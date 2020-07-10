@@ -21,8 +21,18 @@ THE SOFTWARE.
 */
 package main
 
-import "gitlab.com/wwsean08/lifx-streamdeck/cmd"
+import (
+	"github.com/spf13/viper"
+	"gitlab.com/wwsean08/lifx-streamdeck/cmd"
+)
+
+var (
+	version = "develop"
+	commit  = "unknown"
+)
 
 func main() {
+	viper.Set("application.version", version)
+	viper.Set("application.commit", commit)
 	cmd.Execute()
 }
