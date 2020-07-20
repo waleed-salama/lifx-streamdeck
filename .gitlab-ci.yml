@@ -40,7 +40,7 @@ compile-mac:
     - go mod download
     - if [ -n "$CI_COMMIT_TAG" ]; then export version=$CI_COMMIT_TAG; fi
     - echo "implement"
-#    - GOOS=darwin GOARCH=amd64 go build -ldflags "-X main.commit=$CI_COMMIT_SHORT_SHA -X main.version=$version"
+    - GOOS=darwin GOARCH=amd64 go build -ldflags "-X main.commit=$CI_COMMIT_SHORT_SHA -X main.version=$version"
   artifacts:
     paths:
       - lifx-streamdeck
@@ -55,7 +55,7 @@ generate-bundle:
   script:
     - mkdir dev.sean.lifx.sdPlugin
     - cp lifx-streamdeck.exe dev.sean.lifx.sdPlugin
-#    - cp lifx-streamdeck dev.sean.lifx.sdPlugin
+    - cp lifx-streamdeck dev.sean.lifx.sdPlugin
     - cp manifest.json dev.sean.lifx.sdPlugin
     - cp property-inspector/* dev.sean.lifx.sdPlugin
     - cp images/* dev.sean.lifx.sdPlugin

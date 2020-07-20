@@ -1,5 +1,3 @@
-//+build windows
-
 package main
 
 import (
@@ -18,7 +16,7 @@ var (
 func main() {
 	viper.Set("application.version", version)
 	viper.Set("application.commit", commit)
-	f, err := os.OpenFile("testlogfile", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	f, err := os.OpenFile("crash_log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	redirectStderr(f)
 	args := os.Args[1:]
 	port := args[1]
