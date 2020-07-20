@@ -55,7 +55,7 @@ generate-bundle:
   script:
     - mkdir dev.sean.lifx.sdPlugin
     - cp lifx-streamdeck.exe dev.sean.lifx.sdPlugin
-    - cp lifx-streamdeck dev.sean.lifx.sdPlugin
+#    - cp lifx-streamdeck dev.sean.lifx.sdPlugin
     - cp manifest.json dev.sean.lifx.sdPlugin
     - cp property-inspector/* dev.sean.lifx.sdPlugin
     - zip -r dev.sean.lifx.streamDeckPlugin dev.sean.lifx.sdPlugin
