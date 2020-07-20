@@ -1,0 +1,57 @@
+{
+  "Actions": [
+    {
+      "Icon": "actionIcon",
+      "Name": "LIFX Device(s) On",
+      "States": [
+        {
+          "Image": "actionDefaultImage",
+          "TitleAlignment": "middle",
+          "FontSize": "16"
+        }
+      ],
+      "SupportedInMultiActions": true,
+      "Tooltip": "This lets you turn on LIFX devices using your Stream Deck",
+      "UUID": "dev.sean.lifx.on"
+    },
+    {
+      "Icon": "actionIcon",
+      "Name": "LIFX Device(s) Off",
+      "States": [
+        {
+          "Image": "actionDefaultImage",
+          "TitleAlignment": "middle",
+          "FontSize": "16"
+        }
+      ],
+      "SupportedInMultiActions": true,
+      "Tooltip": "This lets you turn off LIFX devices using your Stream Deck",
+      "UUID": "dev.sean.lifx.off"
+    }
+  ],
+  "SDKVersion": 2,
+  "Author": "wwsean08",
+  "CodePath": "lifx-streamdeck.exe",
+  "PropertyInspectorPath": "index-pi.html",
+  "Description": "This lets you control your LIFX devices at the push of a button.  Note that I have no association with LIFX, all rights reserved.",
+  "Name": "LIFX Control",
+  "Category": "LIFX Controls",
+  "CategoryIcon": "categoryIcon",
+  "Icon": "pluginIcon",
+  "URL": "https://sean.dev",
+  "Version": "0.1",
+  "OS": [
+    {
+      "Platform": "windows",
+      "MinimumVersion" : "10"
+    },
+    {
+      "Platform": "mac",
+      "MinimumVersion": "10.11"
+    }
+  ],
+  "Software":
+  {
+    "MinimumVersion" : "4.1"
+  }
+}
