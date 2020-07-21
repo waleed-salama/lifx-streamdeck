@@ -1,9 +1,13 @@
 package lifx
 
 import (
+	"encoding/binary"
 	"fmt"
 	"gitlab.com/wwsean08/golifx"
 	"gitlab.com/wwsean08/streamdeck"
+	"strconv"
+	"strings"
+	"time"
 )
 
 type Client struct {
@@ -50,9 +54,9 @@ func (c *Client) OnSendToPlugin(msg streamdeck.SendToPluginMsg) {
 func (c *Client) OnKeyUp(msg streamdeck.KeyUpMsg) {
 	switch msg.Action {
 	case ActionTurnOnLight:
-		println("")
+		c.turnLights(msg.Payload.Settings, true)
 	case ActionTurnOffLight:
-		println("")
+		c.turnLights(msg.Payload.Settings, false)
 	default:
 		c.SendWarnMessage(msg.Context)
 		c.sdClient.Log(fmt.Sprintf("Unknown action received %s", msg.Action))
@@ -119,4 +123,41 @@ func (c *Client) getAllDevices() (map[string]*golifx.Device, error) {
 	}
 	c.devices = deviceMap
 	return c.devices, nil
+}
+
+func (c *Client) turnLights(settings map[string]interface{}, on bool) {
+	golifx.SetTTL(1 * time.Millisecond)
+	defer golifx.SetTTL(time.Millisecond * 500)
+	for key, _ := range settings {
+		if c.devices[key] == nil {
+			device := golifx.Device{}
+			address, err := macToUint64(key)
+			c.sdClient.Log(fmt.Sprintf("%d", address))
+			if err != nil {
+				c.sdClient.Log(err.Error())
+			}
+			// Not sure why I need this bit shift but via testing this is what I determined I needed, may be fragile
+			address = address >> 16
+			device.SetHardwareAddress(address)
+			c.sdClient.Log(device.MacAddress())
+			err = device.SetPowerState(on)
+			if err != nil {
+				c.sdClient.Log(err.Error())
+			}
+		} else {
+			device := c.devices[key]
+			_ = device.SetPowerState(on)
+		}
+	}
+}
+
+func macToUint64(mac string) (uint64, error) {
+	macMinusColons := strings.Replace(mac, ":", "", -1)
+	decMac, err := strconv.ParseUint(macMinusColons, 16, 64)
+	if err != nil {
+		return 0, err
+	}
+	b := make([]byte, 8)
+	binary.BigEndian.PutUint64(b, decMac)
+	return binary.LittleEndian.Uint64(b), nil
 }
