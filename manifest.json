@@ -1,31 +1,31 @@
 {
   "Actions": [
     {
-      "Icon": "actionIcon",
+      "Icon": "onAction",
       "Name": "LIFX Device(s) On",
       "States": [
         {
-          "Image": "actionDefaultImage",
+          "Image": "onAction",
           "TitleAlignment": "middle",
           "FontSize": "16"
         }
       ],
       "SupportedInMultiActions": true,
-      "Tooltip": "This lets you turn on LIFX devices using your Stream Deck",
+      "Tooltip": "Turn on LIFX devices using your Stream Deck",
       "UUID": "dev.sean.lifx.on"
     },
     {
-      "Icon": "actionIcon",
+      "Icon": "offAction",
       "Name": "LIFX Device(s) Off",
       "States": [
         {
-          "Image": "actionDefaultImage",
+          "Image": "offAction",
           "TitleAlignment": "middle",
           "FontSize": "16"
         }
       ],
       "SupportedInMultiActions": true,
-      "Tooltip": "This lets you turn off LIFX devices using your Stream Deck",
+      "Tooltip": "Turn off LIFX devices using your Stream Deck",
       "UUID": "dev.sean.lifx.off"
     }
   ],
