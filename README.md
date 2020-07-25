@@ -25,8 +25,12 @@ Once you have uninstalled the plugin you can follow the Installation instruction
 ### Setting the devices power state
 You are able to turn devices on or off using the respective actions.  Doing this can control more than one device at once
 
-### Setting the devices color
+### Setting the devices color[^1]
+[^1]: This is not yet in a release but is in the master branch.
 You are able to set the color of devices using this button.  In order to make configuration of the color, you are able to choose a device and copy its current settings and store them as the settings for that button.
 
 ## Known Issues
 1. Sometimes the device mac address is shown instead of the devices label, if the devices label isn't returned in time then the mac address will be shown as opposed to nothing.
+
+## Footnotes
+
