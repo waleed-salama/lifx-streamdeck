@@ -27,6 +27,7 @@ You are able to turn devices on or off using the respective actions.  Doing this
 
 ### Setting the devices color[^1]
 [^1]: This is not yet in a release but is in the master branch.
+
 You are able to set the color of devices using this button.  In order to make configuration of the color, you are able to choose a device and copy its current settings and store them as the settings for that button.
 
 ## Known Issues
