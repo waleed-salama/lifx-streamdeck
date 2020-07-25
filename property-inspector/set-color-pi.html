@@ -28,19 +28,19 @@
     </div>
     <div class="sdpi-item">
         <div class="sdpi-item-label">Hue</div>
-        <input class="sdpi-item-value" type="number" onchange=onColorChanged() id="hue" required placeholder="The degrees between 0-360 for the hue"></input>
+        <input class="sdpi-item-value" min="0" max="360" type="number" onchange=onColorChanged() id="hue" required placeholder="The degrees between 0-360 for the hue"></input>
     </div>
     <div class="sdpi-item">
         <div class="sdpi-item-label">Saturation</div>
-        <input class="sdpi-item-value" type="number" onchange="onColorChanged()" id="saturation" required placeholder="The saturation between 0-100%"></input>
+        <input class="sdpi-item-value" min="0" max="100" type="number" onchange="onColorChanged()" id="saturation" required placeholder="The saturation between 0-100%"></input>
     </div>
     <div class="sdpi-item">
         <div class="sdpi-item-label">Brightness</div>
-        <input class="sdpi-item-value" type="number" onchange="onColorChanged()" id="brightness" required placeholder="The brightness between 0-100%"></input>
+        <input class="sdpi-item-value" min="0" max="100" type="number" onchange="onColorChanged()" id="brightness" required placeholder="The brightness between 0-100%"></input>
     </div>
     <div class="sdpi-item">
         <div class="sdpi-item-label">Kelvin</div>
-        <input class="sdpi-item-value" type="number" onchange="onColorChanged()" id="kelvin" required placeholder="The kelvin temperature of white light"></input>
+        <input class="sdpi-item-value" min="1500" max="9000" type="number" onchange="onColorChanged()" id="kelvin" required placeholder="The kelvin temperature of white light"></input>
     </div>
 </div>
 <script>
