@@ -1,6 +1,6 @@
 # LIFX Stream Deck
 [![pipeline status](https://gitlab.com/wwsean08/lifx-streamdeck/badges/master/pipeline.svg)](https://gitlab.com/wwsean08/lifx-streamdeck/-/commits/master)
-[![Discord](https://img.shields.io/discord/493162062524973056?label=Discord)](https://discord.gg/PPVYMeP)
+[![discord](https://img.shields.io/discord/493162062524973056?label=discord)](https://discord.gg/PPVYMeP)
 [![license](https://img.shields.io/badge/license-MIT-brightgreen)](https://gitlab.com/wwsean08/lifx-streamdeck/-/blob/master/LICENSE)
 
 This plugin allows for an Elgato Stream Deck to control LIFX devices at the click of a button.  Currently, it is capable of turning devices on or off, as well as setting the color of the light.
