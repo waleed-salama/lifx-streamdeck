@@ -27,6 +27,21 @@
       "SupportedInMultiActions": true,
       "Tooltip": "Turn off LIFX devices using your Stream Deck",
       "UUID": "dev.sean.lifx.off"
+    },
+    {
+      "Icon": "onAction",
+      "Name": "Set LIFX Color",
+      "States": [
+        {
+          "Image": "onAction",
+          "TitleAlignment": "middle",
+          "FontSize": "16"
+        }
+      ],
+      "SupportedInMultiActions": true,
+      "Tooltip": "Set the color on LIFX devices using your Stream Deck",
+      "UUID": "dev.sean.lifx.color",
+      "PropertyInspectorPath": "set-color-pi.html"
     }
   ],
   "SDKVersion": 2,

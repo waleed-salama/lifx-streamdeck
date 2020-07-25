@@ -48,6 +48,8 @@ func (c *Client) OnSendToPlugin(msg streamdeck.SendToPluginMsg) {
 	switch msg.Payload["type"] {
 	case "discovery":
 		c.discoverDevices(msg.Action, msg.Context)
+	case "getColor":
+		c.getDevicesCurrentColor(msg.Action, msg.Context, msg.Payload["mac"].(string))
 	}
 }
 
@@ -57,6 +59,8 @@ func (c *Client) OnKeyUp(msg streamdeck.KeyUpMsg) {
 		c.turnLights(msg.Payload.Settings, true)
 	case ActionTurnOffLight:
 		c.turnLights(msg.Payload.Settings, false)
+	case ActionSetColor:
+		c.setColor(msg.Context, msg.Payload.Settings)
 	default:
 		c.SendWarnMessage(msg.Context)
 		c.sdClient.Log(fmt.Sprintf("Unknown action received %s", msg.Action))
@@ -79,6 +83,50 @@ func (c *Client) discoverDevices(action, context string) {
 		c.sdClient.Log(err.Error())
 	}
 	c.sendDevicesToPropertyInspector(action, context, devices)
+}
+
+func (c *Client) getDevicesCurrentColor(action, context, mac string) {
+	device := c.devices[mac]
+	if device == nil {
+		device := golifx.Device{}
+		address, err := macToUint64(mac)
+		if err != nil {
+			c.sdClient.Log(err.Error())
+		}
+		device.SetHardwareAddress(address)
+	}
+	cs, _ := device.GetColorState()
+	c.sendColorStateToPropertyInspector(action, context, cs.Color)
+}
+
+func (c *Client) sendColorStateToPropertyInspector(action, context string, hsbk *golifx.HSBK) {
+	type colorState struct {
+		Hue        int `json:"hue"`
+		Saturation int `json:"saturation"`
+		Brightness int `json:"brightness"`
+		Kelvin     int `json:"kelvin"`
+	}
+
+	data := colorState{
+		Hue:        int(hsbk.Hue / 182), // don't ask about the 182 :P
+		Saturation: int(hsbk.Saturation / 655),
+		Brightness: int(hsbk.Brightness / 655),
+		Kelvin:     int(hsbk.Kelvin),
+	}
+
+	msg := streamdeck.SendToPropertyInspectorMsg{
+		Action:  action,
+		Context: context,
+		Event:   streamdeck.SendToPropertyInspectorEvent,
+		Payload: map[string]interface{}{
+			"type":  "getColor",
+			"color": data,
+		},
+	}
+	err := c.sdClient.SendMessage(msg)
+	if err != nil {
+		c.sdClient.Log(err.Error())
+	}
 }
 
 func (c *Client) sendDevicesToPropertyInspector(action string, context string, devices map[string]*golifx.Device) {
@@ -148,6 +196,59 @@ func (c *Client) turnLights(settings map[string]interface{}, on bool) {
 			device := c.devices[key]
 			_ = device.SetPowerState(on)
 		}
+	}
+}
+
+func (c *Client) setColor(context string, settings map[string]interface{}) {
+	devices := settings["devices"].(map[string]interface{})
+	if len(devices) == 0 {
+		// no devices to change so return quickly
+		return
+	}
+	color := settings["color"].(map[string]interface{})
+	hue, err := strconv.ParseUint(color["hue"].(string), 10, 16)
+	if err != nil {
+		c.sdClient.Log(err.Error())
+		c.SendWarnMessage(context)
+		return
+	}
+	saturation, err := strconv.ParseUint(color["saturation"].(string), 10, 16)
+	if err != nil {
+		c.sdClient.Log(err.Error())
+		c.SendWarnMessage(context)
+		return
+	}
+	brightness, err := strconv.ParseUint(color["brightness"].(string), 10, 16)
+	if err != nil {
+		c.sdClient.Log(err.Error())
+		c.SendWarnMessage(context)
+		return
+	}
+	kelvin, err := strconv.ParseUint(color["kelvin"].(string), 10, 16)
+	if err != nil {
+		c.sdClient.Log(err.Error())
+		c.SendWarnMessage(context)
+		return
+	}
+	hsbk := golifx.HSBK{
+		Hue:        uint16(hue * 182),
+		Saturation: uint16(saturation * 655),
+		Brightness: uint16(brightness * 655),
+		Kelvin:     uint16(kelvin),
+	}
+
+	golifx.SetTTL(time.Millisecond * 1)
+	defer golifx.SetTTL(time.Millisecond * 500)
+	for key, _ := range devices {
+		var device *golifx.Device
+		if c.devices[key] != nil {
+			device = c.devices[key]
+		} else {
+			device = &golifx.Device{}
+			mac, _ := macToUint64(key)
+			device.SetHardwareAddress(mac)
+		}
+		_ = device.SetColorState(&hsbk, 0)
 	}
 }
 
