@@ -26,7 +26,7 @@ compile-windows:
   script:
     - go mod download
     - if [ -n "$CI_COMMIT_TAG" ]; then export version=$CI_COMMIT_TAG; fi
-    - GOOS=windows go build -ldflags "-X main.commit=$CI_COMMIT_SHORT_SHA -X main.version=$version"
+    - GOOS=windows go build -v -ldflags "-X main.commit=$CI_COMMIT_SHORT_SHA -X main.version=$version"
   artifacts:
     paths:
       - lifx-streamdeck.exe
@@ -39,7 +39,7 @@ compile-mac:
   script:
     - go mod download
     - if [ -n "$CI_COMMIT_TAG" ]; then export version=$CI_COMMIT_TAG; fi
-    - GOOS=darwin GOARCH=amd64 go build -ldflags "-X main.commit=$CI_COMMIT_SHORT_SHA -X main.version=$version"
+    - GOOS=darwin GOARCH=amd64 go build -v -ldflags "-X main.commit=$CI_COMMIT_SHORT_SHA -X main.version=$version"
   artifacts:
     paths:
       - lifx-streamdeck
