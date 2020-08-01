@@ -12,7 +12,8 @@
       ],
       "SupportedInMultiActions": true,
       "Tooltip": "Turn on LIFX devices using your Stream Deck",
-      "UUID": "dev.sean.lifx.on"
+      "UUID": "dev.sean.lifx.on",
+      "PropertyInspectorPath": "on-off-pi.html"
     },
     {
       "Icon": "offAction",
@@ -26,7 +27,8 @@
       ],
       "SupportedInMultiActions": true,
       "Tooltip": "Turn off LIFX devices using your Stream Deck",
-      "UUID": "dev.sean.lifx.off"
+      "UUID": "dev.sean.lifx.off",
+      "PropertyInspectorPath": "on-off-pi.html"
     },
     {
       "Icon": "onAction",
@@ -48,7 +50,6 @@
   "Author": "wwsean08",
   "CodePath": "lifx-streamdeck.exe",
   "CodePathMac": "lifx-streamdeck",
-  "PropertyInspectorPath": "index-pi.html",
   "Description": "This lets you control your LIFX devices at the push of a button.  Note that I have no association with LIFX, all rights reserved.",
   "Name": "LIFX Control",
   "Category": "LIFX Controls",
