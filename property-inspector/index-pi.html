@@ -120,6 +120,9 @@
                     deviceContainer.append(tmpDevice)
                 }
             })
+            if (devices.length === 0 && keys.length === 0) {
+                deviceContainer.innerText = 'No devices found.  Please verify your devices are turned on and try again.'
+            }
 
             let children = deviceContainer.getElementsByTagName("input")
             for (let i = 0; i < children.length; i++) {

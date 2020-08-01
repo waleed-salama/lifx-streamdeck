@@ -200,6 +200,15 @@
             })
         }
 
+        if (devices.length === 0) {
+            if (actionInfo.payload.settings["devices"]) {
+                let keys = Object.keys(actionInfo.payload.settings["devices"])
+                if (keys.length === 0) {
+                    deviceContainer.innerText = 'No devices found.  Please verify your devices are turned on and try again.'
+                }
+            }
+        }
+
         let children = deviceContainer.getElementsByTagName("input")
         for (let i = 0; i < children.length; i++) {
             children[i].onclick = onCheckBoxClicked
