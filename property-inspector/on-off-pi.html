@@ -46,13 +46,12 @@
             }
             websocket.onmessage = function (event) {
                 const jsonObj = JSON.parse(event.data);
-                console.log(JSON.stringify(jsonObj))
                 const sdEvent = jsonObj['event'];
 
                 if (sdEvent === 'sendToPropertyInspector') {
-                    const data = jsonObj['payload']
+                    const data = jsonObj['payload'];
                     if (data['type'] === 'discovery') {
-                        devicesDiscovered(data)
+                        devicesDiscovered(data);
                     }
                 }
             }
@@ -74,83 +73,82 @@
         }
 
         function discoverDevices() {
-            sendValueToPlugin('type', 'discovery')
-            let container = document.getElementById('discover-container')
-            let discoveryButton = document.getElementById('discovery')
-            let loader = document.createElement('div')
-            loader.setAttribute('class', 'loader')
-            discoveryButton.setAttribute('disabled', 'disabled')
-            container.append(loader)
+            sendValueToPlugin('type', 'discovery');
+            let container = document.getElementById('discover-container');
+            let discoveryButton = document.getElementById('discovery');
+            let loader = document.createElement('div');
+            loader.setAttribute('class', 'loader');
+            discoveryButton.setAttribute('disabled', 'disabled');
+            container.append(loader);
         }
 
         function devicesDiscovered(data) {
-            const devices = data["devices"]
-            let discoveryContainer = document.getElementById("discover-container")
-            let discoveryButton = document.getElementById('discovery')
-            let loader = discoveryContainer.getElementsByClassName("loader")
+            const devices = data["devices"];
+            let discoveryContainer = document.getElementById("discover-container");
+            let discoveryButton = document.getElementById('discovery');
+            let loader = discoveryContainer.getElementsByClassName("loader");
             for (let i = 0; i < loader.length; i++) {
-                loader[i].remove()
+                loader[i].remove();
             }
 
-            discoveryButton.removeAttribute('disabled')
+            discoveryButton.removeAttribute('disabled');
 
-            let deviceContainer = document.getElementById('device_container')
-            deviceContainer.innerHTML = ''
+            let deviceContainer = document.getElementById('device_container');
+            deviceContainer.innerHTML = '';
             devices.forEach(d => {
-                    let tmpDevice = document.createElement('div')
-                    tmpDevice.setAttribute("class", "sdpi-item-child")
+                    let tmpDevice = document.createElement('div');
+                    tmpDevice.setAttribute("class", "sdpi-item-child");
                     tmpDevice.innerHTML = `
                 <input id=${d['mac']} type="checkbox" value=${d['mac']}>
                 <label for=${d['mac']} class="sdpi-item-label"><span></span>${d['label']}</label>
                 `
-                    deviceContainer.append(tmpDevice)
+                    deviceContainer.append(tmpDevice);
                 }
             )
 
-            let keys = Object.keys(actionInfo.payload.settings)
+            let keys = Object.keys(actionInfo.payload.settings);
             keys.forEach(key => {
-                exists = document.getElementById(key) !== null
+                const exists = document.getElementById(key) !== null;
                 if (!exists) {
-                    let tmpDevice = document.createElement('div')
-                    tmpDevice.setAttribute("class", "sdpi-item-child")
+                    let tmpDevice = document.createElement('div');
+                    tmpDevice.setAttribute("class", "sdpi-item-child");
                     tmpDevice.innerHTML = `
                 <input id=${key} type="checkbox" value=${key}>
                 <label for=${key} class="sdpi-item-label"><span></span>${actionInfo.payload.settings[key]}</label>
                 `
-                    deviceContainer.append(tmpDevice)
+                    deviceContainer.append(tmpDevice);
                 }
             })
             if (devices.length === 0 && keys.length === 0) {
-                deviceContainer.innerText = 'No devices found.  Please verify your devices are turned on and try again.'
+                deviceContainer.innerText = 'No devices found.  Please verify your devices are turned on and try again.';
             }
 
-            let children = deviceContainer.getElementsByTagName("input")
+            let children = deviceContainer.getElementsByTagName("input");
             for (let i = 0; i < children.length; i++) {
-                children[i].onclick = onCheckBoxClicked
+                children[i].onclick = onCheckBoxClicked;
                 if (actionInfo.payload.settings[children[i].id]) {
                     // if the device is in the settings then we want to control it
-                    children[i].setAttribute("checked", "true")
+                    children[i].setAttribute("checked", "true");
                 }
             }
         }
 
         function onCheckBoxClicked(e) {
             if (this.checked) {
-                AddDevice(this.value, this.nextElementSibling.textContent)
+                AddDevice(this.value, this.nextElementSibling.textContent);
             } else {
-                RemoveDevice(this.value)
+                RemoveDevice(this.value);
             }
         }
 
         function RemoveDevice(deviceMac) {
-            // do stuff
-            delete actionInfo.payload.settings[deviceMac]
-            UpdateDevices()
+            delete actionInfo.payload.settings[deviceMac];
+            UpdateDevices();
         }
 
         function AddDevice(deviceMac, deviceLabel) {
-            actionInfo.payload.settings[deviceMac] = deviceLabel
-            UpdateDevices()
+            actionInfo.payload.settings[deviceMac] = deviceLabel;
+            UpdateDevices();
         }
 
         function UpdateDevices() {
@@ -161,7 +159,6 @@
                     "context": uuid,
                     "payload": actionInfo.payload.settings
                 };
-                console.log(JSON.stringify(json))
                 websocket.send(JSON.stringify(json));
             }
         }
