@@ -5,7 +5,7 @@
       "Name": "LIFX Device(s) On",
       "States": [
         {
-          "Image": "onAction",
+          "Image": "onKey",
           "TitleAlignment": "middle",
           "FontSize": "16"
         }
@@ -20,7 +20,7 @@
       "Name": "LIFX Device(s) Off",
       "States": [
         {
-          "Image": "offAction",
+          "Image": "offKey",
           "TitleAlignment": "middle",
           "FontSize": "16"
         }
@@ -31,11 +31,11 @@
       "PropertyInspectorPath": "on-off-pi.html"
     },
     {
-      "Icon": "onAction",
+      "Icon": "colorAction",
       "Name": "Set LIFX Color",
       "States": [
         {
-          "Image": "onAction",
+          "Image": "colorKey",
           "TitleAlignment": "middle",
           "FontSize": "16"
         }
