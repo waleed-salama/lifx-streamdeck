@@ -88,7 +88,7 @@ func (c *Client) discoverDevices(action, context string) {
 func (c *Client) getDevicesCurrentColor(action, context, mac string) {
 	device := c.devices[mac]
 	if device == nil {
-		device := golifx.Device{}
+		device = new(golifx.Device)
 		address, err := macToUint64(mac)
 		if err != nil {
 			c.sdClient.Log(err.Error())
@@ -134,7 +134,7 @@ func (c *Client) sendDevicesToPropertyInspector(action string, context string, d
 		Label string `json:"label"`
 		Mac   string `json:"mac"`
 	}
-	data := []deviceInfo{}
+	data := make([]deviceInfo, 0)
 	for mac, device := range devices {
 		// Label for the users, mac for our usage
 		label, err := device.GetLabel()
@@ -176,7 +176,7 @@ func (c *Client) getAllDevices() (map[string]*golifx.Device, error) {
 func (c *Client) turnLights(settings map[string]interface{}, on bool) {
 	golifx.SetTTL(1 * time.Millisecond)
 	defer golifx.SetTTL(time.Millisecond * 500)
-	for key, _ := range settings {
+	for key := range settings {
 		if c.devices[key] == nil {
 			device := golifx.Device{}
 			address, err := macToUint64(key)
@@ -239,7 +239,7 @@ func (c *Client) setColor(context string, settings map[string]interface{}) {
 
 	golifx.SetTTL(time.Millisecond * 1)
 	defer golifx.SetTTL(time.Millisecond * 500)
-	for key, _ := range devices {
+	for key := range devices {
 		var device *golifx.Device
 		if c.devices[key] != nil {
 			device = c.devices[key]
