@@ -34,9 +34,6 @@ func (c *Client) Init() {
 	c.sdClient.SetOnKeyUpCallback(c.OnKeyUp)
 	c.sdClient.SetSendToPluginCallback(c.OnSendToPlugin)
 	c.sdClient.SetPropertyInspectorDidAppearCallback(c.OnPropertyInspectorDidAppear)
-	c.sdClient.SetRawCallback(func(msg []byte) {
-		c.sdClient.Log(string(msg))
-	})
 	_, _ = c.getAllDevices()
 }
 
@@ -56,9 +53,9 @@ func (c *Client) OnSendToPlugin(msg streamdeck.SendToPluginMsg) {
 func (c *Client) OnKeyUp(msg streamdeck.KeyUpMsg) {
 	switch msg.Action {
 	case ActionTurnOnLight:
-		c.turnLights(msg.Payload.Settings, true)
+		c.turnLights(msg.Context, msg.Payload.Settings, true)
 	case ActionTurnOffLight:
-		c.turnLights(msg.Payload.Settings, false)
+		c.turnLights(msg.Context, msg.Payload.Settings, false)
 	case ActionSetColor:
 		c.setColor(msg.Context, msg.Payload.Settings)
 	default:
@@ -92,6 +89,7 @@ func (c *Client) getDevicesCurrentColor(action, context, mac string) {
 		address, err := macToUint64(mac)
 		if err != nil {
 			c.sdClient.Log(err.Error())
+			c.SendWarnMessage(context)
 		}
 		device.SetHardwareAddress(address)
 	}
@@ -140,7 +138,6 @@ func (c *Client) sendDevicesToPropertyInspector(action string, context string, d
 		label, err := device.GetLabel()
 		if err != nil {
 			label = device.MacAddress()
-			c.sdClient.Log(err.Error())
 		}
 		data = append(data, deviceInfo{Label: label, Mac: mac})
 	}
@@ -173,29 +170,24 @@ func (c *Client) getAllDevices() (map[string]*golifx.Device, error) {
 	return c.devices, nil
 }
 
-func (c *Client) turnLights(settings map[string]interface{}, on bool) {
+func (c *Client) turnLights(context string, settings map[string]interface{}, on bool) {
 	golifx.SetTTL(1 * time.Millisecond)
 	defer golifx.SetTTL(time.Millisecond * 500)
 	for key := range settings {
 		if c.devices[key] == nil {
 			device := golifx.Device{}
 			address, err := macToUint64(key)
-			c.sdClient.Log(fmt.Sprintf("%d", address))
 			if err != nil {
 				c.sdClient.Log(err.Error())
+				c.SendWarnMessage(context)
 			}
 			// Not sure why I need this bit shift but via testing this is what I determined I needed, may be fragile
 			address = address >> 16
 			device.SetHardwareAddress(address)
-			c.sdClient.Log(device.MacAddress())
-			err = device.SetPowerState(on)
-			if err != nil {
-				c.sdClient.Log(err.Error())
-			}
-		} else {
-			device := c.devices[key]
-			_ = device.SetPowerState(on)
+			c.devices[key] = &device
 		}
+		device := c.devices[key]
+		_ = device.SetPowerState(on)
 	}
 }
 
@@ -240,14 +232,13 @@ func (c *Client) setColor(context string, settings map[string]interface{}) {
 	golifx.SetTTL(time.Millisecond * 1)
 	defer golifx.SetTTL(time.Millisecond * 500)
 	for key := range devices {
-		var device *golifx.Device
-		if c.devices[key] != nil {
-			device = c.devices[key]
-		} else {
-			device = &golifx.Device{}
+		if c.devices[key] == nil {
+			device := golifx.Device{}
 			mac, _ := macToUint64(key)
 			device.SetHardwareAddress(mac)
+			c.devices[key] = &device
 		}
+		device := c.devices[key]
 		_ = device.SetColorState(&hsbk, 0)
 	}
 }
