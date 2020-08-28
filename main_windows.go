@@ -1,11 +1,13 @@
 package main
 
 import (
-	"github.com/spf13/viper"
-	"gitlab.com/wwsean08/lifx-streamdeck/lifx"
 	"log"
 	"os"
 	"syscall"
+	"time"
+
+	"github.com/spf13/viper"
+	"gitlab.com/wwsean08/lifx-streamdeck/lifx"
 )
 
 var (
@@ -27,6 +29,7 @@ func main() {
 	}
 	go client.Init()
 	for {
+		time.Sleep(time.Minute)
 	}
 }
 
