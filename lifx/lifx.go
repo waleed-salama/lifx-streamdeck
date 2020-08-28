@@ -3,11 +3,12 @@ package lifx
 import (
 	"encoding/binary"
 	"fmt"
-	"gitlab.com/wwsean08/golifx"
-	"gitlab.com/wwsean08/streamdeck"
 	"strconv"
 	"strings"
 	"time"
+
+	"gitlab.com/wwsean08/golifx"
+	"gitlab.com/wwsean08/streamdeck"
 )
 
 type Client struct {
@@ -31,6 +32,7 @@ func NewClient(port, uuid string) (*Client, error) {
 }
 
 func (c *Client) Init() {
+	golifx.SetAlwaysBroadcast(true)
 	c.sdClient.SetOnKeyUpCallback(c.OnKeyUp)
 	c.sdClient.SetSendToPluginCallback(c.OnSendToPlugin)
 	c.sdClient.SetPropertyInspectorDidAppearCallback(c.OnPropertyInspectorDidAppear)
