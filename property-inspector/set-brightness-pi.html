@@ -1,0 +1,196 @@
+<head>
+    <meta charset="utf-8" />
+    <title>My Property Inspector</title>
+    <link rel="stylesheet" href="sdpi.css">
+    <link rel="stylesheet" href="custom.css">
+</head>
+
+<body>
+<div class="sdpi-wrapper" id="global-wrapper">
+    <div class="sdpi-item" id="discover-container">
+        <div class="sdpi-item-label empty"></div>
+        <button class="sdpi-item-value" id="discovery" onclick="discoverDevices()">Discover Devices</button>
+    </div>
+    <div class="sdpi-item" id="device_select">
+        <div class="sdpi-item-label">Devices</div>
+        <div class="sdpi-item" type="checkbox">
+            <div class="sdpi-item-value min100" id="device_container">
+                <div class="loader"></div>
+            </div>
+        </div>
+    </div>
+    <div class="sdpi-item">
+        <div class="sdpi-item-label">Brightness</div>
+        <input class="sdpi-item-value" min="0" max="100" type="number" onchange="onColorChanged()" id="brightness" required placeholder="The brightness between 0-100%"></input>
+    </div>
+</div>
+<script>
+    // this is our global websocket, used to communicate from/to Stream Deck software
+    // and some info about our plugin, as sent by Stream Deck software
+    let websocket = null,
+        uuid = null,
+        actionInfo = {};
+
+    function connectElgatoStreamDeckSocket(inPort, inUUID, inRegisterEvent, inInfo, inActionInfo) {
+        uuid = inUUID;
+        // please note: the incoming arguments are of type STRING, so
+        // in case of the inActionInfo, we must parse it into JSON first
+        actionInfo = JSON.parse(inActionInfo); // cache the info
+        websocket = new WebSocket('ws://localhost:' + inPort);
+        if (!actionInfo.payload.settings["devices"]) {
+            actionInfo.payload.settings["devices"] = {};
+        }
+        if (actionInfo.payload.settings["brightness"]) {
+            let brightnessBox = document.getElementById('brightness');
+            brightnessBox.value = actionInfo.payload.settings['brightness'];
+        }
+
+        // if connection was established, the websocket sends
+        // an 'onopen' event, where we need to register our PI
+        websocket.onopen = function () {
+            const json = {
+                event:  inRegisterEvent,
+                uuid:   inUUID
+            };
+            // register property inspector to Stream Deck
+            websocket.send(JSON.stringify(json));
+        }
+        websocket.onmessage = function (event) {
+            const jsonObj = JSON.parse(event.data);
+            const sdEvent = jsonObj['event'];
+
+            if (sdEvent === 'sendToPropertyInspector') {
+                const data = jsonObj['payload']
+                if (data['type'] === 'discovery') {
+                    devicesDiscovered(data);
+                }
+            }
+        }
+    }
+
+    // our method to pass values to the plugin
+    function sendValueToPlugin(payload) {
+        if (websocket) {
+            const json = {
+                "action": actionInfo['action'],
+                "event": "sendToPlugin",
+                "context": uuid,
+                "payload": payload
+            };
+            websocket.send(JSON.stringify(json));
+        }
+    }
+
+    function discoverDevices() {
+        sendValueToPlugin({'type': 'discovery'});
+        let container = document.getElementById('discover-container');
+        let discoveryButton = document.getElementById('discovery');
+        let loader = document.createElement('div');
+        loader.setAttribute('class', 'loader');
+        discoveryButton.setAttribute('disabled', 'disabled');
+        container.append(loader);
+    }
+
+    function devicesDiscovered(data) {
+        const devices = data["devices"];
+        let discoveryContainer = document.getElementById("discover-container");
+        let discoveryButton = document.getElementById('discovery');
+        let loader = discoveryContainer.getElementsByClassName("loader");
+        for (let i = 0; i < loader.length; i++) {
+            loader[i].remove();
+        }
+
+        discoveryButton.removeAttribute('disabled');
+
+        let deviceContainer = document.getElementById('device_container');
+        let deviceDropdown = document.getElementById('device_dropdown');
+        deviceContainer.innerHTML = ''
+        devices.forEach(d => {
+                let tmpDevice = document.createElement('div');
+                tmpDevice.setAttribute("class", "sdpi-item-child");
+                tmpDevice.innerHTML = `
+                <input id=${d['mac']} type="checkbox" value=${d['mac']}>
+                <label for=${d['mac']} class="sdpi-item-label"><span></span>${d['label']}</label>
+                `
+                deviceContainer.append(tmpDevice);
+            }
+        )
+
+        if (actionInfo.payload.settings["devices"]) {
+            let keys = Object.keys(actionInfo.payload.settings["devices"]);
+            keys.forEach(key => {
+                let exists = document.getElementById(key) !== null;
+                if (!exists) {
+                    let tmpDevice = document.createElement('div');
+                    tmpDevice.setAttribute("class", "sdpi-item-child");
+                    tmpDevice.innerHTML = `
+                <input id=${key} type="checkbox" value=${key}>
+                <label for=${key} class="sdpi-item-label"><span></span>${actionInfo.payload.settings["devices"][key]}</label>
+                `
+                    deviceContainer.append(tmpDevice);
+                }
+            })
+        }
+
+        if (devices.length === 0) {
+            if (actionInfo.payload.settings["devices"]) {
+                let keys = Object.keys(actionInfo.payload.settings["devices"]);
+                if (keys.length === 0) {
+                    deviceContainer.innerText = 'No devices found.  Please verify your devices are turned on and try again.'
+                }
+            }
+        }
+
+        let children = deviceContainer.getElementsByTagName("input");
+        for (let i = 0; i < children.length; i++) {
+            children[i].onclick = onCheckBoxClicked;
+            if (actionInfo.payload.settings["devices"][children[i].id]) {
+                // if the device is in the settings then we want to control it
+                children[i].setAttribute("checked", "true");
+            }
+        }
+    }
+
+    function onCheckBoxClicked() {
+        if (this.checked) {
+            AddDevice(this.value, this.nextElementSibling.textContent);
+        } else {
+            RemoveDevice(this.value);
+        }
+    }
+
+    function onColorChanged() {
+        let brightnessBox = document.getElementById('brightness');
+        actionInfo.payload.settings["brightness"] = brightnessBox.value;
+        UpdateSettings();
+    }
+
+    function RemoveDevice(deviceMac) {
+        if (!actionInfo.payload.settings["devices"]) {
+            actionInfo.payload.settings["devices"] = {};
+        }
+        delete actionInfo.payload.settings["devices"][deviceMac];
+        UpdateSettings();
+    }
+
+    function AddDevice(deviceMac, deviceLabel) {
+        if (!actionInfo.payload.settings["devices"]) {
+            actionInfo.payload.settings["devices"] = {};
+        }
+        actionInfo.payload.settings["devices"][deviceMac] = deviceLabel;
+        UpdateSettings();
+    }
+
+    function UpdateSettings() {
+        if (websocket) {
+            const json = {
+                "action": actionInfo.action,
+                "event": "setSettings",
+                "context": uuid,
+                "payload": actionInfo.payload.settings
+            };
+            websocket.send(JSON.stringify(json));
+        }
+    }
+</script>
+</body>

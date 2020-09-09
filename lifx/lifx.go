@@ -2,20 +2,22 @@ package lifx
 
 import (
 	"encoding/binary"
-	"fmt"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/spf13/viper"
 	"gitlab.com/wwsean08/golifx"
 	"gitlab.com/wwsean08/streamdeck"
 )
 
+// Client represents our client data
 type Client struct {
 	sdClient *streamdeck.Client
 	devices  map[string]*golifx.Device
 }
 
+// NewClient creates a client for speaking with the Stream Deck websocket
 func NewClient(port, uuid string) (*Client, error) {
 	sdClient, err := streamdeck.NewClient(port, uuid)
 	if err != nil {
@@ -31,48 +33,16 @@ func NewClient(port, uuid string) (*Client, error) {
 	return client, nil
 }
 
+// Init handles initializing the client, and setting up the initial discovery of devices
 func (c *Client) Init() {
 	golifx.SetAlwaysBroadcast(true)
 	c.sdClient.SetOnKeyUpCallback(c.OnKeyUp)
 	c.sdClient.SetSendToPluginCallback(c.OnSendToPlugin)
 	c.sdClient.SetPropertyInspectorDidAppearCallback(c.OnPropertyInspectorDidAppear)
+	if viper.GetString("application.version") == "develop" {
+		c.sdClient.SetRawCallback(c.DebugCallback)
+	}
 	_, _ = c.getAllDevices()
-}
-
-func (c *Client) OnPropertyInspectorDidAppear(msg streamdeck.PropertyInspectorDidAppearMsg) {
-	c.sendDevicesToPropertyInspector(msg.Action, msg.Context, c.devices)
-}
-
-func (c *Client) OnSendToPlugin(msg streamdeck.SendToPluginMsg) {
-	switch msg.Payload["type"] {
-	case "discovery":
-		c.discoverDevices(msg.Action, msg.Context)
-	case "getColor":
-		c.getDevicesCurrentColor(msg.Action, msg.Context, msg.Payload["mac"].(string))
-	}
-}
-
-func (c *Client) OnKeyUp(msg streamdeck.KeyUpMsg) {
-	switch msg.Action {
-	case ActionTurnOnLight:
-		c.turnLights(msg.Context, msg.Payload.Settings, true)
-	case ActionTurnOffLight:
-		c.turnLights(msg.Context, msg.Payload.Settings, false)
-	case ActionSetColor:
-		c.setColor(msg.Context, msg.Payload.Settings)
-	default:
-		c.SendWarnMessage(msg.Context)
-		c.sdClient.Log(fmt.Sprintf("Unknown action received %s", msg.Action))
-	}
-}
-
-func (c *Client) SendWarnMessage(context string) {
-	msg := streamdeck.ShowAlertMsg{
-		Event:   streamdeck.ShowAlertEvent,
-		Context: context,
-	}
-
-	_ = c.sdClient.SendMessage(msg)
 }
 
 func (c *Client) discoverDevices(action, context string) {
@@ -97,66 +67,6 @@ func (c *Client) getDevicesCurrentColor(action, context, mac string) {
 	}
 	cs, _ := device.GetColorState()
 	c.sendColorStateToPropertyInspector(action, context, cs.Color)
-}
-
-func (c *Client) sendColorStateToPropertyInspector(action, context string, hsbk *golifx.HSBK) {
-	type colorState struct {
-		Hue        int `json:"hue"`
-		Saturation int `json:"saturation"`
-		Brightness int `json:"brightness"`
-		Kelvin     int `json:"kelvin"`
-	}
-
-	data := colorState{
-		Hue:        int(hsbk.Hue / 182), // don't ask about the 182 :P
-		Saturation: int(hsbk.Saturation / 655),
-		Brightness: int(hsbk.Brightness / 655),
-		Kelvin:     int(hsbk.Kelvin),
-	}
-
-	msg := streamdeck.SendToPropertyInspectorMsg{
-		Action:  action,
-		Context: context,
-		Event:   streamdeck.SendToPropertyInspectorEvent,
-		Payload: map[string]interface{}{
-			"type":  "getColor",
-			"color": data,
-		},
-	}
-	err := c.sdClient.SendMessage(msg)
-	if err != nil {
-		c.sdClient.Log(err.Error())
-	}
-}
-
-func (c *Client) sendDevicesToPropertyInspector(action string, context string, devices map[string]*golifx.Device) {
-	type deviceInfo struct {
-		Label string `json:"label"`
-		Mac   string `json:"mac"`
-	}
-	data := make([]deviceInfo, 0)
-	for mac, device := range devices {
-		// Label for the users, mac for our usage
-		label, err := device.GetLabel()
-		if err != nil {
-			label = device.MacAddress()
-		}
-		data = append(data, deviceInfo{Label: label, Mac: mac})
-	}
-
-	msg := streamdeck.SendToPropertyInspectorMsg{
-		Action:  action,
-		Context: context,
-		Event:   streamdeck.SendToPropertyInspectorEvent,
-		Payload: map[string]interface{}{
-			"type":    "discovery",
-			"devices": data,
-		},
-	}
-	err := c.sdClient.SendMessage(msg)
-	if err != nil {
-		c.sdClient.Log(err.Error())
-	}
 }
 
 func (c *Client) getAllDevices() (map[string]*golifx.Device, error) {
@@ -242,6 +152,39 @@ func (c *Client) setColor(context string, settings map[string]interface{}) {
 		}
 		device := c.devices[key]
 		_ = device.SetColorState(&hsbk, 0)
+	}
+}
+
+func (c *Client) setBrightness(context string, settings map[string]interface{}) {
+	devices := settings["devices"].(map[string]interface{})
+	if len(devices) == 0 {
+		// no devices to change so return quickly
+		return
+	}
+	brightness, err := strconv.ParseUint(settings["brightness"].(string), 10, 16)
+	if err != nil {
+		c.sdClient.Log(err.Error())
+		c.SendWarnMessage(context)
+		return
+	}
+
+	for key := range devices {
+		if c.devices[key] == nil {
+			device := golifx.Device{}
+			mac, _ := macToUint64(key)
+			device.SetHardwareAddress(mac)
+			c.devices[key] = &device
+		}
+		device := c.devices[key]
+		current, err := device.GetColorState()
+		if err != nil {
+			c.sdClient.Log(err.Error())
+			c.SendWarnMessage(context)
+			continue
+		}
+		hsbk := current.Color
+		hsbk.Brightness = uint16(brightness * 655)
+		_ = device.SetColorState(hsbk, 0)
 	}
 }
 
