@@ -169,22 +169,24 @@ func (c *Client) setBrightness(context string, settings map[string]interface{}) 
 	}
 
 	for key := range devices {
-		if c.devices[key] == nil {
-			device := golifx.Device{}
-			mac, _ := macToUint64(key)
-			device.SetHardwareAddress(mac)
-			c.devices[key] = &device
-		}
-		device := c.devices[key]
-		current, err := device.GetColorState()
-		if err != nil {
-			c.sdClient.Log(err.Error())
-			c.SendWarnMessage(context)
-			continue
-		}
-		hsbk := current.Color
-		hsbk.Brightness = uint16(brightness * 655)
-		_ = device.SetColorState(hsbk, 0)
+		go func(key string) {
+			if c.devices[key] == nil {
+				device := golifx.Device{}
+				mac, _ := macToUint64(key)
+				device.SetHardwareAddress(mac)
+				c.devices[key] = &device
+			}
+			device := c.devices[key]
+			current, err := device.GetColorState()
+			if err != nil {
+				c.sdClient.Log(err.Error())
+				c.SendWarnMessage(context)
+				return
+			}
+			hsbk := current.Color
+			hsbk.Brightness = uint16(brightness * 655)
+			_ = device.SetColorState(hsbk, 0)
+		}(key)
 	}
 }
 
