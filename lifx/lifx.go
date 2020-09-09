@@ -169,6 +169,9 @@ func (c *Client) setBrightness(context string, settings map[string]interface{}) 
 	}
 
 	for key := range devices {
+		// Due to having to do some lookups before making the settings changes
+		// i'm running these each in their own thread, that way they (to the eye)
+		//  happen simultaneously.
 		go func(key string) {
 			if c.devices[key] == nil {
 				device := golifx.Device{}
