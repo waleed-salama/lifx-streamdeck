@@ -74,7 +74,7 @@ generate-bundle:
     - cp property-inspector/* dev.sean.lifx.sdPlugin
     - cp images/* dev.sean.lifx.sdPlugin
     - cp LICENSE dev.sean.lifx.sdPlugin
-    - cp attribution dev.sean.lifx.sdPlugin
+    - cp -r attribution dev.sean.lifx.sdPlugin
     - zip -r dev.sean.lifx.streamDeckPlugin dev.sean.lifx.sdPlugin
   artifacts:
     paths:
