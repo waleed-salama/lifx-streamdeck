@@ -1,5 +1,18 @@
+# v0.2.0
+## New Features
+* [Issue #4](https://gitlab.com/wwsean08/lifx-streamdeck/-/issues/4): Add an action to set the brightness independant of the color the light currently is.  There may be a slight delay in this as it requires looking up the current color due to LIFX combining those pieces of data in their API.
+
+## Fixes
+* Add licensing and attribution to the streamdeck package during the build for compliance and legal reasons.
+
+## Unrelated Changes
+* New issue and merge request templates created and added to the repository.
+
+## Known Issues:
+* [Sometimes mac addresses are shown](https://gitlab.com/wwsean08/lifx-streamdeck/-/issues/1)
+
 # v0.1.1
-## Changes
+## Fixes
 * Fix high CPU Usage reported by Luke Last - [issue 2](https://gitlab.com/wwsean08/lifx-streamdeck/-/issues/2)
 * Handle IP address change of devices by using broadcasts instead of direct messages - [issue 3](https://gitlab.com/wwsean08/lifx-streamdeck/-/issues/3)
 
@@ -7,7 +20,6 @@
 * [Sometimes mac addresses are shown](https://gitlab.com/wwsean08/lifx-streamdeck/-/issues/1)
 
 # v0.1.0
-## Changes
 * Initial Release
 
 ## Known Issues:
