@@ -46,11 +46,11 @@
       "PropertyInspectorPath": "set-color-pi.html"
     },
     {
-      "Icon": "",
+      "Icon": "brightnessAction",
       "Name": "Set Brightness",
       "States": [
         {
-          "Image": "",
+          "Image": "brightnessKey",
           "TitleAlignment": "middle",
           "FontSize": "16"
         }

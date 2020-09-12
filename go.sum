@@ -162,8 +162,6 @@ github.com/spf13/jwalterweatherman v1.0.0 h1:XHEdyB+EcvlqZamSM4ZOMGlc93t6AcsBEu9
 github.com/spf13/jwalterweatherman v1.0.0/go.mod h1:cQK4TGJAtQXfYWX+Ddv3mKDzgVb68N+wFjFa4jdeBTo=
 github.com/spf13/pflag v1.0.3 h1:zPAT6CGy6wXeQ7NtTnaTerfKOsV6V6F8agHXFiazDkg=
 github.com/spf13/pflag v1.0.3/go.mod h1:DYY7MBk1bdzusC3SYhjObp+wFpr4gzcvqqNjLnInEg4=
-github.com/spf13/viper v1.7.0 h1:xVKxvI7ouOI5I+U9s2eeiUfMaWBVoXA3AWskkrqK0VM=
-github.com/spf13/viper v1.7.0/go.mod h1:8WkrPz2fc9jxqZNCJI/76HCieCp4Q8HaLFoCha5qpdg=
 github.com/spf13/viper v1.7.1 h1:pM5oEahlgWv/WnHXpgbKz7iLIxRf65tye2Ci+XFK5sk=
 github.com/spf13/viper v1.7.1/go.mod h1:8WkrPz2fc9jxqZNCJI/76HCieCp4Q8HaLFoCha5qpdg=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
@@ -176,10 +174,14 @@ github.com/subosito/gotenv v1.2.0 h1:Slr1R9HxAlEKefgq5jn9U+DnETlIUa6HfgEzj0g5d7s
 github.com/subosito/gotenv v1.2.0/go.mod h1:N0PQaV/YGNqwC0u51sEeR/aUtSLEXKX9iv69rRypqCw=
 github.com/tmc/grpc-websocket-proxy v0.0.0-20190109142713-0ad062ec5ee5/go.mod h1:ncp9v5uamzpCO7NfCPTXjqaC+bZgJeR0sMTm6dMHP7U=
 github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2/go.mod h1:UETIi67q53MR2AWcXfiuqkDkRtnGDLqkBTpCHuJHxtU=
-gitlab.com/wwsean08/golifx v0.1.0 h1:tOIgC+5UF406kw622UR18WzKZ0x3rUC+XJEEF3ISLfc=
-gitlab.com/wwsean08/golifx v0.1.0/go.mod h1:o+No+WgKJvk1wUBWAzIEqvGKfjIEf5qUk9p7DhZWrP4=
+gitlab.com/wwsean08/golifx v0.1.1 h1:tXk1F7Y9AQluJaVBIxu+kDMMTpUs72tZYQm+vEXu67o=
+gitlab.com/wwsean08/golifx v0.1.1/go.mod h1:o+No+WgKJvk1wUBWAzIEqvGKfjIEf5qUk9p7DhZWrP4=
+gitlab.com/wwsean08/golifx v0.2.0 h1:c9Hf9iEYK62rQhQBn0BnGt8H+LiuxTeb03TgnZ2KcL4=
+gitlab.com/wwsean08/golifx v0.2.0/go.mod h1:o+No+WgKJvk1wUBWAzIEqvGKfjIEf5qUk9p7DhZWrP4=
 gitlab.com/wwsean08/streamdeck v0.0.2 h1:GLNSVhLenKEd2t+kK1qD1H7cjyrj4TMqxLrkqf+LYn0=
 gitlab.com/wwsean08/streamdeck v0.0.2/go.mod h1:PP6/8ebj5LwpDzZmT3KFMxTVWPfVkHctv/61MwHhI78=
+gitlab.com/wwsean08/streamdeck v0.0.3 h1:aLLaNmt7GKDB3Myjf0xPsUUmOKm5gZzYNfhDtLGqpNg=
+gitlab.com/wwsean08/streamdeck v0.0.3/go.mod h1:PP6/8ebj5LwpDzZmT3KFMxTVWPfVkHctv/61MwHhI78=
 go.etcd.io/bbolt v1.3.2/go.mod h1:IbVyRI1SCnLcuJnV2u8VeU0CEYM7e686BmAb1XKL+uU=
 go.opencensus.io v0.21.0/go.mod h1:mSImk1erAIZhrmZN+AvHh14ztQfjbGwt4TtuofqLduU=
 go.opencensus.io v0.22.0/go.mod h1:+kGneAE2xo2IficOXnaByMWTGM9T73dGwxeWcUqIpI8=
