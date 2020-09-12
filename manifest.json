@@ -44,6 +44,21 @@
       "Tooltip": "Set the color on LIFX devices using your Stream Deck",
       "UUID": "dev.sean.lifx.color",
       "PropertyInspectorPath": "set-color-pi.html"
+    },
+    {
+      "Icon": "brightnessAction",
+      "Name": "Set Brightness",
+      "States": [
+        {
+          "Image": "brightnessKey",
+          "TitleAlignment": "middle",
+          "FontSize": "16"
+        }
+      ],
+      "SupportedInMultiActions": true,
+      "Tooltip": "",
+      "UUID": "dev.sean.lifx.brightness",
+      "PropertyInspectorPath": "set-brightness-pi.html"
     }
   ],
   "SDKVersion": 2,
@@ -56,7 +71,7 @@
   "CategoryIcon": "categoryIcon",
   "Icon": "pluginIcon",
   "URL": "https://sean.dev",
-  "Version": "0.1.1",
+  "Version": "0.2.0",
   "OS": [
     {
       "Platform": "windows",
