@@ -46,6 +46,21 @@ compile-mac:
   except:
     - schedules
 
+generate-license-data:
+  stage: build
+  image: golang:1.14
+  before_script:
+    - go get github.com/google/go-licenses
+  script:
+    # a library I am managing has a "forbidden" license, which causes it to have a bad return code.
+    # I am ok with this so forcing it to have a clean return code via the || true
+    - go-licenses save "gitlab.com/wwsean08/lifx-streamdeck" --save_path="attribution" || true
+  artifacts:
+    paths:
+      - "attribution"
+  except:
+    - schedules
+
 generate-bundle:
   stage: dist
   image: ubuntu:20.04
@@ -59,6 +74,7 @@ generate-bundle:
     - cp property-inspector/* dev.sean.lifx.sdPlugin
     - cp images/* dev.sean.lifx.sdPlugin
     - cp LICENSE dev.sean.lifx.sdPlugin
+    - cp attribution dev.sean.lifx.sdPlugin
     - zip -r dev.sean.lifx.streamDeckPlugin dev.sean.lifx.sdPlugin
   artifacts:
     paths:
