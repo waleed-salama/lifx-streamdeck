@@ -1,5 +1,5 @@
 # LIFX Stream Deck
-[![pipeline status](https://gitlab.com/wwsean08/lifx-streamdeck/badges/master/pipeline.svg)](https://gitlab.com/wwsean08/lifx-streamdeck/-/commits/master)
+[![pipeline status](https://gitlab.com/wwsean08/lifx-streamdeck/badges/main/pipeline.svg)](https://gitlab.com/wwsean08/lifx-streamdeck/-/commits/main)
 [![discord](https://img.shields.io/discord/493162062524973056?label=discord)](https://discord.gg/PPVYMeP)
 [![license](https://img.shields.io/badge/license-MIT-brightgreen)](https://gitlab.com/wwsean08/lifx-streamdeck/-/blob/master/LICENSE)
 
