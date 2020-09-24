@@ -182,6 +182,8 @@ gitlab.com/wwsean08/streamdeck v0.0.2 h1:GLNSVhLenKEd2t+kK1qD1H7cjyrj4TMqxLrkqf+
 gitlab.com/wwsean08/streamdeck v0.0.2/go.mod h1:PP6/8ebj5LwpDzZmT3KFMxTVWPfVkHctv/61MwHhI78=
 gitlab.com/wwsean08/streamdeck v0.0.3 h1:aLLaNmt7GKDB3Myjf0xPsUUmOKm5gZzYNfhDtLGqpNg=
 gitlab.com/wwsean08/streamdeck v0.0.3/go.mod h1:PP6/8ebj5LwpDzZmT3KFMxTVWPfVkHctv/61MwHhI78=
+gitlab.com/wwsean08/streamdeck v0.0.4 h1:obP9gP3LX/yb/+VJgL+WrG5BtZDs3XGcZidnbLKNQdU=
+gitlab.com/wwsean08/streamdeck v0.0.4/go.mod h1:PP6/8ebj5LwpDzZmT3KFMxTVWPfVkHctv/61MwHhI78=
 go.etcd.io/bbolt v1.3.2/go.mod h1:IbVyRI1SCnLcuJnV2u8VeU0CEYM7e686BmAb1XKL+uU=
 go.opencensus.io v0.21.0/go.mod h1:mSImk1erAIZhrmZN+AvHh14ztQfjbGwt4TtuofqLduU=
 go.opencensus.io v0.22.0/go.mod h1:+kGneAE2xo2IficOXnaByMWTGM9T73dGwxeWcUqIpI8=
