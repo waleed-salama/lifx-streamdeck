@@ -1,3 +1,7 @@
+# v0.2.3 (WIP)
+## Fixes
+* No longer "panics" during a normal shutdown/closing of the Stream Deck application
+
 # v0.2.2
 ## Fixes
 * Fix (probably) false positive virus detection for the v0.2.1 release by downgrading to go v1.14 
