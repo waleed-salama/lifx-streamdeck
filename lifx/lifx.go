@@ -39,6 +39,7 @@ func (c *Client) Init() {
 	c.sdClient.SetOnKeyUpCallback(c.OnKeyUp)
 	c.sdClient.SetSendToPluginCallback(c.OnSendToPlugin)
 	c.sdClient.SetPropertyInspectorDidAppearCallback(c.OnPropertyInspectorDidAppear)
+	c.sdClient.SetWillAppearCallback(c.OnWillAppear)
 	if viper.GetString("application.version") == "develop" {
 		c.sdClient.SetRawCallback(c.DebugCallback)
 	}
@@ -134,6 +135,7 @@ func (c *Client) setColor(context string, settings map[string]interface{}) {
 		c.SendWarnMessage(context)
 		return
 	}
+	transition, err := strconv.ParseUint(color["transition"].(string), 10, 32)
 	hsbk := golifx.HSBK{
 		Hue:        uint16(hue * 182),
 		Saturation: uint16(saturation * 655),
@@ -151,7 +153,8 @@ func (c *Client) setColor(context string, settings map[string]interface{}) {
 			c.devices[key] = &device
 		}
 		device := c.devices[key]
-		_ = device.SetColorState(&hsbk, 0)
+		_ = device.SetColorState(&hsbk, uint32(transition))
+
 	}
 }
 

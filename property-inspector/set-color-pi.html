@@ -42,6 +42,10 @@
         <div class="sdpi-item-label">Kelvin</div>
         <input class="sdpi-item-value" min="1500" max="9000" type="number" onchange="onColorChanged()" id="kelvin" required placeholder="The kelvin temperature of white light"></input>
     </div>
+    <div class="sdpi-item">
+        <div class="sdpi-item-label">Transition</div>
+        <input class="sdpi-item-value" min="0" max="15000" type="number" onchange="onColorChanged()" id="transition" value="0" required placeholder="The transition time in milliseconds"></input>
+    </div>
 </div>
 <script>
     // this is our global websocket, used to communicate from/to Stream Deck software
@@ -70,6 +74,11 @@
             brightnessBox.value = actionInfo.payload.settings["color"]['brightness'];
             let kelvinBox = document.getElementById('kelvin');
             kelvinBox.value = actionInfo.payload.settings["color"]['kelvin'];
+            let transitionBox = document.getElementById('transition');
+            transitionBox.value = actionInfo.payload.settings['color']['transition']
+        }
+        if (!actionInfo.payload.settings["version"])  {
+            actionInfo.payload.settings["version"] = 1
         }
 
         // if connection was established, the websocket sends
@@ -231,6 +240,7 @@
         let saturationBox = document.getElementById('saturation');
         let brightnessBox = document.getElementById('brightness');
         let kelvinBox = document.getElementById('kelvin');
+        let transitionBox = document.getElementById('transition');
 
         if (!actionInfo.payload.settings["color"]) {
             actionInfo.payload.settings["color"] = {};
@@ -239,6 +249,7 @@
         actionInfo.payload.settings["color"]["saturation"] = saturationBox.value;
         actionInfo.payload.settings["color"]["brightness"] = brightnessBox.value;
         actionInfo.payload.settings["color"]["kelvin"] = kelvinBox.value;
+        actionInfo.payload.settings["color"]["transition"] = transitionBox.value
         UpdateSettings();
     }
 
