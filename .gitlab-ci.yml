@@ -89,7 +89,7 @@ virus-total-scan:
   before_script:
     - apt update && apt install -y curl jq
   script:
-    - curl --request POST --url 'https://www.virustotal.com/vtapi/v2/file/scan' -o output.json --form "apikey=$VT_API_KEY" --form --form 'file=@./dev.sean.lifx.streamDeckPlugin'
+    - curl --request POST --url 'https://www.virustotal.com/vtapi/v2/file/scan' -o output.json --form "apikey=$VT_API_KEY" --form 'file=@./dev.sean.lifx.streamDeckPlugin'
     - export SCANID=$(cat output.json | jq .sha256 | tr -d '"')
     - sleep 120
     - curl --request GET -o results.json --url "https://www.virustotal.com/vtapi/v2/file/report?apikey=$VT_API_KEY&resource=$SCANID"
