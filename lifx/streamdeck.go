@@ -12,6 +12,33 @@ func (c *Client) OnPropertyInspectorDidAppear(msg streamdeck.PropertyInspectorDi
 	c.sendDevicesToPropertyInspector(msg.Action, msg.Context, c.devices)
 }
 
+// OnWillAppear is called when an item is displayed on the stream deck
+func (c *Client) OnWillAppear(msg streamdeck.WillAppearMsg) {
+	if len(msg.Payload.Settings) == 0 {
+		//this is brand new or unconfigured
+		return
+	}
+	switch msg.Action {
+	case ActionSetColor:
+		if val, ok := msg.Payload.Settings["version"]; ok {
+			// Version set so work on migrations
+			switch val {
+
+			}
+		} else {
+			// Version was not set, so migrate to latest version
+			settings := migrateColorSettingsToV1(msg.Payload.Settings)
+			settingsMsg := streamdeck.SetSettingsMsg{
+				Context: msg.Context,
+				Event:   streamdeck.SetSettingsEvent,
+				Payload: settings,
+			}
+			c.sdClient.SendMessage(settingsMsg)
+		}
+
+	}
+}
+
 // OnSendToPlugin is called when a message is sent to the plugin (generally from the property inspector)
 func (c *Client) OnSendToPlugin(msg streamdeck.SendToPluginMsg) {
 	switch msg.Payload["type"] {
