@@ -114,3 +114,5 @@ modules.xml
 
 # End of https://www.toptal.com/developers/gitignore/api/go,jetbrains+all
 /lifx-streamdeck
+dev.sean.lifx.sdPlugin
+dev.sean.lifx.streamDeckPlugin

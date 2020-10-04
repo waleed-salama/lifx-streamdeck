@@ -3,6 +3,7 @@ stages:
   - vulnerability
   - build
   - dist
+  - antivirus
 
 variables:
   version: 0.1.0
@@ -79,5 +80,20 @@ generate-bundle:
   artifacts:
     paths:
       - dev.sean.lifx.streamDeckPlugin
+  except:
+    - schedules
+
+virus-total-scan:
+  stage: antivirus
+  image: ubuntu:20.04
+  before_script:
+    - apt update && apt install -y curl jq
+  script:
+    - curl --request POST --url 'https://www.virustotal.com/vtapi/v2/file/scan' -o output.json --form "apikey=$VT_API_KEY" --form --form 'file=@./dev.sean.lifx.streamDeckPlugin'
+    - export SCANID=$(cat output.json | jq .sha256 | tr -d '"')
+    - sleep 120
+    - curl --request GET -o results.json --url "https://www.virustotal.com/vtapi/v2/file/report?apikey=$VT_API_KEY&resource=$SCANID"
+    - echo "Positives Found $(cat results.json | jq .positives), results at $(cat results.json | jq .permalink)"
+    - exit $(cat results.json | jq .positives)
   except:
     - schedules
