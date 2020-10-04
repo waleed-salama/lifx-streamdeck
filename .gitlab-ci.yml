@@ -94,6 +94,7 @@ virus-total-scan:
     - sleep 300
     - curl --request GET -o results.json --url "https://www.virustotal.com/vtapi/v2/file/report?apikey=$VT_API_KEY&resource=$SCANID"
     - echo "Positives Found $(cat results.json | jq .positives), results at $(cat results.json | jq .permalink)"
+    # if there are 0 results then this will be successful, otherwise the job will fail.
     - exit $(cat results.json | jq .positives)
   artifacts:
     paths:
