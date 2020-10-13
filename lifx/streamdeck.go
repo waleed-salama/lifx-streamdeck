@@ -35,7 +35,21 @@ func (c *Client) OnWillAppear(msg streamdeck.WillAppearMsg) {
 			}
 			c.sdClient.SendMessage(settingsMsg)
 		}
+	case ActionSetBrightness:
+		if val, ok := msg.Payload.Settings["version"]; ok {
+			// version set so work on migrations if needed
+			switch val {
 
+			}
+		} else {
+			settings := migrateBrightnessSettingsToV1(msg.Payload.Settings)
+			settingsMsg := streamdeck.SetSettingsMsg{
+				Context: msg.Context,
+				Event:   streamdeck.SetSettingsEvent,
+				Payload: settings,
+			}
+			c.sdClient.SendMessage(settingsMsg)
+		}
 	}
 }
 

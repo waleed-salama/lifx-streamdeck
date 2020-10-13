@@ -23,6 +23,10 @@
         <div class="sdpi-item-label">Brightness</div>
         <input class="sdpi-item-value" min="0" max="100" type="number" onchange="onColorChanged()" id="brightness" required placeholder="The brightness between 0-100%"></input>
     </div>
+    <div class="sdpi-item">
+        <div class="sdpi-item-label">Transition</div>
+        <input class="sdpi-item-value" min="0" max="15000" type="number" onchange="onColorChanged()" id="transition" value="0" required placeholder="The transition time in milliseconds"></input>
+    </div>
 </div>
 <script>
     // this is our global websocket, used to communicate from/to Stream Deck software
@@ -44,6 +48,11 @@
             let brightnessBox = document.getElementById('brightness');
             brightnessBox.value = actionInfo.payload.settings['brightness'];
         }
+        if (actionInfo.payload.settings["transition"]) {
+            let transitionBox = document.getElementById('transition');
+            transitionBox.value = actionInfo.payload.settings['transition'];
+        }
+        actionInfo.payload.settings["version"] = 1
 
         // if connection was established, the websocket sends
         // an 'onopen' event, where we need to register our PI
@@ -162,6 +171,8 @@
     function onColorChanged() {
         let brightnessBox = document.getElementById('brightness');
         actionInfo.payload.settings["brightness"] = brightnessBox.value;
+        let transitionBox = document.getElementById('transition');
+        actionInfo.payload.settings["transition"] = transitionBox.value;
         UpdateSettings();
     }
 

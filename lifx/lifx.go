@@ -170,6 +170,12 @@ func (c *Client) setBrightness(context string, settings map[string]interface{}) 
 		c.SendWarnMessage(context)
 		return
 	}
+	transition, err := strconv.ParseUint(settings["transition"].(string), 10, 32)
+	if err != nil {
+		c.sdClient.Log(err.Error())
+		c.SendWarnMessage(context)
+		return
+	}
 
 	for key := range devices {
 		// Due to having to do some lookups before making the settings changes
@@ -191,7 +197,7 @@ func (c *Client) setBrightness(context string, settings map[string]interface{}) 
 			}
 			hsbk := current.Color
 			hsbk.Brightness = uint16(brightness * 655)
-			_ = device.SetColorState(hsbk, 0)
+			_ = device.SetColorState(hsbk, uint32(transition))
 		}(key)
 	}
 }

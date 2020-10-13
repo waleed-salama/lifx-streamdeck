@@ -1,6 +1,6 @@
-# v0.2.3 (WIP)
+# v0.2.3
 ## New Features
-* Setting the color of your lights now supports a transition time.  Existing configs will be set to 0 so it acts as it did before of changing instantly.  The max transition time is set to 15 seconds.
+* Setting the color or brightness of your lights now supports a transition time.  Existing configs will be set to 0 so it acts as it did before of changing instantly.  The max transition time is set to 15 seconds.
 * Automate the same virus scan that Elgato runs on every build to prevent submitting a version that will be rejected.
 
 ## Fixes

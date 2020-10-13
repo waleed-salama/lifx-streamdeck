@@ -6,3 +6,9 @@ func migrateColorSettingsToV1(settings map[string]interface{}) map[string]interf
 	colorSettings["transition"] = "0"
 	return settings
 }
+
+func migrateBrightnessSettingsToV1(settings map[string]interface{}) map[string]interface{} {
+	settings["version"] = 1
+	settings["transition"] = "0"
+	return settings
+}
