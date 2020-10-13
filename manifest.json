@@ -71,7 +71,7 @@
   "CategoryIcon": "categoryIcon",
   "Icon": "pluginIcon",
   "URL": "https://sean.dev",
-  "Version": "0.2.2",
+  "Version": "0.2.3",
   "OS": [
     {
       "Platform": "windows",
