@@ -86,6 +86,8 @@ generate-bundle:
 virus-total-scan:
   stage: antivirus
   image: ubuntu:20.04
+  # Generally failures are false positives, but they should be investigated (elgato will ask about them)
+  allow_failure: true
   before_script:
     - apt update && apt install -y curl jq
   script:
