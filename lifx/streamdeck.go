@@ -18,39 +18,69 @@ func (c *Client) OnWillAppear(msg streamdeck.WillAppearMsg) {
 		//this is brand new or unconfigured
 		return
 	}
+	settings := msg.Payload.Settings
+	var err error
 	switch msg.Action {
 	case ActionSetColor:
-		if val, ok := msg.Payload.Settings["version"]; ok {
+		if val, ok := settings["version"]; ok {
 			// Version set so work on migrations
-			switch val {
-
+			switch int(val.(float64)) {
+			case 1:
+				c.sdClient.Log("Transitioning from color v1 to color v2")
+				settings, err = migrateColorSettingsToV2(settings)
+				if err != nil {
+					c.sdClient.Log(err.Error())
+					panic(err)
+				}
+				fallthrough
+			case 2:
+				// Nothing to do yet
 			}
 		} else {
 			// Version was not set, so migrate to latest version
-			settings := migrateColorSettingsToV1(msg.Payload.Settings)
-			settingsMsg := streamdeck.SetSettingsMsg{
-				Context: msg.Context,
-				Event:   streamdeck.SetSettingsEvent,
-				Payload: settings,
-			}
-			c.sdClient.SendMessage(settingsMsg)
+			settings = migrateColorSettingsToV1(settings)
 		}
 	case ActionSetBrightness:
-		if val, ok := msg.Payload.Settings["version"]; ok {
+		if val, ok := settings["version"]; ok {
 			// version set so work on migrations if needed
-			switch val {
+			switch int(val.(float64)) {
+			case 1:
+				settings, err = migrateBrightnessSettingsToV2(settings)
+				if err != nil {
+					c.sdClient.Log(err.Error())
+					panic(err)
+				}
+				fallthrough
+			case 2:
+				// Nothing to do yet
+			}
+		} else {
+			settings = migrateBrightnessSettingsToV1(settings)
+		}
+	case ActionTurnOnDevice, ActionTurnOffDevice:
+		if val, ok := settings["version"]; ok {
+			// version set so work on migrations if needed
+			switch int(val.(float64)) {
 
 			}
 		} else {
-			settings := migrateBrightnessSettingsToV1(msg.Payload.Settings)
-			settingsMsg := streamdeck.SetSettingsMsg{
-				Context: msg.Context,
-				Event:   streamdeck.SetSettingsEvent,
-				Payload: settings,
+			settings = migratePowerSettingsToV1(settings)
+		}
+	case ActionSetWaveform:
+		// ActionSetWaveform will always have a version if it's valid
+		if val, ok := settings["version"]; ok {
+			// version set so work on migrations if needed
+			switch int(val.(float64)) {
+
 			}
-			c.sdClient.SendMessage(settingsMsg)
 		}
 	}
+	settingsMsg := streamdeck.SetSettingsMsg{
+		Context: msg.Context,
+		Event:   streamdeck.SetSettingsEvent,
+		Payload: settings,
+	}
+	c.sdClient.SendMessage(settingsMsg)
 }
 
 // OnSendToPlugin is called when a message is sent to the plugin (generally from the property inspector)
@@ -66,14 +96,16 @@ func (c *Client) OnSendToPlugin(msg streamdeck.SendToPluginMsg) {
 // OnKeyUp is called when the Stream Deck key is unpressed
 func (c *Client) OnKeyUp(msg streamdeck.KeyUpMsg) {
 	switch msg.Action {
-	case ActionTurnOnLight:
+	case ActionTurnOnDevice:
 		c.turnLights(msg.Context, msg.Payload.Settings, true)
-	case ActionTurnOffLight:
+	case ActionTurnOffDevice:
 		c.turnLights(msg.Context, msg.Payload.Settings, false)
 	case ActionSetColor:
 		c.setColor(msg.Context, msg.Payload.Settings)
 	case ActionSetBrightness:
 		c.setBrightness(msg.Context, msg.Payload.Settings)
+	case ActionSetWaveform:
+		c.setWaveform(msg.Context, msg.Payload.Settings)
 	default:
 		c.SendWarnMessage(msg.Context)
 		c.sdClient.Log(fmt.Sprintf("Unknown action received %s", msg.Action))

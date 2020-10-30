@@ -34,6 +34,11 @@
             actionInfo = JSON.parse(inActionInfo); // cache the info
             websocket = new WebSocket('ws://localhost:' + inPort);
 
+            if (!actionInfo.payload.settings["devices"]) {
+                actionInfo.payload.settings["devices"] = [];
+            }
+            actionInfo.payload.settings["version"] = 1
+
             // if connection was established, the websocket sends
             // an 'onopen' event, where we need to register our PI
             websocket.onopen = function () {
@@ -106,30 +111,33 @@
                 }
             )
 
-            let keys = Object.keys(actionInfo.payload.settings);
-            keys.forEach(key => {
-                const exists = document.getElementById(key) !== null;
+            const tempDevices = actionInfo.payload.settings["devices"]
+            for (let index = 0; index < tempDevices.length; index++) {
+                const device = tempDevices[index];
+                const exists = document.getElementById(device["mac"]);
                 if (!exists) {
                     let tmpDevice = document.createElement('div');
                     tmpDevice.setAttribute("class", "sdpi-item-child");
                     tmpDevice.innerHTML = `
-                <input id=${key} type="checkbox" value=${key}>
-                <label for=${key} class="sdpi-item-label"><span></span>${actionInfo.payload.settings[key]}</label>
+                <input id=${tmpDevice["mac"]} type="checkbox" value=${tmpDevice["label"]}>
+                <label for=${tmpDevice["mac"]} class="sdpi-item-label"><span></span>${tmpDevice["label"]}</label>
                 `
                     deviceContainer.append(tmpDevice);
                 }
-            })
-            if (devices.length === 0 && keys.length === 0) {
+            }
+            if (devices.length === 0 && tempDevices.length === 0) {
                 deviceContainer.innerText = 'No devices found.  Please verify your devices are turned on and try again.';
             }
 
             let children = deviceContainer.getElementsByTagName("input");
             for (let i = 0; i < children.length; i++) {
                 children[i].onclick = onCheckBoxClicked;
-                if (actionInfo.payload.settings[children[i].id]) {
-                    // if the device is in the settings then we want to control it
-                    children[i].setAttribute("checked", "true");
-                }
+                for (let index = 0; index < tempDevices.length; index++)
+                    if (tempDevices[index].mac === children[i].id) {
+                        // if the device is in the settings then we want to control it
+                        children[i].setAttribute("checked", "true");
+                        break
+                    }
             }
         }
 
@@ -142,12 +150,25 @@
         }
 
         function RemoveDevice(deviceMac) {
-            delete actionInfo.payload.settings[deviceMac];
+            let foundIndex = -1;
+            const devices = actionInfo.payload.settings["devices"];
+            for (let index = 0; index < devices.length; index++) {
+                const device = devices[index];
+                if (device["mac"] === deviceMac) {
+                    foundIndex = index;
+                }
+            }
+            if (foundIndex >= 0) {
+                actionInfo.payload.settings["devices"].splice(foundIndex, 1)
+            } else {
+                console.log("No device found with mac ", deviceMac)
+            }
             UpdateDevices();
         }
 
         function AddDevice(deviceMac, deviceLabel) {
-            actionInfo.payload.settings[deviceMac] = deviceLabel;
+            device = {"mac": deviceMac, "label": deviceLabel};
+            actionInfo.payload.settings["devices"].push(device);
             UpdateDevices();
         }
 

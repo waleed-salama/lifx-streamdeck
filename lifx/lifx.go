@@ -4,8 +4,8 @@ import (
 	"encoding/binary"
 	"strconv"
 	"strings"
-	"time"
 
+	"github.com/mitchellh/mapstructure"
 	"github.com/spf13/viper"
 	"gitlab.com/wwsean08/golifx"
 	"gitlab.com/wwsean08/streamdeck"
@@ -84,100 +84,71 @@ func (c *Client) getAllDevices() (map[string]*golifx.Device, error) {
 }
 
 func (c *Client) turnLights(context string, settings map[string]interface{}, on bool) {
-	golifx.SetTTL(1 * time.Millisecond)
-	defer golifx.SetTTL(time.Millisecond * 500)
-	for key := range settings {
-		if c.devices[key] == nil {
-			device := golifx.Device{}
-			address, err := macToUint64(key)
+	powerSettings := new(PowerSettings)
+	err := mapstructure.Decode(settings, powerSettings)
+	if err != nil {
+		c.sdClient.Log(err.Error())
+		c.SendWarnMessage(context)
+		return
+	}
+	for _, device := range powerSettings.Devices {
+		if c.devices[device.Mac] == nil {
+			tmpDevice := golifx.Device{}
+			address, err := macToUint64(device.Mac)
 			if err != nil {
 				c.sdClient.Log(err.Error())
 				c.SendWarnMessage(context)
 			}
 			// Not sure why I need this bit shift but via testing this is what I determined I needed, may be fragile
 			address = address >> 16
-			device.SetHardwareAddress(address)
-			c.devices[key] = &device
+			tmpDevice.SetHardwareAddress(address)
+			c.devices[device.Mac] = &tmpDevice
 		}
-		device := c.devices[key]
+		device := c.devices[device.Mac]
 		_ = device.SetPowerState(on)
 	}
 }
 
 func (c *Client) setColor(context string, settings map[string]interface{}) {
-	devices := settings["devices"].(map[string]interface{})
-	if len(devices) == 0 {
-		// no devices to change so return quickly
-		return
-	}
-	color := settings["color"].(map[string]interface{})
-	hue, err := strconv.ParseUint(color["hue"].(string), 10, 16)
+	colorSettings := new(ColorSettings)
+	err := mapstructure.Decode(settings, colorSettings)
 	if err != nil {
 		c.sdClient.Log(err.Error())
 		c.SendWarnMessage(context)
 		return
 	}
-	saturation, err := strconv.ParseUint(color["saturation"].(string), 10, 16)
-	if err != nil {
-		c.sdClient.Log(err.Error())
-		c.SendWarnMessage(context)
-		return
-	}
-	brightness, err := strconv.ParseUint(color["brightness"].(string), 10, 16)
-	if err != nil {
-		c.sdClient.Log(err.Error())
-		c.SendWarnMessage(context)
-		return
-	}
-	kelvin, err := strconv.ParseUint(color["kelvin"].(string), 10, 16)
-	if err != nil {
-		c.sdClient.Log(err.Error())
-		c.SendWarnMessage(context)
-		return
-	}
-	transition, err := strconv.ParseUint(color["transition"].(string), 10, 32)
+	hue, saturation, brightness, kelvin, transition := colorSettings.Color.GenerateLIFXValues()
+
 	hsbk := golifx.HSBK{
-		Hue:        uint16(hue * 182),
-		Saturation: uint16(saturation * 655),
-		Brightness: uint16(brightness * 655),
-		Kelvin:     uint16(kelvin),
+		Hue:        hue,
+		Saturation: saturation,
+		Brightness: brightness,
+		Kelvin:     kelvin,
 	}
 
-	golifx.SetTTL(time.Millisecond * 1)
-	defer golifx.SetTTL(time.Millisecond * 500)
-	for key := range devices {
-		if c.devices[key] == nil {
-			device := golifx.Device{}
-			mac, _ := macToUint64(key)
-			device.SetHardwareAddress(mac)
-			c.devices[key] = &device
+	for _, device := range colorSettings.Devices {
+		if c.devices[device.Mac] == nil {
+			tmpDevice := golifx.Device{}
+			mac, _ := macToUint64(device.Mac)
+			tmpDevice.SetHardwareAddress(mac)
+			c.devices[device.Mac] = &tmpDevice
 		}
-		device := c.devices[key]
-		_ = device.SetColorState(&hsbk, uint32(transition))
+		device := c.devices[device.Mac]
+		_ = device.SetColorState(&hsbk, transition)
 
 	}
 }
 
 func (c *Client) setBrightness(context string, settings map[string]interface{}) {
-	devices := settings["devices"].(map[string]interface{})
-	if len(devices) == 0 {
-		// no devices to change so return quickly
-		return
-	}
-	brightness, err := strconv.ParseUint(settings["brightness"].(string), 10, 16)
-	if err != nil {
-		c.sdClient.Log(err.Error())
-		c.SendWarnMessage(context)
-		return
-	}
-	transition, err := strconv.ParseUint(settings["transition"].(string), 10, 32)
+	brightnessSettings := new(BrightnessSettings)
+	err := mapstructure.Decode(settings, brightnessSettings)
 	if err != nil {
 		c.sdClient.Log(err.Error())
 		c.SendWarnMessage(context)
 		return
 	}
 
-	for key := range devices {
+	for _, device := range brightnessSettings.Devices {
 		// Due to having to do some lookups before making the settings changes
 		// i'm running these each in their own thread, that way they (to the eye)
 		//  happen simultaneously.
@@ -196,12 +167,25 @@ func (c *Client) setBrightness(context string, settings map[string]interface{}) 
 				return
 			}
 			hsbk := current.Color
-			hsbk.Brightness = uint16(brightness * 655)
-			_ = device.SetColorState(hsbk, uint32(transition))
-		}(key)
+			hsbk.Brightness = uint16(brightnessSettings.Brightness * 655)
+			_ = device.SetColorState(hsbk, brightnessSettings.Transition)
+		}(device.Mac)
 	}
 }
 
+func (c *Client) setWaveform(context string, settings map[string]interface{}) {
+	waveFormSettings := new(WaveFormSettings)
+	err := mapstructure.Decode(settings, waveFormSettings)
+	if err != nil {
+		c.sdClient.Log(err.Error())
+		c.SendWarnMessage(context)
+		return
+	}
+
+}
+
+//macToUint64 takes a mac address string and converts it to a mac address that
+// LIFX will understand
 func macToUint64(mac string) (uint64, error) {
 	macMinusColons := strings.Replace(mac, ":", "", -1)
 	decMac, err := strconv.ParseUint(macMinusColons, 16, 64)
