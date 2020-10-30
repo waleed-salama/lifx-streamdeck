@@ -18,63 +18,8 @@ func (c *Client) OnWillAppear(msg streamdeck.WillAppearMsg) {
 		//this is brand new or unconfigured
 		return
 	}
-	settings := msg.Payload.Settings
-	var err error
-	switch msg.Action {
-	case ActionSetColor:
-		if val, ok := settings["version"]; ok {
-			// Version set so work on migrations
-			switch int(val.(float64)) {
-			case 1:
-				c.sdClient.Log("Transitioning from color v1 to color v2")
-				settings, err = migrateColorSettingsToV2(settings)
-				if err != nil {
-					c.sdClient.Log(err.Error())
-					panic(err)
-				}
-				fallthrough
-			case 2:
-				// Nothing to do yet
-			}
-		} else {
-			// Version was not set, so migrate to latest version
-			settings = migrateColorSettingsToV1(settings)
-		}
-	case ActionSetBrightness:
-		if val, ok := settings["version"]; ok {
-			// version set so work on migrations if needed
-			switch int(val.(float64)) {
-			case 1:
-				settings, err = migrateBrightnessSettingsToV2(settings)
-				if err != nil {
-					c.sdClient.Log(err.Error())
-					panic(err)
-				}
-				fallthrough
-			case 2:
-				// Nothing to do yet
-			}
-		} else {
-			settings = migrateBrightnessSettingsToV1(settings)
-		}
-	case ActionTurnOnDevice, ActionTurnOffDevice:
-		if val, ok := settings["version"]; ok {
-			// version set so work on migrations if needed
-			switch int(val.(float64)) {
-
-			}
-		} else {
-			settings = migratePowerSettingsToV1(settings)
-		}
-	case ActionSetWaveform:
-		// ActionSetWaveform will always have a version if it's valid
-		if val, ok := settings["version"]; ok {
-			// version set so work on migrations if needed
-			switch int(val.(float64)) {
-
-			}
-		}
-	}
+	// Migrate settings if needed
+	settings := c.Migrate(msg.Payload.Settings, msg.Action)
 	settingsMsg := streamdeck.SetSettingsMsg{
 		Context: msg.Context,
 		Event:   streamdeck.SetSettingsEvent,

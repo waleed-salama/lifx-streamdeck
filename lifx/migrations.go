@@ -2,6 +2,67 @@ package lifx
 
 import "strconv"
 
+//Migrate migrates the schema of settings objects
+func (c *Client) Migrate(settings map[string]interface{}, action string) map[string]interface{} {
+	var err error
+	switch action {
+	case ActionSetColor:
+		if val, ok := settings["version"]; ok {
+
+			switch int(val.(float64)) {
+			case 1:
+				c.sdClient.Log("Transitioning from color v1 to color v2")
+				settings, err = migrateColorSettingsToV2(settings)
+				if err != nil {
+					c.sdClient.Log(err.Error())
+					panic(err)
+				}
+				fallthrough
+			case 2:
+
+			}
+		} else {
+
+			settings = migrateColorSettingsToV1(settings)
+		}
+	case ActionSetBrightness:
+		if val, ok := settings["version"]; ok {
+
+			switch int(val.(float64)) {
+			case 1:
+				settings, err = migrateBrightnessSettingsToV2(settings)
+				if err != nil {
+					c.sdClient.Log(err.Error())
+					panic(err)
+				}
+				fallthrough
+			case 2:
+
+			}
+		} else {
+			settings = migrateBrightnessSettingsToV1(settings)
+		}
+	case ActionTurnOnDevice, ActionTurnOffDevice:
+		if val, ok := settings["version"]; ok {
+
+			switch int(val.(float64)) {
+
+			}
+		} else {
+			settings = migratePowerSettingsToV1(settings)
+		}
+	case ActionSetWaveform:
+
+		if val, ok := settings["version"]; ok {
+
+			switch int(val.(float64)) {
+
+			}
+		}
+	}
+	return settings
+}
+
 func migrateColorSettingsToV1(settings map[string]interface{}) map[string]interface{} {
 	settings["version"] = 1
 	colorSettings := settings["color"].(map[string]interface{})
