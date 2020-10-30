@@ -1,6 +1,7 @@
 ---
 stages:
   - vulnerability
+  - test
   - build
   - dist
   - antivirus
@@ -20,6 +21,15 @@ snyk-scan:
     - npm install -g snyk
     - snyk auth $SNYK_TOKEN
     - snyk test
+
+test:
+  stage: test
+  image: golang:1.14
+  script:
+    - go mod download
+    - go test ./...
+  except:
+    - schedules
 
 compile-windows:
   stage: build
