@@ -19,7 +19,11 @@ func (c *Client) OnWillAppear(msg streamdeck.WillAppearMsg) {
 		return
 	}
 	// Migrate settings if needed
-	settings := c.Migrate(msg.Payload.Settings, msg.Action)
+	settings, err := c.Migrate(msg.Payload.Settings, msg.Action)
+	if err != nil {
+		c.sdClient.Log(err.Error())
+		panic(err)
+	}
 	settingsMsg := streamdeck.SetSettingsMsg{
 		Context: msg.Context,
 		Event:   streamdeck.SetSettingsEvent,
