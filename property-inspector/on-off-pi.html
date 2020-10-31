@@ -3,13 +3,14 @@
     <title>My Property Inspector</title>
     <link rel="stylesheet" href="sdpi.css">
     <link rel="stylesheet" href="custom.css">
+    <script type="text/javascript" src="utils.js"></script>
 </head>
 
 <body>
     <div class="sdpi-wrapper" id="global-wrapper">
         <div class="sdpi-item" id="discover-container">
             <div class="sdpi-item-label empty"></div>
-            <button class="sdpi-item-value" id="discovery" onclick="discoverDevices()">Discover Devices</button>
+            <button class="sdpi-item-value" id="discovery" onclick="DiscoverDevices()">Discover Devices</button>
         </div>
         <div class="sdpi-item" id="device_select">
             <div class="sdpi-item-label">Device</div>
@@ -60,31 +61,6 @@
                     }
                 }
             }
-        }
-
-        // our method to pass values to the plugin
-        function sendValueToPlugin(param, value) {
-            if (websocket) {
-                const json = {
-                    "action": actionInfo['action'],
-                    "event": "sendToPlugin",
-                    "context": uuid,
-                    "payload": {
-                        [param] : value
-                    }
-                };
-                websocket.send(JSON.stringify(json));
-            }
-        }
-
-        function discoverDevices() {
-            sendValueToPlugin('type', 'discovery');
-            let container = document.getElementById('discover-container');
-            let discoveryButton = document.getElementById('discovery');
-            let loader = document.createElement('div');
-            loader.setAttribute('class', 'loader');
-            discoveryButton.setAttribute('disabled', 'disabled');
-            container.append(loader);
         }
 
         function devicesDiscovered(data) {
@@ -146,41 +122,6 @@
                 AddDevice(this.value, this.nextElementSibling.textContent);
             } else {
                 RemoveDevice(this.value);
-            }
-        }
-
-        function RemoveDevice(deviceMac) {
-            let foundIndex = -1;
-            const devices = actionInfo.payload.settings["devices"];
-            for (let index = 0; index < devices.length; index++) {
-                const device = devices[index];
-                if (device["mac"] === deviceMac) {
-                    foundIndex = index;
-                }
-            }
-            if (foundIndex >= 0) {
-                actionInfo.payload.settings["devices"].splice(foundIndex, 1)
-            } else {
-                console.log("No device found with mac ", deviceMac)
-            }
-            UpdateDevices();
-        }
-
-        function AddDevice(deviceMac, deviceLabel) {
-            device = {"mac": deviceMac, "label": deviceLabel};
-            actionInfo.payload.settings["devices"].push(device);
-            UpdateDevices();
-        }
-
-        function UpdateDevices() {
-            if (websocket) {
-                const json = {
-                    "action": actionInfo.action,
-                    "event": "setSettings",
-                    "context": uuid,
-                    "payload": actionInfo.payload.settings
-                };
-                websocket.send(JSON.stringify(json));
             }
         }
     </script>
