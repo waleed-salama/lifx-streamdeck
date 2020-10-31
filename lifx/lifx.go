@@ -181,7 +181,24 @@ func (c *Client) setWaveform(context string, settings map[string]interface{}) {
 		c.SendWarnMessage(context)
 		return
 	}
-
+	hue, saturation, brightness, kelvin, _ := waveFormSettings.AlternateColor.GenerateLIFXValues()
+	hsbk := &golifx.HSBK{
+		Hue:        hue,
+		Saturation: saturation,
+		Brightness: brightness,
+		Kelvin:     kelvin,
+	}
+	for _, device := range waveFormSettings.Devices {
+		if c.devices[device.Mac] == nil {
+			tmpDevice := golifx.Device{}
+			mac, _ := macToUint64(device.Mac)
+			tmpDevice.SetHardwareAddress(mac)
+			c.devices[device.Mac] = &tmpDevice
+		}
+		deviceToModify := c.devices[device.Mac]
+		_, _ = deviceToModify.SetWaveform(waveFormSettings.IsTransient, hsbk, waveFormSettings.Period,
+			waveFormSettings.Cycles, waveFormSettings.GetSkewRatio(), waveFormSettings.Waveform)
+	}
 }
 
 //macToUint64 takes a mac address string and converts it to a mac address that
