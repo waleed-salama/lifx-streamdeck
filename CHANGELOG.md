@@ -1,4 +1,4 @@
-# v0.3.0 (WIP) 
+# v0.3.0
 ## New Features
 * Add support for LIFX Waveform functionality.
 
