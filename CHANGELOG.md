@@ -1,4 +1,8 @@
 # vNext (WIP)
+## New Features
+* Add a toggle button to allow toggling device(s) on/off at a click of a button.
+  * This will toggle each individual light and does not keep a state so of some are on and some are off, each will turn on/off depending on their current status.
+
 ## Fixes
 * Performance improvement which should keep lights more in sync when pressing a button that affects multiple lights.
 

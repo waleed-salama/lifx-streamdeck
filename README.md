@@ -25,15 +25,17 @@ Once you have uninstalled the plugin you can follow the Installation instruction
 ### Setting the devices power state
 You are able to turn devices on or off using the respective actions.  Doing this can control more than one device at once
 
+### Toggle the device power state
+You can use the toggle action to turn on or off devices depending on its current power state.
+
 ### Setting the devices color
 You are able to set a device or multiple devices color at the push of a button.  In order to make configuration of the color simpler, you are able to choose a device and copy its current settings and store them as the settings for that action.  You can also leverage this in a multi-action to turn on a device, set it's color, or maybe eve change between a few colors every couple seconds for a short period of time.
 
 ### Setting the brightness independent of color
-You can change the devices brightness independent of it's current color (as brightness is one of the arguments of setting a color).
+You can change the device's brightness independent of its current color (as brightness is one of the arguments of setting a color).
 
 ### Setting the wave effect
 You can setup a "wave" effect where your button press causes the device to go between two colors over time.  For more information on how the settings work I recommend reading LIFX's [official documentation](https://lan.developer.lifx.com/docs/waveforms).
-
 
 ## Known Issues
 1. Sometimes the device mac address is shown instead of the devices label, if the devices label isn't returned in time then the mac address will be shown as opposed to nothing.
