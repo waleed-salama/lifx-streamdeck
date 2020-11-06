@@ -42,7 +42,11 @@ func (c *Client) Migrate(settings map[string]interface{}, action string) (map[st
 	case ActionTurnOnDevice, ActionTurnOffDevice:
 		if val, ok := settings["version"]; ok {
 			switch val {
-			// no migrations for this yet
+			case 1:
+				settings = migratePowerSettingsToV2(settings)
+				fallthrough
+			case 2:
+				// doesn't exist yet
 			}
 		} else {
 			settings = migratePowerSettingsToV1(settings)
@@ -154,4 +158,10 @@ func migratePowerSettingsToV1(settings map[string]interface{}) map[string]interf
 	newSettings["version"] = 1
 	newSettings["devices"] = devices
 	return newSettings
+}
+
+func migratePowerSettingsToV2(settings map[string]interface{}) map[string]interface{} {
+	settings["version"] = 2
+	settings["transition"] = 0
+	return settings
 }

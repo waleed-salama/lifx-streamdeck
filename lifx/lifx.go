@@ -106,7 +106,7 @@ func (c *Client) turnLights(context string, settings map[string]interface{}, on 
 		}
 		lifxDevice := c.devices[device.Mac]
 		go func() {
-			_ = lifxDevice.SetPowerState(on)
+			_ = lifxDevice.SetPowerDurationState(on, powerSettings.Transition)
 		}()
 	}
 }
@@ -233,7 +233,7 @@ func (c *Client) togglePower(context string, settings map[string]interface{}) {
 			if err != nil {
 				return
 			}
-			_ = lifxDevice.SetPowerState(!state)
+			_ = lifxDevice.SetPowerDurationState(!state, toggleSettings.Transition)
 		}()
 	}
 }

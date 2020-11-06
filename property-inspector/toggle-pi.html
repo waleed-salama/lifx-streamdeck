@@ -20,6 +20,10 @@
                 </div>
             </div>
         </div>
+        <div class="sdpi-item">
+            <div class="sdpi-item-label">Transition</div>
+            <input class="sdpi-item-value" min="0" max="15000" type="number" onchange="onTransitionChanged()" id="transition" value="0" required placeholder="The transition time in milliseconds"></input>
+        </div>
     </div>
     <script>
         // this is our global websocket, used to communicate from/to Stream Deck software
@@ -38,7 +42,14 @@
             if (!actionInfo.payload.settings["devices"]) {
                 actionInfo.payload.settings["devices"] = [];
             }
-            actionInfo.payload.settings["version"] = 1
+            if (!actionInfo.payload.settings["transition"]) {
+                actionInfo.payload.settings["transition"] = 0;
+            } else {
+                const transitionBox = document.getElementById("transition");
+                transitionBox.value = actionInfo.payload.settings["transition"];
+            }
+            actionInfo.payload.settings["version"] = 1;
+
 
             // if connection was established, the websocket sends
             // an 'onopen' event, where we need to register our PI
@@ -70,7 +81,8 @@
             let loader = discoveryContainer.getElementsByClassName("loader");
             for (let i = 0; i < loader.length; i++) {
                 loader[i].remove();
-            }
+            }const transitionBox = document.getElementById("transition")
+                transitionBox.value = actionInfo.payload.settings["transition"]
 
             discoveryButton.removeAttribute('disabled');
 
@@ -123,6 +135,12 @@
             } else {
                 RemoveDevice(this.value);
             }
+        }
+
+        function onTransitionChanged() {
+            const transitionBox = document.getElementById("transition");
+            actionInfo.payload.settings["transition"] = parseInt(transitionBox.value, 10);
+            UpdateSettings();
         }
     </script>
 </body>
