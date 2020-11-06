@@ -22,7 +22,7 @@
         </div>
         <div class="sdpi-item">
             <div class="sdpi-item-label">Transition</div>
-            <input class="sdpi-item-value" min="0" max="15000" type="number" onchange="onTransitionChanged()" id="transition" value="0" required placeholder="The transition time in milliseconds"></input>
+            <input class="sdpi-item-value" min="0" max="15000" type="number" onchange="onTransitionChanged()" id="transition" value="0" required placeholder="The transition time in milliseconds" />
         </div>
     </div>
     <script>
@@ -129,7 +129,7 @@
             }
         }
 
-        function onCheckBoxClicked(e) {
+        function onCheckBoxClicked() {
             if (this.checked) {
                 AddDevice(this.value, this.nextElementSibling.textContent);
             } else {
