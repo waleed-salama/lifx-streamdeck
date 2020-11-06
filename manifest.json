@@ -65,7 +65,7 @@
       "Name": "Set Waveform",
       "States": [
         {
-          "Image": "brightnessKey",
+          "Image": "waveKey",
           "TitleAlignment": "middle",
           "FontSize": "16"
         }
