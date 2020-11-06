@@ -15,6 +15,7 @@ func TestMigratePowerFromUnversionedToCurrent(t *testing.T) {
 
 	settings = migratePowerSettingsToV1(settings)
 	require.Equal(t, 1, settings["version"])
+	require.Len(t, settings["devices"], 1)
 	devices := settings["devices"].([]map[string]interface{})
 	require.Equal(t, "d0:73:d5:2b:a7:b8", devices[0]["mac"])
 	require.Equal(t, "Beam", devices[0]["name"])
@@ -58,6 +59,7 @@ func TestMigrateColorSettingsFromUnversionedToCurrent(t *testing.T) {
 	require.Equal(t, uint64(5000), colorSettings["kelvin"])
 	require.Equal(t, uint64(0), colorSettings["transition"])
 
+	require.Len(t, deviceSettings, 3)
 	_a7b8FoundTimes := 0
 	_8605FoundTimes := 0
 	_dc6dFoundTimes := 0
@@ -120,115 +122,5 @@ func TestMigrateBrightnessSettingsFromUnversionedToCurrent(t *testing.T) {
 }
 
 func TestMigrateWaveformSettingsFromV1ToCurrent(t *testing.T) {
-	// there are no migrations
-}
-
-func TestMigrate(t *testing.T) {
-	require := require.New(t)
-	testCases := []struct {
-		desc             string
-		client           *Client
-		settings         map[string]interface{}
-		expectedSettings map[string]interface{}
-		action           string
-		expectErr        bool
-	}{
-		{
-			desc:   "Test Migrate v0 to current color settings",
-			client: &Client{},
-			settings: map[string]interface{}{
-				"color": map[string]interface{}{
-					"hue":        "90",
-					"saturation": "100",
-					"brightness": "100",
-					"kelvin":     "5000",
-				},
-				"devices": map[string]interface{}{
-					"d0:73:d5:2b:a7:b8": "Beam",
-					"d0:73:d5:3c:86:05": "Office 1",
-					"d0:73:d5:3c:dc:6d": "Office 2",
-				},
-			},
-			expectedSettings: map[string]interface{}{
-				"version": 2,
-				"color": map[string]interface{}{
-					"hue":        uint64(90),
-					"saturation": uint64(100),
-					"brightness": uint64(100),
-					"kelvin":     uint64(5000),
-					"transition": uint64(0),
-				},
-				"devices": []map[string]interface{}{
-					{"mac": "d0:73:d5:2b:a7:b8", "name": "Beam"},
-					{"mac": "d0:73:d5:3c:86:05", "name": "Office 1"},
-					{"mac": "d0:73:d5:3c:dc:6d", "name": "Office 2"},
-				},
-			},
-			action:    ActionSetColor,
-			expectErr: false,
-		},
-		{
-			desc:   "Test Migrate v0 to current brightness settings",
-			client: &Client{},
-			settings: map[string]interface{}{
-				"brightness": "50",
-				"devices": map[string]interface{}{
-					"d0:73:d5:2b:a7:b8": "Beam",
-					"d0:73:d5:3c:dc:6d": "Office 2",
-				},
-			},
-			expectedSettings: map[string]interface{}{
-				"version":    2,
-				"brightness": uint64(50),
-				"transition": uint64(0),
-				"devices": []map[string]interface{}{
-					{"mac": "d0:73:d5:2b:a7:b8", "name": "Beam"},
-					{"mac": "d0:73:d5:3c:dc:6d", "name": "Office 2"},
-				},
-			},
-			action:    ActionSetBrightness,
-			expectErr: false,
-		},
-		{
-			desc:   "Test Migrate v0 to current power settings",
-			client: &Client{},
-			settings: map[string]interface{}{
-				"d0:73:d5:2b:a7:b8": "Beam",
-			},
-			expectedSettings: map[string]interface{}{
-				"version": 1,
-				"devices": []map[string]interface{}{
-					{"mac": "d0:73:d5:2b:a7:b8", "name": "Beam"},
-				},
-			},
-			action:    ActionTurnOffDevice,
-			expectErr: false,
-		},
-		{
-			desc:   "Test Migrate v0 to current power settings",
-			client: &Client{},
-			settings: map[string]interface{}{
-				"d0:73:d5:2b:a7:b8": "Beam",
-			},
-			expectedSettings: map[string]interface{}{
-				"version": 1,
-				"devices": []map[string]interface{}{
-					{"mac": "d0:73:d5:2b:a7:b8", "name": "Beam"},
-				},
-			},
-			action:    ActionTurnOnDevice,
-			expectErr: false,
-		},
-	}
-	for _, tC := range testCases {
-		t.Run(tC.desc, func(t *testing.T) {
-			settings, err := tC.client.Migrate(tC.settings, tC.action)
-			if tC.expectErr {
-				require.Error(err)
-			} else {
-				require.NoError(err)
-			}
-			require.Equal(tC.expectedSettings, settings)
-		})
-	}
+	// there are no migrations yet
 }
