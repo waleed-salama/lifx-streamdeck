@@ -104,8 +104,10 @@ func (c *Client) turnLights(context string, settings map[string]interface{}, on 
 			tmpDevice.SetHardwareAddress(address)
 			c.devices[device.Mac] = &tmpDevice
 		}
-		device := c.devices[device.Mac]
-		_ = device.SetPowerState(on)
+		lifxDevice := c.devices[device.Mac]
+		go func() {
+			_ = lifxDevice.SetPowerState(on)
+		}()
 	}
 }
 
@@ -133,8 +135,10 @@ func (c *Client) setColor(context string, settings map[string]interface{}) {
 			tmpDevice.SetHardwareAddress(mac)
 			c.devices[device.Mac] = &tmpDevice
 		}
-		device := c.devices[device.Mac]
-		_ = device.SetColorState(&hsbk, transition)
+		lifxDevice := c.devices[device.Mac]
+		go func() {
+			_ = lifxDevice.SetColorState(&hsbk, transition)
+		}()
 
 	}
 }
@@ -149,18 +153,16 @@ func (c *Client) setBrightness(context string, settings map[string]interface{}) 
 	}
 
 	for _, device := range brightnessSettings.Devices {
-		// Due to having to do some lookups before making the settings changes
-		// i'm running these each in their own thread, that way they (to the eye)
-		//  happen simultaneously.
-		go func(key string) {
-			if c.devices[key] == nil {
-				device := golifx.Device{}
-				mac, _ := macToUint64(key)
-				device.SetHardwareAddress(mac)
-				c.devices[key] = &device
-			}
-			device := c.devices[key]
-			current, err := device.GetColorState()
+		if c.devices[device.Mac] == nil {
+			tmpDevice := golifx.Device{}
+			mac, _ := macToUint64(device.Mac)
+			tmpDevice.SetHardwareAddress(mac)
+			c.devices[device.Mac] = &tmpDevice
+		}
+		lifxDevice := c.devices[device.Mac]
+
+		go func() {
+			current, err := lifxDevice.GetColorState()
 			if err != nil {
 				c.sdClient.Log(err.Error())
 				c.SendWarnMessage(context)
@@ -168,8 +170,8 @@ func (c *Client) setBrightness(context string, settings map[string]interface{}) 
 			}
 			hsbk := current.Color
 			hsbk.Brightness = uint16(brightnessSettings.Brightness * 655)
-			_ = device.SetColorState(hsbk, brightnessSettings.Transition)
-		}(device.Mac)
+			_ = lifxDevice.SetColorState(hsbk, brightnessSettings.Transition)
+		}()
 	}
 }
 
@@ -195,9 +197,12 @@ func (c *Client) setWaveform(context string, settings map[string]interface{}) {
 			tmpDevice.SetHardwareAddress(mac)
 			c.devices[device.Mac] = &tmpDevice
 		}
-		deviceToModify := c.devices[device.Mac]
-		_, _ = deviceToModify.SetWaveform(waveFormSettings.IsTransient, hsbk, waveFormSettings.Period,
-			waveFormSettings.Cycles, waveFormSettings.GetSkewRatio(), waveFormSettings.Waveform)
+		lifxDevice := c.devices[device.Mac]
+		go func() {
+			_, _ = lifxDevice.SetWaveform(waveFormSettings.IsTransient, hsbk, waveFormSettings.Period,
+				waveFormSettings.Cycles, waveFormSettings.GetSkewRatio(), waveFormSettings.Waveform)
+		}()
+
 	}
 }
 
