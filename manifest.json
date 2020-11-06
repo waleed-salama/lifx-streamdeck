@@ -31,6 +31,21 @@
       "PropertyInspectorPath": "on-off-pi.html"
     },
     {
+      "Icon": "toggleAction",
+      "Name": "Toggle LIFX Power",
+      "States": [
+        {
+          "Image": "toggleKey",
+          "TitleAlignment": "middle",
+          "FontSize": "16"
+        }
+      ],
+      "SupportedInMultiActions": true,
+      "Tooltip": "Turn on or off LIFX devices using your Stream Deck",
+      "UUID": "dev.sean.lifx.toggle",
+      "PropertyInspectorPath": "toggle-pi.html"
+    },
+    {
       "Icon": "colorAction",
       "Name": "Set LIFX Color",
       "States": [
@@ -86,7 +101,7 @@
   "CategoryIcon": "categoryIcon",
   "Icon": "pluginIcon",
   "URL": "https://sean.dev",
-  "Version": "0.3.0",
+  "Version": "0.3.1",
   "OS": [
     {
       "Platform": "windows",

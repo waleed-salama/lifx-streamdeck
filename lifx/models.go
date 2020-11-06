@@ -1,7 +1,7 @@
 package lifx
 
 type (
-	//Device represents a devie in the Stream Deck settings
+	//Device represents a device in the Stream Deck settings
 	Device struct {
 		Name string `mapstructure:"name"`
 		Mac  string `mapstructure:"mac"`
@@ -18,6 +18,11 @@ type (
 
 	//PowerSettings represents the on/off action settings
 	PowerSettings struct {
+		Version int      `mapstructure:"version"`
+		Devices []Device `mapstructure:"devices"`
+	}
+
+	ToggleSettings struct {
 		Version int      `mapstructure:"version"`
 		Devices []Device `mapstructure:"devices"`
 	}

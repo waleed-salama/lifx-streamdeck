@@ -55,6 +55,8 @@ func (c *Client) OnKeyUp(msg streamdeck.KeyUpMsg) {
 		c.setBrightness(msg.Context, msg.Payload.Settings)
 	case ActionSetWaveform:
 		c.setWaveform(msg.Context, msg.Payload.Settings)
+	case ActionToggleDevice:
+		c.togglePower(msg.Context, msg.Payload.Settings)
 	default:
 		c.SendWarnMessage(msg.Context)
 		c.sdClient.Log(fmt.Sprintf("Unknown action received %s", msg.Action))

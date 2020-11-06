@@ -42,17 +42,22 @@ func (c *Client) Migrate(settings map[string]interface{}, action string) (map[st
 	case ActionTurnOnDevice, ActionTurnOffDevice:
 		if val, ok := settings["version"]; ok {
 			switch val {
-
+			// no migrations for this yet
 			}
 		} else {
 			settings = migratePowerSettingsToV1(settings)
 			return c.Migrate(settings, action)
 		}
+	case ActionToggleDevice:
+		if val, ok := settings["version"]; ok {
+			switch val {
+			// no migrations for this yet
+			}
+		}
 	case ActionSetWaveform:
 		if val, ok := settings["version"]; ok {
-
 			switch val {
-
+			// no migrations for this yet
 			}
 		}
 	}
