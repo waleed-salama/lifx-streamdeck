@@ -31,7 +31,8 @@ You are able to set a device or multiple devices color at the push of a button. 
 ### Setting the brightness independent of color
 You can change the devices brightness independent of it's current color (as brightness is one of the arguments of setting a color).
 
-### Coming Soon: Setting a "wave" effect
+### Setting the wave effect
+You can setup a "wave" effect where your button press causes the device to go between two colors over time.  For more information on how the settings work I recommend reading LIFX's [official documentation](https://lan.developer.lifx.com/docs/waveforms).
 
 
 ## Known Issues
