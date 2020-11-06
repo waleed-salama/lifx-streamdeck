@@ -59,23 +59,26 @@
         <div class="sdpi-item">
             <div class="sdpi-item-value  min100">
                 <div class="sdpi-item-child">
-                    <input type="checkbox" onchange="onSettingChanged()" id="transient">
-                    <label class="sdpi-item-label" for="transient"></input><span></span>Transient</label>
+                    <input type="checkbox" onchange="onSettingChanged()" id="use-current-color">
+                    <label class="sdpi-item-label" for="use-current-color"></input><span></span>Use original color when done</label>
+                    <details>
+                        <p>This only has any affect if the wave form is not sine or triangle</p>
+                    </details>
                 </div>
             </div>
         </div>
     </div>
     <div class="sdpi-item">
         <div class = "sdpi-item-label">Period</div>
-        <input class="sdpi-item-value" min="100" max="60000" type="number" onchange="onSettingChanged()" id="period" required placehold="The wave period in milliseconds"></input>
+        <input class="sdpi-item-value" min="100" max="60000" type="number" onchange="onSettingChanged()" id="period" required placeholder="The wave period in milliseconds"></input>
     </div>
     <div class="sdpi-item">
         <div class = "sdpi-item-label">Cycles</div>
-        <input class="sdpi-item-value" min="1" max="100000" type="number" onchange="onSettingChanged()" id="cycles" required placehold="The number of cycles to play the animation"></input>
+        <input class="sdpi-item-value" min="1" max="100000" type="number" onchange="onSettingChanged()" id="cycles" required placeholder="The number of cycles to play the animation"></input>
     </div>
     <div class="sdpi-item">
         <div class = "sdpi-item-label">Skew</div>
-        <input class="sdpi-item-value" min="-100" max="100" type="number" onchange="onSettingChanged()" id="skew" required placehold="Skew the wave towards the original color (positive) or the new color (negative)" value="0"></input>
+        <input class="sdpi-item-value" min="-100" max="100" type="number" onchange="onSettingChanged()" id="skew" required placeholder="Skew the wave towards the original color (positive) or the new color (negative)" value="0"></input>
     </div>
 </div>
 <script>
@@ -118,8 +121,8 @@
             const skewBox = document.getElementById("skew");
             skewBox.value = actionInfo.payload.settings["skew"];
         }
-        if (actionInfo.payload.settings["transient"]) {
-            const transientCheckBox = document.getElementById("transient")
+        if (actionInfo.payload.settings["isTransient"]) {
+            const transientCheckBox = document.getElementById("use-current-color")
             transientCheckBox.setAttribute("checked", "true");
         }
         if (actionInfo.payload.settings["waveform"]) {
@@ -265,7 +268,7 @@
         const brightnessBox = document.getElementById('brightness');
         const kelvinBox = document.getElementById('kelvin');
         const waveFormSelect = document.getElementById('waveform-dropdown');
-        const transientCheckBox = document.getElementById('transient');
+        const transientCheckBox = document.getElementById('use-current-color');
         const periodBox = document.getElementById('period');
         const cyclesBox = document.getElementById('cycles');
         const skewBox = document.getElementById('skew');
