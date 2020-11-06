@@ -1,3 +1,7 @@
+# vNext (WIP)
+## Fixes
+* Performance improvement which should keep lights more in sync when pressing a button that affects multiple lights.
+
 # v0.3.0
 ## New Features
 * Add support for LIFX Waveform functionality.
