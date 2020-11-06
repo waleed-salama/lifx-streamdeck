@@ -15,7 +15,6 @@ func TestMigratePowerFromUnversionedToCurrent(t *testing.T) {
 
 	settings = migratePowerSettingsToV1(settings)
 	require.Equal(t, 1, settings["version"])
-	require.Len(t, settings["devices"], 1)
 	devices := settings["devices"].([]map[string]interface{})
 	require.Equal(t, "d0:73:d5:2b:a7:b8", devices[0]["mac"])
 	require.Equal(t, "Beam", devices[0]["name"])
@@ -59,7 +58,6 @@ func TestMigrateColorSettingsFromUnversionedToCurrent(t *testing.T) {
 	require.Equal(t, uint64(5000), colorSettings["kelvin"])
 	require.Equal(t, uint64(0), colorSettings["transition"])
 
-	require.Len(t, deviceSettings, 3)
 	_a7b8FoundTimes := 0
 	_8605FoundTimes := 0
 	_dc6dFoundTimes := 0
@@ -104,7 +102,6 @@ func TestMigrateBrightnessSettingsFromUnversionedToCurrent(t *testing.T) {
 	require.Equal(t, uint64(0), settings["transition"])
 	require.Equal(t, uint64(50), settings["brightness"])
 	devices := settings["devices"].([]map[string]interface{})
-	require.Len(t, devices, 2)
 
 	_a7b8FoundTimes := 0
 	_dc6dFoundTimes := 0
@@ -123,7 +120,7 @@ func TestMigrateBrightnessSettingsFromUnversionedToCurrent(t *testing.T) {
 }
 
 func TestMigrateWaveformSettingsFromV1ToCurrent(t *testing.T) {
-
+	// there are no migrations
 }
 
 func TestMigrate(t *testing.T) {
