@@ -1,3 +1,12 @@
+# v0.3.0
+## New Features
+* Add support for LIFX Waveform functionality.
+
+## Fixes
+* Update golifx library to support more devices.
+* Add tooltip for set brightness action.
+* Tech debt cleanup type work.
+
 # v0.2.3
 ## New Features
 * Setting the color or brightness of your lights now supports a transition time.  Existing configs will be set to 0 so it acts as it did before of changing instantly.  The max transition time is set to 15 seconds.

@@ -56,9 +56,24 @@
         }
       ],
       "SupportedInMultiActions": true,
-      "Tooltip": "",
+      "Tooltip": "Set the brightness of the LIFX Device independent of the color",
       "UUID": "dev.sean.lifx.brightness",
       "PropertyInspectorPath": "set-brightness-pi.html"
+    },
+    {
+      "Icon": "waveAction",
+      "Name": "Set Waveform",
+      "States": [
+        {
+          "Image": "waveKey",
+          "TitleAlignment": "middle",
+          "FontSize": "16"
+        }
+      ],
+      "SupportedInMultiActions": true,
+      "Tooltip": "",
+      "UUID": "dev.sean.lifx.waveform",
+      "PropertyInspectorPath": "set-waveform-pi.html"
     }
   ],
   "SDKVersion": 2,
@@ -71,7 +86,7 @@
   "CategoryIcon": "categoryIcon",
   "Icon": "pluginIcon",
   "URL": "https://sean.dev",
-  "Version": "0.2.3",
+  "Version": "0.3.0",
   "OS": [
     {
       "Platform": "windows",

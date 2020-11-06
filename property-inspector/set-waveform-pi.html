@@ -29,23 +29,56 @@
     </div>
     <div class="sdpi-item">
         <div class="sdpi-item-label">Hue</div>
-        <input class="sdpi-item-value" min="0" max="360" type="number" onchange=onColorChanged() id="hue" required placeholder="The degrees between 0-360 for the hue"></input>
+        <input class="sdpi-item-value" min="0" max="360" type="number" onchange=onSettingChanged() id="hue" required placeholder="The degrees between 0-360 for the hue"></input>
     </div>
     <div class="sdpi-item">
         <div class="sdpi-item-label">Saturation</div>
-        <input class="sdpi-item-value" min="0" max="100" type="number" onchange="onColorChanged()" id="saturation" required placeholder="The saturation between 0-100%"></input>
+        <input class="sdpi-item-value" min="0" max="100" type="number" onchange="onSettingChanged()" id="saturation" required placeholder="The saturation between 0-100%"></input>
     </div>
     <div class="sdpi-item">
         <div class="sdpi-item-label">Brightness</div>
-        <input class="sdpi-item-value" min="0" max="100" type="number" onchange="onColorChanged()" id="brightness" required placeholder="The brightness between 0-100%"></input>
+        <input class="sdpi-item-value" min="0" max="100" type="number" onchange="onSettingChanged()" id="brightness" required placeholder="The brightness between 0-100%"></input>
     </div>
     <div class="sdpi-item">
         <div class="sdpi-item-label">Kelvin</div>
-        <input class="sdpi-item-value" min="1500" max="9000" type="number" onchange="onColorChanged()" id="kelvin" required placeholder="The kelvin temperature of white light"></input>
+        <input class="sdpi-item-value" min="1500" max="9000" type="number" onchange="onSettingChanged()" id="kelvin" required placeholder="The kelvin temperature of white light"></input>
+    </div>
+    <hr />
+    <div class="sdpi-item" id="waveform-select">
+        <div class="sdpi-item-label">Hue</div>
+        <select class="sdpi-item-value select" id="waveform-dropdown">
+            <option value="0">Saw</option>
+            <option value="1">Sine</option>
+            <option value="2">Half-Sine</option>
+            <option value="3">Triangle</option>
+            <option value="4">Pulse</option>
+        </select>
+    </div>
+    <div class="sdpi-item" type="checkbox">
+        <div class="sdpi-item-label empty"></div>
+        <div class="sdpi-item">
+            <div class="sdpi-item-value  min100">
+                <div class="sdpi-item-child">
+                    <input type="checkbox" onchange="onSettingChanged()" id="use-current-color">
+                    <label class="sdpi-item-label" for="use-current-color"></input><span></span>Use original color when done</label>
+                    <details>
+                        <p>This only has any affect if the wave form is not sine or triangle</p>
+                    </details>
+                </div>
+            </div>
+        </div>
     </div>
     <div class="sdpi-item">
-        <div class="sdpi-item-label">Transition</div>
-        <input class="sdpi-item-value" min="0" max="15000" type="number" onchange="onColorChanged()" id="transition" value="0" required placeholder="The transition time in milliseconds"></input>
+        <div class = "sdpi-item-label">Period</div>
+        <input class="sdpi-item-value" min="100" max="60000" type="number" onchange="onSettingChanged()" id="period" required placeholder="The wave period in milliseconds"></input>
+    </div>
+    <div class="sdpi-item">
+        <div class = "sdpi-item-label">Cycles</div>
+        <input class="sdpi-item-value" min="1" max="100000" type="number" onchange="onSettingChanged()" id="cycles" required placeholder="The number of cycles to play the animation"></input>
+    </div>
+    <div class="sdpi-item">
+        <div class = "sdpi-item-label">Skew</div>
+        <input class="sdpi-item-value" min="-100" max="100" type="number" onchange="onSettingChanged()" id="skew" required placeholder="Skew the wave towards the original color (positive) or the new color (negative)" value="0"></input>
     </div>
 </div>
 <script>
@@ -67,21 +100,39 @@
         if (!actionInfo.payload.settings["color"]) {
             actionInfo.payload.settings["color"] = {};
         } else {
-            let hueBox = document.getElementById('hue');
+            const hueBox = document.getElementById('hue');
             hueBox.value = actionInfo.payload.settings["color"]['hue'];
-            let saturationBox = document.getElementById('saturation');
+            const saturationBox = document.getElementById('saturation');
             saturationBox.value = actionInfo.payload.settings["color"]['saturation'];
-            let brightnessBox = document.getElementById('brightness');
+            const brightnessBox = document.getElementById('brightness');
             brightnessBox.value = actionInfo.payload.settings["color"]['brightness'];
-            let kelvinBox = document.getElementById('kelvin');
+            const kelvinBox = document.getElementById('kelvin');
             kelvinBox.value = actionInfo.payload.settings["color"]['kelvin'];
-            let transitionBox = document.getElementById('transition');
-            transitionBox.value = actionInfo.payload.settings['color']['transition']
         }
-        if (!actionInfo.payload.settings["version"])  {
-            actionInfo.payload.settings["version"] = 2
+        if (actionInfo.payload.settings["period"]) {
+            const periodBox = document.getElementById("period");
+            periodBox.value = actionInfo.payload.settings["period"];
+        }
+        if (actionInfo.payload.settings["cycles"]) {
+            const cyclesBox = document.getElementById("cycles");
+            cyclesBox.value = actionInfo.payload.settings["cycles"];
+        }
+        if (actionInfo.payload.settings["skew"]) {
+            const skewBox = document.getElementById("skew");
+            skewBox.value = actionInfo.payload.settings["skew"];
+        }
+        if (actionInfo.payload.settings["isTransient"]) {
+            const transientCheckBox = document.getElementById("use-current-color")
+            transientCheckBox.setAttribute("checked", "true");
+        }
+        if (actionInfo.payload.settings["waveform"]) {
+            const waveFormSelect = document.getElementById("waveform-dropdown")
+            waveFormSelect.value = actionInfo.payload.settings["waveform"];
         }
 
+        if (!actionInfo.payload.settings["version"])  {
+            actionInfo.payload.settings["version"] = 1
+        }
         // if connection was established, the websocket sends
         // an 'onopen' event, where we need to register our PI
         websocket.onopen = function () {
@@ -137,7 +188,7 @@
         brightnessBox.value = data['brightness'];
         let kelvinBox = document.getElementById('kelvin');
         kelvinBox.value = data['kelvin'];
-        onColorChanged();
+        onSettingChanged();
     }
 
     function devicesDiscovered(data) {
@@ -211,12 +262,16 @@
         }
     }
 
-    function onColorChanged() {
+    function onSettingChanged() {
         const hueBox = document.getElementById('hue');
         const saturationBox = document.getElementById('saturation');
         const brightnessBox = document.getElementById('brightness');
         const kelvinBox = document.getElementById('kelvin');
-        const transitionBox = document.getElementById('transition');
+        const waveFormSelect = document.getElementById('waveform-dropdown');
+        const transientCheckBox = document.getElementById('use-current-color');
+        const periodBox = document.getElementById('period');
+        const cyclesBox = document.getElementById('cycles');
+        const skewBox = document.getElementById('skew');
 
         if (!actionInfo.payload.settings["color"]) {
             actionInfo.payload.settings["color"] = {};
@@ -225,7 +280,11 @@
         actionInfo.payload.settings["color"]["saturation"] = parseInt(saturationBox.value, 10);
         actionInfo.payload.settings["color"]["brightness"] = parseInt(brightnessBox.value, 10);
         actionInfo.payload.settings["color"]["kelvin"] = parseInt(kelvinBox.value, 10);
-        actionInfo.payload.settings["color"]["transition"] = parseInt(transitionBox.value, 10);
+        actionInfo.payload.settings["isTransient"] = transientCheckBox.checked;
+        actionInfo.payload.settings["period"] = parseInt(periodBox.value, 10);
+        actionInfo.payload.settings["cycles"] = parseInt(cyclesBox.value, 10);
+        actionInfo.payload.settings["skew"] = parseInt(skewBox.value, 10);
+        actionInfo.payload.settings["waveform"] = parseInt(waveFormSelect.value, 10);
         UpdateSettings();
     }
 </script>
