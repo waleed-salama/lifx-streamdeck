@@ -106,7 +106,7 @@ func (c *Client) turnLights(context string, settings map[string]interface{}, on 
 		}
 		lifxDevice := c.devices[device.Mac]
 		go func() {
-			_ = lifxDevice.SetPowerState(on)
+			_ = lifxDevice.SetPowerDurationState(on, powerSettings.Transition)
 		}()
 	}
 }
@@ -203,6 +203,38 @@ func (c *Client) setWaveform(context string, settings map[string]interface{}) {
 				waveFormSettings.Cycles, waveFormSettings.GetSkewRatio(), waveFormSettings.Waveform)
 		}()
 
+	}
+}
+
+func (c *Client) togglePower(context string, settings map[string]interface{}) {
+	toggleSettings := new(ToggleSettings)
+	err := mapstructure.Decode(settings, toggleSettings)
+	if err != nil {
+		c.sdClient.Log(err.Error())
+		c.SendWarnMessage(context)
+		return
+	}
+	for _, device := range toggleSettings.Devices {
+		if c.devices[device.Mac] == nil {
+			tmpDevice := golifx.Device{}
+			address, err := macToUint64(device.Mac)
+			if err != nil {
+				c.sdClient.Log(err.Error())
+				c.SendWarnMessage(context)
+			}
+			// Not sure why I need this bit shift but via testing this is what I determined I needed, may be fragile
+			address = address >> 16
+			tmpDevice.SetHardwareAddress(address)
+			c.devices[device.Mac] = &tmpDevice
+		}
+		lifxDevice := c.devices[device.Mac]
+		go func() {
+			state, err := lifxDevice.GetPowerState()
+			if err != nil {
+				return
+			}
+			_ = lifxDevice.SetPowerDurationState(!state, toggleSettings.Transition)
+		}()
 	}
 }
 

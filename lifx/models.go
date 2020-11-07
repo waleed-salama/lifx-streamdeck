@@ -1,7 +1,7 @@
 package lifx
 
 type (
-	//Device represents a devie in the Stream Deck settings
+	//Device represents a device in the Stream Deck settings
 	Device struct {
 		Name string `mapstructure:"name"`
 		Mac  string `mapstructure:"mac"`
@@ -9,17 +9,24 @@ type (
 
 	//Color represents the color in settings
 	Color struct {
-		Hue        uint `mapstructure:"hue"`
-		Saturation uint `mapstructure:"saturation"`
-		Brightness uint `mapstructure:"brightness"`
-		Kelvin     uint `mapstructure:"kelvin"`
-		Transition uint `mapstructure:"transition"`
+		Hue        uint   `mapstructure:"hue"`
+		Saturation uint   `mapstructure:"saturation"`
+		Brightness uint   `mapstructure:"brightness"`
+		Kelvin     uint16 `mapstructure:"kelvin"`
+		Transition uint32 `mapstructure:"transition"`
 	}
 
 	//PowerSettings represents the on/off action settings
 	PowerSettings struct {
-		Version int      `mapstructure:"version"`
-		Devices []Device `mapstructure:"devices"`
+		Version    int      `mapstructure:"version"`
+		Transition uint32   `mapstructure:"transition"`
+		Devices    []Device `mapstructure:"devices"`
+	}
+
+	ToggleSettings struct {
+		Version    int      `mapstructure:"version"`
+		Transition uint32   `mapstructure:"transition"`
+		Devices    []Device `mapstructure:"devices"`
 	}
 
 	//ColorSettings represents the set color action settings
@@ -43,7 +50,7 @@ type (
 		IsTransient    bool     `mapstructure:"isTransient"`
 		Period         uint32   `mapstructure:"period"`
 		Cycles         float32  `mapstructure:"cycles"`
-		Skew           int      `mapstructure:"skew"`
+		Skew           int16    `mapstructure:"skew"`
 		Waveform       uint8    `mapstructure:"waveform"`
 		Devices        []Device `mapstructure:"devices"`
 		AlternateColor Color    `mapstructure:"color"`
@@ -57,11 +64,11 @@ func (c Color) GenerateLIFXValues() (uint16, uint16, uint16, uint16, uint32) {
 	sat := 655 * c.Saturation
 	bri := 655 * c.Brightness
 
-	return uint16(hue), uint16(sat), uint16(bri), uint16(c.Kelvin), uint32(c.Transition)
+	return uint16(hue), uint16(sat), uint16(bri), c.Kelvin, c.Transition
 }
 
 //GetSkewRatio converts the input skew into a format that LIFX
 // understands
 func (w WaveFormSettings) GetSkewRatio() int16 {
-	return int16(w.Skew * 327)
+	return w.Skew * 327
 }

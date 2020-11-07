@@ -7,122 +7,140 @@
 </head>
 
 <body>
-    <div class="sdpi-wrapper" id="global-wrapper">
-        <div class="sdpi-item" id="discover-container">
-            <div class="sdpi-item-label empty"></div>
-            <button class="sdpi-item-value" id="discovery" onclick="DiscoverDevices()">Discover Devices</button>
-        </div>
-        <div class="sdpi-item" id="device_select">
-            <div class="sdpi-item-label">Device</div>
-            <div class="sdpi-item" type="checkbox">
-                <div class="sdpi-item-value min100" id="device_container">
-                    <div class="loader"></div>
-                </div>
+<div class="sdpi-wrapper" id="global-wrapper">
+    <div class="sdpi-item" id="discover-container">
+        <div class="sdpi-item-label empty"></div>
+        <button class="sdpi-item-value" id="discovery" onclick="DiscoverDevices()">Discover Devices</button>
+    </div>
+    <div class="sdpi-item" id="device_select">
+        <div class="sdpi-item-label">Device</div>
+        <div class="sdpi-item" type="checkbox">
+            <div class="sdpi-item-value min100" id="device_container">
+                <div class="loader"></div>
             </div>
         </div>
     </div>
-    <script>
-        // this is our global websocket, used to communicate from/to Stream Deck software
-        // and some info about our plugin, as sent by Stream Deck software
-        let websocket = null,
-            uuid = null,
-            actionInfo = {};
+    <div class="sdpi-item">
+        <div class="sdpi-item-label">Transition</div>
+        <input class="sdpi-item-value" min="0" max="15000" type="number" onchange="onTransitionChanged()" id="transition" value="0" required placeholder="The transition time in milliseconds" />
+    </div>
+</div>
+<script>
+    // this is our global websocket, used to communicate from/to Stream Deck software
+    // and some info about our plugin, as sent by Stream Deck software
+    let websocket = null,
+        uuid = null,
+        actionInfo = {};
 
-        function connectElgatoStreamDeckSocket(inPort, inUUID, inRegisterEvent, inInfo, inActionInfo) {
-            uuid = inUUID;
-            // please note: the incoming arguments are of type STRING, so
-            // in case of the inActionInfo, we must parse it into JSON first
-            actionInfo = JSON.parse(inActionInfo); // cache the info
-            websocket = new WebSocket('ws://localhost:' + inPort);
+    function connectElgatoStreamDeckSocket(inPort, inUUID, inRegisterEvent, inInfo, inActionInfo) {
+        uuid = inUUID;
+        // please note: the incoming arguments are of type STRING, so
+        // in case of the inActionInfo, we must parse it into JSON first
+        actionInfo = JSON.parse(inActionInfo); // cache the info
+        websocket = new WebSocket('ws://localhost:' + inPort);
 
-            if (!actionInfo.payload.settings["devices"]) {
-                actionInfo.payload.settings["devices"] = [];
-            }
-            actionInfo.payload.settings["version"] = 1
+        if (!actionInfo.payload.settings["devices"]) {
+            actionInfo.payload.settings["devices"] = [];
+        }
+        if (!actionInfo.payload.settings["transition"]) {
+            actionInfo.payload.settings["transition"] = 0;
+        } else {
+            const transitionBox = document.getElementById("transition");
+            transitionBox.value = actionInfo.payload.settings["transition"];
+        }
+        actionInfo.payload.settings["version"] = 1;
 
-            // if connection was established, the websocket sends
-            // an 'onopen' event, where we need to register our PI
-            websocket.onopen = function () {
-                const json = {
-                    event:  inRegisterEvent,
-                    uuid:   inUUID
-                };
-                // register property inspector to Stream Deck
-                websocket.send(JSON.stringify(json));
-            }
-            websocket.onmessage = function (event) {
-                const jsonObj = JSON.parse(event.data);
-                const sdEvent = jsonObj['event'];
 
-                if (sdEvent === 'sendToPropertyInspector') {
-                    const data = jsonObj['payload'];
-                    if (data['type'] === 'discovery') {
-                        devicesDiscovered(data);
-                    }
+        // if connection was established, the websocket sends
+        // an 'onopen' event, where we need to register our PI
+        websocket.onopen = function () {
+            const json = {
+                event:  inRegisterEvent,
+                uuid:   inUUID
+            };
+            // register property inspector to Stream Deck
+            websocket.send(JSON.stringify(json));
+        }
+        websocket.onmessage = function (event) {
+            const jsonObj = JSON.parse(event.data);
+            const sdEvent = jsonObj['event'];
+
+            if (sdEvent === 'sendToPropertyInspector') {
+                const data = jsonObj['payload'];
+                if (data['type'] === 'discovery') {
+                    devicesDiscovered(data);
                 }
             }
         }
+    }
 
-        function devicesDiscovered(data) {
-            const devices = data["devices"];
-            let discoveryContainer = document.getElementById("discover-container");
-            let discoveryButton = document.getElementById('discovery');
-            let loader = discoveryContainer.getElementsByClassName("loader");
-            for (let i = 0; i < loader.length; i++) {
-                loader[i].remove();
-            }
+    function devicesDiscovered(data) {
+        const devices = data["devices"];
+        let discoveryContainer = document.getElementById("discover-container");
+        let discoveryButton = document.getElementById('discovery');
+        let loader = discoveryContainer.getElementsByClassName("loader");
+        for (let i = 0; i < loader.length; i++) {
+            loader[i].remove();
+        }const transitionBox = document.getElementById("transition")
+        transitionBox.value = actionInfo.payload.settings["transition"]
 
-            discoveryButton.removeAttribute('disabled');
+        discoveryButton.removeAttribute('disabled');
 
-            let deviceContainer = document.getElementById('device_container');
-            deviceContainer.innerHTML = '';
-            devices.forEach(d => {
-                    let tmpDevice = document.createElement('div');
-                    tmpDevice.setAttribute("class", "sdpi-item-child");
-                    tmpDevice.innerHTML = `
+        let deviceContainer = document.getElementById('device_container');
+        deviceContainer.innerHTML = '';
+        devices.forEach(d => {
+                let tmpDevice = document.createElement('div');
+                tmpDevice.setAttribute("class", "sdpi-item-child");
+                tmpDevice.innerHTML = `
                 <input id=${d['mac']} type="checkbox" value=${d['mac']}>
                 <label for=${d['mac']} class="sdpi-item-label"><span></span>${d['label']}</label>
                 `
-                    deviceContainer.append(tmpDevice);
-                }
-            )
+                deviceContainer.append(tmpDevice);
+            }
+        )
 
-            const tempDevices = actionInfo.payload.settings["devices"]
-            for (let index = 0; index < tempDevices.length; index++) {
-                const device = tempDevices[index];
-                const exists = document.getElementById(device["mac"]);
-                if (!exists) {
-                    let tmpDevice = document.createElement('div');
-                    tmpDevice.setAttribute("class", "sdpi-item-child");
-                    tmpDevice.innerHTML = `
+        const tempDevices = actionInfo.payload.settings["devices"]
+        for (let index = 0; index < tempDevices.length; index++) {
+            const device = tempDevices[index];
+            const exists = document.getElementById(device["mac"]);
+            if (!exists) {
+                let tmpDevice = document.createElement('div');
+                tmpDevice.setAttribute("class", "sdpi-item-child");
+                tmpDevice.innerHTML = `
                 <input id=${tmpDevice["mac"]} type="checkbox" value=${tmpDevice["label"]}>
                 <label for=${tmpDevice["mac"]} class="sdpi-item-label"><span></span>${tmpDevice["label"]}</label>
                 `
-                    deviceContainer.append(tmpDevice);
+                deviceContainer.append(tmpDevice);
+            }
+        }
+        if (devices.length === 0 && tempDevices.length === 0) {
+            deviceContainer.innerText = 'No devices found.  Please verify your devices are turned on and try again.';
+        }
+
+        let children = deviceContainer.getElementsByTagName("input");
+        for (let i = 0; i < children.length; i++) {
+            children[i].onclick = onCheckBoxClicked;
+            for (let index = 0; index < tempDevices.length; index++)
+                if (tempDevices[index].mac === children[i].id) {
+                    // if the device is in the settings then we want to control it
+                    children[i].setAttribute("checked", "true");
+                    break
                 }
-            }
-            if (devices.length === 0 && tempDevices.length === 0) {
-                deviceContainer.innerText = 'No devices found.  Please verify your devices are turned on and try again.';
-            }
-
-            let children = deviceContainer.getElementsByTagName("input");
-            for (let i = 0; i < children.length; i++) {
-                children[i].onclick = onCheckBoxClicked;
-                for (let index = 0; index < tempDevices.length; index++)
-                    if (tempDevices[index].mac === children[i].id) {
-                        // if the device is in the settings then we want to control it
-                        children[i].setAttribute("checked", "true");
-                        break
-                    }
-            }
         }
+    }
 
-        function onCheckBoxClicked(e) {
-            if (this.checked) {
-                AddDevice(this.value, this.nextElementSibling.textContent);
-            } else {
-                RemoveDevice(this.value);
-            }
+    function onCheckBoxClicked() {
+        if (this.checked) {
+            AddDevice(this.value, this.nextElementSibling.textContent);
+        } else {
+            RemoveDevice(this.value);
         }
-    </script>
+    }
+
+    function onTransitionChanged() {
+        const transitionBox = document.getElementById("transition");
+        actionInfo.payload.settings["transition"] = parseInt(transitionBox.value, 10);
+        UpdateSettings();
+    }
+</script>
 </body>
