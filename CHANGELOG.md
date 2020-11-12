@@ -1,4 +1,4 @@
-# v0.4.0 (WIP)
+# v0.4.0
 ## New Features
 * Add a toggle button to allow toggling device(s) on/off at a click of a button.
   * This will toggle each individual light and does not keep a state, so if some are on, and some are off, each will turn on or off depending on their current power state.
