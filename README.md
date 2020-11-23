@@ -22,6 +22,8 @@ Upgrading requires uninstalling the previous version, don't worry, your settings
 Once you have uninstalled the plugin you can follow the Installation instructions.
 
 ## Supported Actions
+You can see an overview of the features at https://www.youtube.com/watch?v=PiGfuwZe3Zs
+
 ### Setting the devices power state
 You are able to turn devices on or off using the respective actions.  Doing this can control more than one device at once
 
