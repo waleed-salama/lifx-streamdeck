@@ -153,7 +153,8 @@
 
         let deviceContainer = document.getElementById('device_container');
         let deviceDropdown = document.getElementById('device_dropdown');
-        deviceContainer.innerHTML = ''
+        deviceContainer.innerHTML = '';
+        deviceDropdown.innerHTML = '';
         devices.forEach(d => {
                 let tmpDevice = document.createElement('div');
                 tmpDevice.setAttribute("class", "sdpi-item-child");
