@@ -1,3 +1,10 @@
+# v0.4.1
+## New Features
+* Upgrade compiler to go 1.15 reducing binary sizes to about half their existing size.
+
+## Fixes
+* Fix a bug where devices would be duplicated in dropdowns on rediscovery.
+
 # v0.4.0
 ## New Features
 * Add a toggle button to allow toggling device(s) on/off at a click of a button.
