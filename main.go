@@ -3,6 +3,7 @@
 package main
 
 import (
+	"encoding/json"
 	"os"
 	"time"
 
@@ -21,7 +22,10 @@ func main() {
 	args := os.Args[1:]
 	port := args[1]
 	uuid := args[3]
-	client, err := lifx.NewClient(port, uuid)
+	info := args[7]
+	appInfo := new(lifx.AppInfo)
+	json.Unmarshal([]byte(info), appInfo)
+	client, err := lifx.NewClient(port, uuid, appInfo)
 	if err != nil {
 		panic(err)
 	}

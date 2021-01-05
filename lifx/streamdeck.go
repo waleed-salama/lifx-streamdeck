@@ -1,7 +1,12 @@
 package lifx
 
 import (
+	"archive/zip"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net"
+	"os"
 
 	"gitlab.com/wwsean08/golifx"
 	"gitlab.com/wwsean08/streamdeck"
@@ -57,6 +62,8 @@ func (c *Client) OnKeyUp(msg streamdeck.KeyUpMsg) {
 		c.setWaveform(msg.Context, msg.Payload.Settings)
 	case ActionToggleDevice:
 		c.togglePower(msg.Context, msg.Payload.Settings)
+	case ActionDebug:
+		c.generateDebug(msg.Context)
 	default:
 		c.SendWarnMessage(msg.Context)
 		c.sdClient.Log(fmt.Sprintf("Unknown action received %s", msg.Action))
@@ -136,4 +143,106 @@ func (c *Client) sendDevicesToPropertyInspector(action string, context string, d
 	if err != nil {
 		c.sdClient.Log(err.Error())
 	}
+}
+
+func (c Client) generateDebug(context string) {
+	// get app environment info
+	envData, err := json.Marshal(c.appInfo)
+	if err != nil {
+		c.sdClient.Log(err.Error())
+		c.SendWarnMessage(context)
+		return
+	}
+
+	netInfo, err := getNetworkInfo()
+	if err != nil {
+		c.sdClient.Log(err.Error())
+		c.SendWarnMessage(context)
+		return
+	}
+	netData, err := json.Marshal(netInfo)
+	if err != nil {
+		c.sdClient.Log(err.Error())
+		c.SendWarnMessage(context)
+		return
+	}
+	crashData, err := ioutil.ReadFile("crash_log")
+	if err != nil {
+		c.sdClient.Log(err.Error())
+		c.SendWarnMessage(context)
+		return
+	}
+
+	zipFile, err := os.OpenFile("debug.zip", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	if err != nil {
+		c.sdClient.Log(err.Error())
+		c.SendWarnMessage(context)
+		return
+	}
+	defer zipFile.Close()
+	zipw := zip.NewWriter(zipFile)
+	defer zipw.Close()
+
+	netFile, err := zipw.Create("net.json")
+	if err != nil {
+		c.sdClient.Log(err.Error())
+		c.SendWarnMessage(context)
+		return
+	}
+	netFile.Write(netData)
+
+	envFile, err := zipw.Create("env.json")
+	if err != nil {
+		c.sdClient.Log(err.Error())
+		c.SendWarnMessage(context)
+		return
+	}
+	envFile.Write(envData)
+
+	crashFile, err := zipw.Create("crash_log")
+	if err != nil {
+		c.sdClient.Log(err.Error())
+		c.SendWarnMessage(context)
+		return
+	}
+	crashFile.Write(crashData)
+}
+
+type network struct {
+	IP         string          `json:"ip_used"`
+	Interfaces []interfaceInfo `json:"interfaces"`
+}
+
+type interfaceInfo struct {
+	IFName string     `json:"if_name"`
+	Addrs  []net.Addr `json:"addrs"`
+}
+
+// leveraging the fact that i know how golifx works to get the info i want
+func getNetworkInfo() (network, error) {
+	conn, err := net.Dial("udp", "8.8.8.8:80")
+	if err != nil {
+		return network{}, err
+	}
+	h, _, err := net.SplitHostPort(conn.LocalAddr().String())
+	if err != nil {
+		return network{}, err
+	}
+	iFaces, err := net.Interfaces()
+	ifInfo := make([]interfaceInfo, len(iFaces))
+	if err != nil {
+		return network{}, err
+	}
+	for i, iFace := range iFaces {
+		addrs, _ := iFace.Addrs()
+		tmp := interfaceInfo{
+			IFName: iFace.Name,
+			Addrs:  addrs,
+		}
+		ifInfo[i] = tmp
+	}
+	return network{
+		IP:         h,
+		Interfaces: ifInfo,
+	}, nil
 }

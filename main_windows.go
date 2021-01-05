@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"log"
 	"os"
 	"syscall"
@@ -18,12 +19,15 @@ var (
 func main() {
 	viper.Set("application.version", version)
 	viper.Set("application.commit", commit)
-	f, err := os.OpenFile("crash_log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	f, err := os.OpenFile("crash_log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
 	redirectStderr(f)
 	args := os.Args[1:]
 	port := args[1]
 	uuid := args[3]
-	client, err := lifx.NewClient(port, uuid)
+	info := args[7]
+	appInfo := new(lifx.AppInfo)
+	json.Unmarshal([]byte(info), appInfo)
+	client, err := lifx.NewClient(port, uuid, appInfo)
 	if err != nil {
 		panic(err)
 	}

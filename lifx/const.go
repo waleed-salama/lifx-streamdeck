@@ -13,4 +13,6 @@ const (
 	ActionSetBrightness = "dev.sean.lifx.brightness"
 	//ActionSetWaveform is the UUID to set a waveform on the device
 	ActionSetWaveform = "dev.sean.lifx.waveform"
+	//ActionDebug is the UUID to generate a debug bundle
+	ActionDebug = "dev.sean.lifx.debug"
 )
