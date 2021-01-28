@@ -64,10 +64,20 @@ func (c *Client) OnKeyUp(msg streamdeck.KeyUpMsg) {
 		c.togglePower(msg.Context, msg.Payload.Settings)
 	case ActionDebug:
 		c.generateDebug(msg.Context)
+		c.sendOKMessage(msg.Context)
 	default:
 		c.SendWarnMessage(msg.Context)
 		c.sdClient.Log(fmt.Sprintf("Unknown action received %s", msg.Action))
 	}
+}
+
+func (c *Client) sendOKMessage(context string) {
+	msg := streamdeck.ShowOkMsg{
+		Event:   streamdeck.ShowOkEvent,
+		Context: context,
+	}
+
+	_ = c.sdClient.SendMessage(msg)
 }
 
 // SendWarnMessage sends a warning message to the Stream Deck showing a warning symbol on the key

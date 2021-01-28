@@ -1,3 +1,7 @@
+# v0.5.0 
+## New Features
+* Add a debug action to allow me to better assist users running into issues.
+
 # v0.4.1
 ## New Features
 * Upgrade compiler to go 1.15 reducing binary sizes to about half their existing size.
