@@ -57,6 +57,23 @@ type (
 	}
 )
 
+// Application used for debug
+type Application struct {
+	Language string `json:"language"`
+	Platform string `json:"platform"`
+	Version  string `json:"version"`
+}
+
+// Plugin used for debug
+type Plugin struct {
+	Version string `json:"version"`
+}
+
+type AppInfo struct {
+	Application Application `json:"application"`
+	Plugin      Plugin      `json:"plugin"`
+}
+
 //GenerateLIFXValues is a helper function to take care of
 //the math convertting user input to proper values for lifx
 func (c Color) GenerateLIFXValues() (uint16, uint16, uint16, uint16, uint32) {

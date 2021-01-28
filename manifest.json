@@ -86,9 +86,24 @@
         }
       ],
       "SupportedInMultiActions": true,
-      "Tooltip": "",
+      "Tooltip": "Start a waveform on your LIFX Device(s)",
       "UUID": "dev.sean.lifx.waveform",
       "PropertyInspectorPath": "set-waveform-pi.html"
+    },
+    {
+      "Icon": "debugAction",
+      "Name": "Debug",
+      "States": [
+        {
+          "Image": "debugKey",
+          "TitleAlignment": "middle",
+          "FontSize": "16"
+        }
+      ],
+      "SupportedInMultiActions": false,
+      "Tooltip": "Generate debug bundle",
+      "UUID": "dev.sean.lifx.debug",
+      "PropertyInspectorPath": "debug-pi.html"
     }
   ],
   "SDKVersion": 2,
@@ -101,7 +116,7 @@
   "CategoryIcon": "categoryIcon",
   "Icon": "pluginIcon",
   "URL": "https://sean.dev",
-  "Version": "0.4.1",
+  "Version": "0.5.0",
   "OS": [
     {
       "Platform": "windows",

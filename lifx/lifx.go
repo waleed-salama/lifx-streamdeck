@@ -15,10 +15,11 @@ import (
 type Client struct {
 	sdClient *streamdeck.Client
 	devices  map[string]*golifx.Device
+	appInfo  *AppInfo
 }
 
 // NewClient creates a client for speaking with the Stream Deck websocket
-func NewClient(port, uuid string) (*Client, error) {
+func NewClient(port, uuid string, info *AppInfo) (*Client, error) {
 	sdClient, err := streamdeck.NewClient(port, uuid)
 	if err != nil {
 		return nil, err
@@ -29,6 +30,7 @@ func NewClient(port, uuid string) (*Client, error) {
 	}
 	client := &Client{
 		sdClient: sdClient,
+		appInfo:  info,
 	}
 	return client, nil
 }
