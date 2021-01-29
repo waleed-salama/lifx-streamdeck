@@ -1,3 +1,9 @@
+# v0.5.1 (WIP)
+## New Features
+
+## Fixes
+* The order of devices is now sorted alphabetically for discovered devices.  This will result in more consistent locations for device selection.
+
 # v0.5.0 
 ## New Features
 * Add a debug action to allow me to better assist users running into issues.
