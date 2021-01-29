@@ -81,6 +81,7 @@
         <input class="sdpi-item-value" min="-100" max="100" type="number" onchange="onSettingChanged()" id="skew" required placeholder="Skew the wave towards the original color (positive) or the new color (negative)" value="0"></input>
     </div>
 </div>
+</body>
 <script>
     // this is our global websocket, used to communicate from/to Stream Deck software
     // and some info about our plugin, as sent by Stream Deck software
@@ -193,6 +194,7 @@
 
     function devicesDiscovered(data) {
         const devices = data["devices"];
+        devices.sort((a, b) => (a.label.toUpperCase() > b.label.toUpperCase()) ? 1 : -1);
         let discoveryContainer = document.getElementById("discover-container");
         let discoveryButton = document.getElementById('discovery');
         let loader = discoveryContainer.getElementsByClassName("loader");
@@ -223,36 +225,36 @@
         )
 
         const tempDevices = actionInfo.payload.settings["devices"]
-            if (tempDevices) {
-                for (let index = 0; index < tempDevices.length; index++) {
-                    const device = tempDevices[index];
-                    const exists = document.getElementById(device["mac"]);
-                    if (!exists) {
-                        let tmpDevice = document.createElement('div');
-                        tmpDevice.setAttribute("class", "sdpi-item-child");
-                        tmpDevice.innerHTML = `
+        if (tempDevices) {
+            for (let index = 0; index < tempDevices.length; index++) {
+                const device = tempDevices[index];
+                const exists = document.getElementById(device["mac"]);
+                if (!exists) {
+                    let tmpDevice = document.createElement('div');
+                    tmpDevice.setAttribute("class", "sdpi-item-child");
+                    tmpDevice.innerHTML = `
                 <input id=${tmpDevice["mac"]} type="checkbox" value=${tmpDevice["label"]}>
                 <label for=${tmpDevice["mac"]} class="sdpi-item-label"><span></span>${tmpDevice["label"]}</label>
                 `
-                        deviceContainer.append(tmpDevice);
-                    }
+                    deviceContainer.append(tmpDevice);
                 }
             }
+        }
 
-            if (devices.length === 0 && tempDevices.length === 0) {
-                deviceContainer.innerText = 'No devices found.  Please verify your devices are turned on and try again.'
-            }
+        if (devices.length === 0 && tempDevices.length === 0) {
+            deviceContainer.innerText = 'No devices found.  Please verify your devices are turned on and try again.'
+        }
 
-            const children = deviceContainer.getElementsByTagName("input");
-            for (let i = 0; i < children.length; i++) {
-                children[i].onclick = onCheckBoxClicked;
-                for (let index = 0; index < tempDevices.length; index++)
-                    if (tempDevices[index].mac === children[i].id) {
-                        // if the device is in the settings then we want to control it
-                        children[i].setAttribute("checked", "true");
-                        break
-                    }
-            }
+        const children = deviceContainer.getElementsByTagName("input");
+        for (let i = 0; i < children.length; i++) {
+            children[i].onclick = onCheckBoxClicked;
+            for (let index = 0; index < tempDevices.length; index++)
+                if (tempDevices[index].mac === children[i].id) {
+                    // if the device is in the settings then we want to control it
+                    children[i].setAttribute("checked", "true");
+                    break
+                }
+        }
     }
 
     function onCheckBoxClicked() {
@@ -289,4 +291,3 @@
         UpdateSettings();
     }
 </script>
-</body>

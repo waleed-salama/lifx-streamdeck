@@ -76,6 +76,7 @@
 
         function devicesDiscovered(data) {
             const devices = data["devices"];
+            devices.sort((a, b) => (a.label.toUpperCase() > b.label.toUpperCase()) ? 1 : -1);
             let discoveryContainer = document.getElementById("discover-container");
             let discoveryButton = document.getElementById('discovery');
             let loader = discoveryContainer.getElementsByClassName("loader");

@@ -141,7 +141,9 @@
     }
 
     function devicesDiscovered(data) {
-        const devices = data["devices"];
+        let devices = data["devices"];
+        //TODO: Refactor label -> name like the settings
+        devices.sort((a, b) => (a.label.toUpperCase() > b.label.toUpperCase()) ? 1 : -1);
         let discoveryContainer = document.getElementById("discover-container");
         let discoveryButton = document.getElementById('discovery');
         let loader = discoveryContainer.getElementsByClassName("loader");
