@@ -180,7 +180,7 @@ func (c Client) generateDebug(context string) {
 	crashData, err := ioutil.ReadFile("crash_log")
 	if err != nil {
 		// If the file doesn't exist, that's not a big deal
-		if strings.HasSuffix(err.Error(), "no such file or directory") {
+		if !strings.HasSuffix(err.Error(), "no such file or directory") {
 			c.sdClient.Log(err.Error())
 			c.SendWarnMessage(context)
 			return
