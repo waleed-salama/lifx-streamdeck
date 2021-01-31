@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"net"
 	"os"
+	"strings"
 
 	"gitlab.com/wwsean08/golifx"
 	"gitlab.com/wwsean08/streamdeck"
@@ -178,9 +179,12 @@ func (c Client) generateDebug(context string) {
 	}
 	crashData, err := ioutil.ReadFile("crash_log")
 	if err != nil {
-		c.sdClient.Log(err.Error())
-		c.SendWarnMessage(context)
-		return
+		// If the file doesn't exist, that's not a big deal
+		if strings.HasSuffix(err.Error(), "no such file or directory") {
+			c.sdClient.Log(err.Error())
+			c.SendWarnMessage(context)
+			return
+		}
 	}
 
 	fName, err := homedir.Expand("~/lifx-controls-debug.zip")
