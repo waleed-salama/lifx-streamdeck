@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"encoding/json"
 	"fmt"
+	"github.com/mitchellh/go-homedir"
 	"io/ioutil"
 	"net"
 	"os"
@@ -64,7 +65,6 @@ func (c *Client) OnKeyUp(msg streamdeck.KeyUpMsg) {
 		c.togglePower(msg.Context, msg.Payload.Settings)
 	case ActionDebug:
 		c.generateDebug(msg.Context)
-		c.sendOKMessage(msg.Context)
 	default:
 		c.SendWarnMessage(msg.Context)
 		c.sdClient.Log(fmt.Sprintf("Unknown action received %s", msg.Action))
@@ -183,7 +183,14 @@ func (c Client) generateDebug(context string) {
 		return
 	}
 
-	zipFile, err := os.OpenFile("debug.zip", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	fName, err := homedir.Expand("~/lifx-controls-debug.zip")
+	if err != nil {
+		c.sdClient.Log(err.Error())
+		c.SendWarnMessage(context)
+		return
+	}
+
+	zipFile, err := os.OpenFile(fName, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
 		c.sdClient.Log(err.Error())
 		c.SendWarnMessage(context)
@@ -216,6 +223,7 @@ func (c Client) generateDebug(context string) {
 		return
 	}
 	crashFile.Write(crashData)
+	c.sendOKMessage(context)
 }
 
 type network struct {
