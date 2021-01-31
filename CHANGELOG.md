@@ -1,8 +1,7 @@
-# v0.5.1 (WIP)
-## New Features
-
+# v0.5.1
 ## Fixes
 * The order of devices is now sorted alphabetically for discovered devices.  This will result in more consistent locations for device selection.
+* Fix the debug action for MacOS.
 
 # v0.5.0 
 ## New Features
