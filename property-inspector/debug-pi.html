@@ -11,6 +11,10 @@
     <details class="message caution">
         <summary>This is for debug usage only.  This action shouldn't be used unless you've been told to use it.</summary>
     </details>
+    <div class="sdpi-item">
+        <div class="sdpi-item-label">Button</div>
+        <button class="sdpi-item-value" onclick="launchGlobalSettings()" id="mybutton">Global Settings</button>
+    </div>
 </div>
 <script>
     // this is our global websocket, used to communicate from/to Stream Deck software
@@ -18,6 +22,7 @@
     let websocket = null,
         uuid = null,
         actionInfo = {};
+        gsWindow = null;
 
     function connectElgatoStreamDeckSocket(inPort, inUUID, inRegisterEvent, inInfo, inActionInfo) {
         uuid = inUUID;
@@ -37,8 +42,19 @@
             websocket.send(JSON.stringify(json));
         }
         websocket.onmessage = function (event) {
+            const jsonObj = JSON.parse(event.data);
+            const sdEvent = jsonObj.event;
 
+            if (sdEvent === "didReceiveGlobalSettings") {
+                if (gsWindow) {
+                    gsWindow.setGlobalSettingsUI(jsonObj);
+                }
+            }
         }
+    }
+
+    function launchGlobalSettings() {
+        gsWindow = window.open("global-settings-pi.html");
     }
 </script>
 </body>

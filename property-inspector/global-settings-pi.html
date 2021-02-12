@@ -1,0 +1,56 @@
+<head>
+    <meta charset="utf-8" />
+    <title>My Property Inspector</title>
+    <link rel="stylesheet" href="sdpi.css">
+    <link rel="stylesheet" href="custom.css">
+    <script type="text/javascript" src="utils.js"></script>
+</head>
+
+<body>
+<div class="sdpi-wrapper" id="global-wrapper">
+    <div class="sdpi-heading">
+        <summary>LIFX Controls Global Settings</summary>
+    </div>
+    <div class="sdpi-item">
+        <div class="sdpi-item-label empty"></div>
+        <div class="loader"></div>
+    </div>
+    <div class="sdpi-item">
+        <div class="sdpi-item-label">Outbound IP</div>
+        <input class="sdpi-item-value" id="outIP" pattern="^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$" />
+    </div>
+
+    <div class="sdpi-item">
+        <div class="sdpi-item-label empty"></div>
+        <button class="sdpi-item-value" id="submit" onclick="onSubmit()">Submit</button>
+        <button class="sdpi-item-value red" id="reset" onclick="onReset()">Reset</button>
+    </div>
+</div>
+<script>
+    function setGlobalSettingsUI(settings) {
+        loaders = document.getElementsByClassName("loader")
+        for (let i = 0; i < loaders.length; i++) {
+            loaders[i].remove();
+        }
+        outIP.value = settings.payload.settings.outIP;
+    }
+
+    function onSubmit() {
+        if (!outIP.checkValidity()) {
+            alert("Outbound IP must be a valid IP v4 address");
+            return
+        }
+        const outboundIP = outIP.value;
+        const payload = {"version": 1, "outIP": outboundIP};
+        opener.UpdateGlobalSettings(payload);
+    }
+
+    function onReset() {
+        outIP.value = "";
+    }
+
+    const msg = {"event": "getGlobalSettings", "context": opener.getUUID()};
+    opener.getWS().send(JSON.stringify(msg))
+    const outIP = document.getElementById("outIP");
+</script>
+</body>

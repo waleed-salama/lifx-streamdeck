@@ -10,6 +10,28 @@ function UpdateSettings() {
     }
 }
 
+function UpdateGlobalSettings(payload) {
+    if (websocket) {
+        const json = {
+            "action": actionInfo.action,
+            "event": "setGlobalSettings",
+            "context": uuid,
+            "payload": payload
+        };
+        websocket.send(JSON.stringify(json));
+    } else {
+        console.error("websocket null")
+    }
+}
+
+function getUUID() {
+    return uuid;
+}
+
+function getWS() {
+    return websocket;
+}
+
 // our method to pass values to the plugin
 function sendValueToPlugin(payload) {
     if (websocket) {
