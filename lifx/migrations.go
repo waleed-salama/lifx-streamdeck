@@ -71,27 +71,7 @@ func (c *Client) MigrateActions(settings map[string]interface{}, action string) 
 	return settings, nil
 }
 
-func (c *Client) MigrateGlobalSettings() {
-	// Clear out the channel if there are already entries to prevent issues then break out of the loop
-loop:
-	for {
-		select {
-		case _, ok := <-c.gSettingsChannel:
-			if !ok {
-				panic("Global Settings Channel Closed")
-			}
-		default:
-			break loop
-		}
-	}
-
-	msg := streamdeck.GetGlobalSettingsMsg{
-		Event:   streamdeck.GetGlobalSettingsEvent,
-		Context: c.uuid,
-	}
-
-	_ = c.sdClient.SendMessage(msg)
-	globalSettings := <-c.gSettingsChannel
+func (c *Client) MigrateGlobalSettings(globalSettings map[string]interface{}) map[string]interface{} {
 	// No settings, migrate to v1
 	if len(globalSettings) == 0 {
 		globalSettings["version"] = 1
@@ -102,15 +82,16 @@ loop:
 			Payload: globalSettings,
 		}
 		_ = c.sdClient.SendMessage(msg)
-		c.MigrateGlobalSettings()
+		globalSettings = c.MigrateGlobalSettings(globalSettings)
 	} else {
 		if val, ok := globalSettings["version"]; ok {
 			switch val {
 			case 1:
-
+				// nothing to do here
 			}
 		}
 	}
+	return globalSettings
 }
 
 func migrateColorSettingsToV1(settings map[string]interface{}) map[string]interface{} {

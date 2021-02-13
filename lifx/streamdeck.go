@@ -77,8 +77,8 @@ func (c *Client) OnKeyUp(msg streamdeck.KeyUpMsg) {
 
 func (c *Client) OnDidReceiveGlobalSettings(msg streamdeck.DidReceiveGlobalSettingsMsg) {
 	settings := msg.Payload.Settings
-	//TODO: Fix this blocking here
-	c.gSettingsChannel <- settings
+	// generally this will be a no-op but makes logic simpler
+	settings = c.MigrateGlobalSettings(settings)
 	c.UpdateGlobalSettings(settings)
 }
 
