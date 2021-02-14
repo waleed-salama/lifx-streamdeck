@@ -30,10 +30,12 @@ func NewClient(port, uuid string, info *AppInfo) (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
+	gSettings := new(GlobalSettings)
 	client := &Client{
-		sdClient: sdClient,
-		appInfo:  info,
-		uuid:     uuid,
+		sdClient:       sdClient,
+		appInfo:        info,
+		uuid:           uuid,
+		globalSettings: gSettings,
 	}
 	return client, nil
 }

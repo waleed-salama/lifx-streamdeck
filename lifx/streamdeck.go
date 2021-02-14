@@ -173,7 +173,11 @@ func (c Client) UpdateGlobalSettings(settings map[string]interface{}) {
 		c.sdClient.Log(err.Error())
 		return
 	}
-	c.globalSettings = gSettings
+	*c.globalSettings = *gSettings
+
+	println("UpdateGlobalSettings")
+	println(c.globalSettings)
+	println(c.globalSettings.OutIP)
 
 	if gSettings.OutIP == "" {
 		golifx.SetOutboundIP(nil)
@@ -190,6 +194,18 @@ func (c Client) generateDebug(context string) {
 		c.SendWarnMessage(context)
 		return
 	}
+
+	// get global settings as json
+	gSettingsData, err := json.Marshal(c.globalSettings)
+	if err != nil {
+		c.sdClient.Log(err.Error())
+		c.SendWarnMessage(context)
+		return
+	}
+
+	println("generateDebug")
+	println(c.globalSettings)
+	//println(c.globalSettings.OutIP)
 
 	netInfo, err := getNetworkInfo()
 	if err != nil {
@@ -253,6 +269,15 @@ func (c Client) generateDebug(context string) {
 		return
 	}
 	crashFile.Write(crashData)
+
+	gSettingsFile, err := zipw.Create("gSettings.json")
+	if err != nil {
+		c.sdClient.Log(err.Error())
+		c.SendWarnMessage(context)
+		return
+	}
+	gSettingsFile.Write(gSettingsData)
+
 	c.sendOKMessage(context)
 }
 
