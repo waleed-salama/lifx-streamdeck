@@ -78,3 +78,7 @@ function DiscoverDevices() {
     discoveryButton.setAttribute('disabled', 'disabled');
     container.append(loader);
 }
+
+function launchGlobalSettings() {
+    gsWindow = window.open("global-settings-pi.html");
+}

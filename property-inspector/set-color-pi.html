@@ -3,6 +3,7 @@
     <title>My Property Inspector</title>
     <link rel="stylesheet" href="sdpi.css">
     <link rel="stylesheet" href="custom.css">
+    <link rel="stylesheet" href="fa-all.min.css">
     <script type="text/javascript" src="utils.js"></script>
 </head>
 
@@ -11,6 +12,7 @@
     <div class="sdpi-item" id="discover-container">
         <div class="sdpi-item-label empty"></div>
         <button class="sdpi-item-value" id="discovery" onclick="DiscoverDevices()">Discover Devices</button>
+        <button onclick="launchGlobalSettings()" title="Global Settings"><i class="fas fa-cog"></i></button>
     </div>
     <div class="sdpi-item" id="device_select">
         <div class="sdpi-item-label">Devices</div>
@@ -102,6 +104,10 @@
                     devicesDiscovered(data);
                 } else if (data['type'] === 'getColor') {
                     colorReceived(data['color']);
+                }
+            } else if (sdEvent === "didReceiveGlobalSettings") {
+                if (gsWindow) {
+                    gsWindow.setGlobalSettingsUI(jsonObj);
                 }
             }
         }

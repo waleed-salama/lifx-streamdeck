@@ -3,6 +3,7 @@
     <title>My Property Inspector</title>
     <link rel="stylesheet" href="sdpi.css">
     <link rel="stylesheet" href="custom.css">
+    <link rel="stylesheet" href="fa-all.min.css">
     <script type="text/javascript" src="utils.js"></script>
 </head>
 
@@ -12,8 +13,8 @@
         <summary>This is for debug usage only.  This action shouldn't be used unless you've been told to use it.</summary>
     </details>
     <div class="sdpi-item">
-        <div class="sdpi-item-label">Button</div>
-        <button class="sdpi-item-value" onclick="launchGlobalSettings()" id="mybutton">Global Settings</button>
+        <div class="sdpi-item-value empty"></div>
+        <button onclick="launchGlobalSettings()"><i class="fas fa-cog"></i> Global Settings</button>
     </div>
 </div>
 <script>
@@ -51,10 +52,6 @@
                 }
             }
         }
-    }
-
-    function launchGlobalSettings() {
-        gsWindow = window.open("global-settings-pi.html");
     }
 </script>
 </body>
