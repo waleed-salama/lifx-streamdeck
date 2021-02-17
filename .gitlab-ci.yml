@@ -116,7 +116,7 @@ generate-bundle:
     - cp lifx-streamdeck.exe dev.sean.lifx.sdPlugin
     - cp lifx-streamdeck dev.sean.lifx.sdPlugin
     - cp manifest.json dev.sean.lifx.sdPlugin
-    - cp property-inspector/* dev.sean.lifx.sdPlugin
+    - cp -r property-inspector/* dev.sean.lifx.sdPlugin
     - cp images/* dev.sean.lifx.sdPlugin
     - cp LICENSE dev.sean.lifx.sdPlugin
     - cp -r attribution dev.sean.lifx.sdPlugin
