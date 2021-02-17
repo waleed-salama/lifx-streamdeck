@@ -1,3 +1,10 @@
+// this is our global websocket, used to communicate from/to Stream Deck software
+// and some info about our plugin, as sent by Stream Deck software
+let websocket = null,
+    uuid = null,
+    actionInfo = {},
+    gsWindow = null;
+
 function UpdateSettings() {
     if (websocket) {
         const json = {

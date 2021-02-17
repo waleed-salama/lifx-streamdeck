@@ -28,12 +28,6 @@
         </div>
     </div>
     <script>
-        // this is our global websocket, used to communicate from/to Stream Deck software
-        // and some info about our plugin, as sent by Stream Deck software
-        let websocket = null,
-            uuid = null,
-            actionInfo = {};
-
         function connectElgatoStreamDeckSocket(inPort, inUUID, inRegisterEvent, inInfo, inActionInfo) {
             uuid = inUUID;
             // please note: the incoming arguments are of type STRING, so

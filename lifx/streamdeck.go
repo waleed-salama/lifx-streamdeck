@@ -173,12 +173,8 @@ func (c Client) UpdateGlobalSettings(settings map[string]interface{}) {
 		c.sdClient.Log(err.Error())
 		return
 	}
+
 	*c.globalSettings = *gSettings
-
-	println("UpdateGlobalSettings")
-	println(c.globalSettings)
-	println(c.globalSettings.OutIP)
-
 	if gSettings.OutIP == "" {
 		golifx.SetOutboundIP(nil)
 	} else {
@@ -202,10 +198,6 @@ func (c Client) generateDebug(context string) {
 		c.SendWarnMessage(context)
 		return
 	}
-
-	println("generateDebug")
-	println(c.globalSettings)
-	//println(c.globalSettings.OutIP)
 
 	netInfo, err := getNetworkInfo()
 	if err != nil {
