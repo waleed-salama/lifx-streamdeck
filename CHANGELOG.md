@@ -1,3 +1,7 @@
+# v0.5.2
+## Fixes
+* Fixes [issue #10](https://gitlab.com/wwsean08/lifx-streamdeck/-/issues/10) by allowing you to enter the outbound IP to use.  This is available via the global settings option.  Future versions might be slightly nicer for input.
+
 # v0.5.1
 ## Fixes
 * The order of devices is now sorted alphabetically for discovered devices.  This will result in more consistent locations for device selection.
