@@ -1,9 +1,12 @@
 package lifx
 
-import "strconv"
+import (
+	"gitlab.com/wwsean08/streamdeck"
+	"strconv"
+)
 
-//Migrate migrates the schema of settings objects
-func (c *Client) Migrate(settings map[string]interface{}, action string) (map[string]interface{}, error) {
+//MigrateActions migrates the schema of settings objects
+func (c *Client) MigrateActions(settings map[string]interface{}, action string) (map[string]interface{}, error) {
 	var err error
 	switch action {
 	case ActionSetColor:
@@ -20,7 +23,7 @@ func (c *Client) Migrate(settings map[string]interface{}, action string) (map[st
 			}
 		} else {
 			settings = migrateColorSettingsToV1(settings)
-			return c.Migrate(settings, action)
+			return c.MigrateActions(settings, action)
 		}
 	case ActionSetBrightness:
 		if val, ok := settings["version"]; ok {
@@ -37,7 +40,7 @@ func (c *Client) Migrate(settings map[string]interface{}, action string) (map[st
 			}
 		} else {
 			settings = migrateBrightnessSettingsToV1(settings)
-			return c.Migrate(settings, action)
+			return c.MigrateActions(settings, action)
 		}
 	case ActionTurnOnDevice, ActionTurnOffDevice:
 		if val, ok := settings["version"]; ok {
@@ -50,7 +53,7 @@ func (c *Client) Migrate(settings map[string]interface{}, action string) (map[st
 			}
 		} else {
 			settings = migratePowerSettingsToV1(settings)
-			return c.Migrate(settings, action)
+			return c.MigrateActions(settings, action)
 		}
 	case ActionToggleDevice:
 		if val, ok := settings["version"]; ok {
@@ -66,6 +69,29 @@ func (c *Client) Migrate(settings map[string]interface{}, action string) (map[st
 		}
 	}
 	return settings, nil
+}
+
+func (c *Client) MigrateGlobalSettings(globalSettings map[string]interface{}) map[string]interface{} {
+	// No settings, migrate to v1
+	if len(globalSettings) == 0 {
+		globalSettings["version"] = 1
+		globalSettings["outIP"] = ""
+		msg := streamdeck.SetGlobalSettingsMsg{
+			Event:   streamdeck.SetGlobalSettingsEvent,
+			Context: c.uuid,
+			Payload: globalSettings,
+		}
+		_ = c.sdClient.SendMessage(msg)
+		globalSettings = c.MigrateGlobalSettings(globalSettings)
+	} else {
+		if val, ok := globalSettings["version"]; ok {
+			switch val {
+			case 1:
+				// nothing to do here
+			}
+		}
+	}
+	return globalSettings
 }
 
 func migrateColorSettingsToV1(settings map[string]interface{}) map[string]interface{} {

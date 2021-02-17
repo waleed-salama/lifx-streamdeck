@@ -1,3 +1,10 @@
+// this is our global websocket, used to communicate from/to Stream Deck software
+// and some info about our plugin, as sent by Stream Deck software
+let websocket = null,
+    uuid = null,
+    actionInfo = {},
+    gsWindow = null;
+
 function UpdateSettings() {
     if (websocket) {
         const json = {
@@ -8,6 +15,28 @@ function UpdateSettings() {
         };
         websocket.send(JSON.stringify(json));
     }
+}
+
+function UpdateGlobalSettings(payload) {
+    if (websocket) {
+        const json = {
+            "action": actionInfo.action,
+            "event": "setGlobalSettings",
+            "context": uuid,
+            "payload": payload
+        };
+        websocket.send(JSON.stringify(json));
+    } else {
+        console.error("websocket null")
+    }
+}
+
+function getUUID() {
+    return uuid;
+}
+
+function getWS() {
+    return websocket;
 }
 
 // our method to pass values to the plugin
@@ -55,4 +84,8 @@ function DiscoverDevices() {
     loader.setAttribute('class', 'loader');
     discoveryButton.setAttribute('disabled', 'disabled');
     container.append(loader);
+}
+
+function launchGlobalSettings() {
+    gsWindow = window.open("global-settings-pi.html");
 }

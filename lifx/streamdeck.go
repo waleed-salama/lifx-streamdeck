@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/mitchellh/go-homedir"
+	"github.com/mitchellh/mapstructure"
 	"io/ioutil"
 	"net"
 	"os"
@@ -25,8 +26,8 @@ func (c *Client) OnWillAppear(msg streamdeck.WillAppearMsg) {
 		//this is brand new or unconfigured
 		return
 	}
-	// Migrate settings if needed
-	settings, err := c.Migrate(msg.Payload.Settings, msg.Action)
+	// MigrateActions settings if needed
+	settings, err := c.MigrateActions(msg.Payload.Settings, msg.Action)
 	if err != nil {
 		c.sdClient.Log(err.Error())
 		panic(err)
@@ -46,6 +47,8 @@ func (c *Client) OnSendToPlugin(msg streamdeck.SendToPluginMsg) {
 		c.discoverDevices(msg.Action, msg.Context)
 	case "getColor":
 		c.getDevicesCurrentColor(msg.Action, msg.Context, msg.Payload["mac"].(string))
+	default:
+		c.sdClient.Log(fmt.Sprintf("Unknown message type recieved from Property Inspector, %s", msg.Payload["type"]))
 	}
 }
 
@@ -70,6 +73,13 @@ func (c *Client) OnKeyUp(msg streamdeck.KeyUpMsg) {
 		c.SendWarnMessage(msg.Context)
 		c.sdClient.Log(fmt.Sprintf("Unknown action received %s", msg.Action))
 	}
+}
+
+func (c *Client) OnDidReceiveGlobalSettings(msg streamdeck.DidReceiveGlobalSettingsMsg) {
+	settings := msg.Payload.Settings
+	// generally this will be a no-op but makes logic simpler
+	settings = c.MigrateGlobalSettings(settings)
+	c.UpdateGlobalSettings(settings)
 }
 
 func (c *Client) sendOKMessage(context string) {
@@ -156,9 +166,33 @@ func (c *Client) sendDevicesToPropertyInspector(action string, context string, d
 	}
 }
 
+func (c Client) UpdateGlobalSettings(settings map[string]interface{}) {
+	var gSettings = new(GlobalSettings)
+	err := mapstructure.Decode(settings, gSettings)
+	if err != nil {
+		c.sdClient.Log(err.Error())
+		return
+	}
+
+	*c.globalSettings = *gSettings
+	if gSettings.OutIP == "" {
+		golifx.SetOutboundIP(nil)
+	} else {
+		golifx.SetOutboundIP(&gSettings.OutIP)
+	}
+}
+
 func (c Client) generateDebug(context string) {
 	// get app environment info
 	envData, err := json.Marshal(c.appInfo)
+	if err != nil {
+		c.sdClient.Log(err.Error())
+		c.SendWarnMessage(context)
+		return
+	}
+
+	// get global settings as json
+	gSettingsData, err := json.Marshal(c.globalSettings)
 	if err != nil {
 		c.sdClient.Log(err.Error())
 		c.SendWarnMessage(context)
@@ -227,6 +261,15 @@ func (c Client) generateDebug(context string) {
 		return
 	}
 	crashFile.Write(crashData)
+
+	gSettingsFile, err := zipw.Create("gSettings.json")
+	if err != nil {
+		c.sdClient.Log(err.Error())
+		c.SendWarnMessage(context)
+		return
+	}
+	gSettingsFile.Write(gSettingsData)
+
 	c.sendOKMessage(context)
 }
 

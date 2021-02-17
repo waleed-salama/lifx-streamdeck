@@ -3,6 +3,7 @@
     <title>My Property Inspector</title>
     <link rel="stylesheet" href="sdpi.css">
     <link rel="stylesheet" href="custom.css">
+    <link rel="stylesheet" href="fa-all.min.css">
     <script type="text/javascript" src="utils.js"></script>
 </head>
 
@@ -11,14 +12,12 @@
     <details class="message caution">
         <summary>This is for debug usage only.  This action shouldn't be used unless you've been told to use it.</summary>
     </details>
+    <div class="sdpi-item">
+        <div class="sdpi-item-value empty"></div>
+        <button onclick="launchGlobalSettings()"><i class="fas fa-cog"></i> Global Settings</button>
+    </div>
 </div>
 <script>
-    // this is our global websocket, used to communicate from/to Stream Deck software
-    // and some info about our plugin, as sent by Stream Deck software
-    let websocket = null,
-        uuid = null,
-        actionInfo = {};
-
     function connectElgatoStreamDeckSocket(inPort, inUUID, inRegisterEvent, inInfo, inActionInfo) {
         uuid = inUUID;
         // please note: the incoming arguments are of type STRING, so
@@ -37,7 +36,14 @@
             websocket.send(JSON.stringify(json));
         }
         websocket.onmessage = function (event) {
+            const jsonObj = JSON.parse(event.data);
+            const sdEvent = jsonObj.event;
 
+            if (sdEvent === "didReceiveGlobalSettings") {
+                if (gsWindow) {
+                    gsWindow.setGlobalSettingsUI(jsonObj);
+                }
+            }
         }
     }
 </script>

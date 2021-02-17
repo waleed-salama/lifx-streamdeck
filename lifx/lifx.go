@@ -13,9 +13,11 @@ import (
 
 // Client represents our client data
 type Client struct {
-	sdClient *streamdeck.Client
-	devices  map[string]*golifx.Device
-	appInfo  *AppInfo
+	sdClient       *streamdeck.Client
+	devices        map[string]*golifx.Device
+	appInfo        *AppInfo
+	uuid           string
+	globalSettings *GlobalSettings
 }
 
 // NewClient creates a client for speaking with the Stream Deck websocket
@@ -28,9 +30,12 @@ func NewClient(port, uuid string, info *AppInfo) (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
+	gSettings := new(GlobalSettings)
 	client := &Client{
-		sdClient: sdClient,
-		appInfo:  info,
+		sdClient:       sdClient,
+		appInfo:        info,
+		uuid:           uuid,
+		globalSettings: gSettings,
 	}
 	return client, nil
 }
@@ -42,9 +47,15 @@ func (c *Client) Init() {
 	c.sdClient.SetSendToPluginCallback(c.OnSendToPlugin)
 	c.sdClient.SetPropertyInspectorDidAppearCallback(c.OnPropertyInspectorDidAppear)
 	c.sdClient.SetWillAppearCallback(c.OnWillAppear)
+	c.sdClient.SetDidReceiveGlobalSettingsCallback(c.OnDidReceiveGlobalSettings)
 	if viper.GetString("application.version") == "develop" {
 		c.sdClient.SetRawCallback(c.DebugCallback)
 	}
+	msg := streamdeck.GetGlobalSettingsMsg{
+		Context: c.uuid,
+		Event:   streamdeck.GetGlobalSettingsEvent,
+	}
+	_ = c.sdClient.SendMessage(msg)
 	_, _ = c.getAllDevices()
 }
 
