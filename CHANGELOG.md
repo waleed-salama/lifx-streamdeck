@@ -1,3 +1,10 @@
+# v0.6.0 (WIP)
+## Features
+* TODO: Create a cache to reduce the occurences of [issue 1](https://gitlab.com/wwsean08/lifx-streamdeck/-/issues/1) where mac addresses are shown instead of the device label. 
+
+## Unrelated Changes
+* Added links to my kofi, discord, and twitch into the global settings which will open in your default browser.
+
 # v0.5.2
 ## Fixes
 * Fixes [issue #10](https://gitlab.com/wwsean08/lifx-streamdeck/-/issues/10) by allowing you to enter the outbound IP to use.  This is available via the global settings option.  Future versions might be slightly nicer for input.

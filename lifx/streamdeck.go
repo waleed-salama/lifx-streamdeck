@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/mitchellh/go-homedir"
 	"github.com/mitchellh/mapstructure"
+	"github.com/skratchdot/open-golang/open"
 	"io/ioutil"
 	"net"
 	"os"
@@ -47,6 +48,15 @@ func (c *Client) OnSendToPlugin(msg streamdeck.SendToPluginMsg) {
 		c.discoverDevices(msg.Action, msg.Context)
 	case "getColor":
 		c.getDevicesCurrentColor(msg.Action, msg.Context, msg.Payload["mac"].(string))
+	case "kofi":
+		//browser.Open("")
+		_ = open.Start("https://ko-fi.com/P5P23OLT2")
+	case "discord":
+		//browser.Open("https://discord.gg/PPVYMeP")
+		_ = open.Start("https://discord.gg/PPVYMeP")
+	case "twitch":
+		//browser.Open("https://twitch.tv/wwsean08")
+		_ = open.Start("https://twitch.tv/wwsean08")
 	default:
 		c.sdClient.Log(fmt.Sprintf("Unknown message type recieved from Property Inspector, %s", msg.Payload["type"]))
 	}

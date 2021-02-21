@@ -25,6 +25,17 @@
         <button class="sdpi-item-value" id="submit" onclick="onSubmit()">Submit</button>
         <button class="sdpi-item-value red" id="reset" onclick="onReset()">Reset</button>
     </div>
+
+    <div class="sdpi-heading">
+        <summary>Links</summary>
+    </div>
+    <div>
+        <div style="display: flex; justify-content: center; flex-basis: 100%;">
+            <a href="#" onclick="opener.sendValueToPlugin({'type': 'kofi'})"><img class="logo" src="Kofi-Logo.png" border="0" alt="Buy Me a Coffee at ko-fi.com"/></a>
+            <a href="#" onclick="opener.sendValueToPlugin({'type': 'discord'})"><img src="Discord-Logo.png" class="logo" alt="wwsean08's Discord Server"></a>
+            <a href="#" onclick="opener.sendValueToPlugin({'type': 'twitch'})"><img src="Twitch-Logo.png" class="logo" alt="wwsean08's Twitch Page"></a>
+        </div>
+    </div>
 </div>
 <script>
     function setGlobalSettingsUI(settings) {

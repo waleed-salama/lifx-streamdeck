@@ -23,3 +23,8 @@ input:invalid {
 button.red {
     background-color: red;
 }
+
+.logo {
+    border:0;
+    height:36px;
+}
