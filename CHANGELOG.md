@@ -1,6 +1,6 @@
 # v0.6.0 (WIP)
 ## Features
-* TODO: Create a cache to reduce the occurences of [issue 1](https://gitlab.com/wwsean08/lifx-streamdeck/-/issues/1) where mac addresses are shown instead of the device label. 
+* Create a cache to reduce the occurrences of [issue 1](https://gitlab.com/wwsean08/lifx-streamdeck/-/issues/1) where mac addresses are shown instead of the device label. 
 
 ## Unrelated Changes
 * Added links to my kofi, discord, and twitch into the global settings which will open in your default browser.
