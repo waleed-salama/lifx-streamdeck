@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/mitchellh/mapstructure"
 	"github.com/spf13/viper"
@@ -43,6 +44,7 @@ func NewClient(port, uuid string, info *AppInfo) (*Client, error) {
 // Init handles initializing the client, and setting up the initial discovery of devices
 func (c *Client) Init() {
 	golifx.SetAlwaysBroadcast(true)
+	golifx.SetCacheTTL(time.Minute)
 	c.sdClient.SetOnKeyUpCallback(c.OnKeyUp)
 	c.sdClient.SetSendToPluginCallback(c.OnSendToPlugin)
 	c.sdClient.SetPropertyInspectorDidAppearCallback(c.OnPropertyInspectorDidAppear)
