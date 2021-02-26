@@ -1,4 +1,4 @@
-# v0.6.0 (WIP)
+# v0.6.0
 ## Features
 * Create a cache to reduce the occurrences of [issue 1](https://gitlab.com/wwsean08/lifx-streamdeck/-/issues/1) where mac addresses are shown instead of the device label. 
 
