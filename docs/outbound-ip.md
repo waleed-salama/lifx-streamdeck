@@ -9,6 +9,7 @@ Many routers offer the ability to get the device list, it might be under a page 
 
 ## Windows
 On Windows open command prompt by hitting start and typing in `cmd` once that loads, run `ipconfig`
+
 ![img.png](imgs/ipconfig.png)
 
 Based on the screenshot above I would enter `192.168.2.124` into the Outbound IP box as the first 3 numbers match with my LIFX Bulb, which would cause it to use this network adapter to manage the devices.
