@@ -14,8 +14,8 @@ snyk-scan:
   image: node:14.2
   before_script:
     - apt install -y wget tar
-    - wget -q https://golang.org/dl/go1.15.7.linux-amd64.tar.gz -O /tmp/go1.15.7.linux-amd64.tar.gz
-    - tar -C /usr/local -xzf /tmp/go1.15.7.linux-amd64.tar.gz
+    - wget -q https://golang.org/dl/go1.16.0.linux-amd64.tar.gz -O /tmp/go1.16.0.linux-amd64.tar.gz
+    - tar -C /usr/local -xzf /tmp/go1.16.0.linux-amd64.tar.gz
   script:
     - export PATH=$PATH:/usr/local/go/bin
     - npm install -g snyk
@@ -24,7 +24,7 @@ snyk-scan:
 
 test:
   stage: test
-  image: golang:1.15
+  image: golang:1.16
   before_script:
     - go mod download
   script:
@@ -34,7 +34,7 @@ test:
 
 coverage-report:
   stage: test
-  image: golang:1.15
+  image: golang:1.16
   before_script:
     - go mod download
   script:
@@ -67,7 +67,7 @@ release-test:
 
 compile-windows:
   stage: build
-  image: golang:1.15
+  image: golang:1.16
   script:
     - go mod download
     - if [ -n "$CI_COMMIT_TAG" ]; then export version=$CI_COMMIT_TAG; fi
@@ -80,7 +80,7 @@ compile-windows:
 
 compile-mac:
   stage: build
-  image: golang:1.15
+  image: golang:1.16
   script:
     - go mod download
     - if [ -n "$CI_COMMIT_TAG" ]; then export version=$CI_COMMIT_TAG; fi
@@ -93,7 +93,7 @@ compile-mac:
 
 generate-license-data:
   stage: build
-  image: golang:1.15
+  image: golang:1.16
   before_script:
     - go get github.com/google/go-licenses
   script:
