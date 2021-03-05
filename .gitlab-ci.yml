@@ -14,8 +14,8 @@ snyk-scan:
   image: node:14.2
   before_script:
     - apt install -y wget tar
-    - wget -q https://golang.org/dl/go1.16.0.linux-amd64.tar.gz -O /tmp/go1.16.0.linux-amd64.tar.gz
-    - tar -C /usr/local -xzf /tmp/go1.16.0.linux-amd64.tar.gz
+    - wget -q https://golang.org/dl/go1.16.linux-amd64.tar.gz -O /tmp/go1.16.linux-amd64.tar.gz
+    - tar -C /usr/local -xzf /tmp/go1.16.linux-amd64.tar.gz
   script:
     - export PATH=$PATH:/usr/local/go/bin
     - npm install -g snyk
