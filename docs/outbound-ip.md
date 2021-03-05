@@ -14,4 +14,8 @@ On Windows open command prompt by hitting start and typing in `cmd` once that lo
 
 Based on the screenshot above I would enter `192.168.2.124` into the Outbound IP box as the first 3 numbers match with my LIFX Bulb, which would cause it to use this network adapter to manage the devices.
 ## Mac
+On mac open your `terminal` application then run the `ifconfig` command
 
+![img.png](imgs/ifconfig.png)
+
+Based on the screenshot above I would enter `192.168.2.122` into the Outbound IP box as the first 3 numbers match with my LIFX Bulb, which would cause it to use this network adapter to manage the devices.
