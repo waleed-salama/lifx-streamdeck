@@ -2,6 +2,9 @@
 ## Fixes
 * Added a link to documentation around the `Outbound IP` setting to hopefully reduce confusion.
 
+# Unrelated Changes
+* Upgraded to go 1.16
+
 # v0.6.0
 ## Features
 * Create a cache to reduce the occurrences of [issue 1](https://gitlab.com/wwsean08/lifx-streamdeck/-/issues/1) where mac addresses are shown instead of the device label. 
