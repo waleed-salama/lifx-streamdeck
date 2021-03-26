@@ -1,3 +1,8 @@
+# v0.6.2
+## Fixes
+* Adds some new debug information
+
+
 # v0.6.1
 ## Fixes
 * Added a link to documentation around the `Outbound IP` setting to hopefully reduce confusion.

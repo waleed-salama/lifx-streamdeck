@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/mitchellh/go-homedir"
 	"github.com/mitchellh/mapstructure"
+	"github.com/mostlygeek/arp"
 	"github.com/skratchdot/open-golang/open"
 	"io/ioutil"
 	"net"
@@ -229,6 +230,7 @@ func (c Client) generateDebug(context string) {
 			return
 		}
 	}
+	deviceData, err := json.Marshal(c.devices)
 
 	fName, err := homedir.Expand("~/lifx-controls-debug.zip")
 	if err != nil {
@@ -279,11 +281,20 @@ func (c Client) generateDebug(context string) {
 	}
 	gSettingsFile.Write(gSettingsData)
 
+	devicesFile, err := zipw.Create("devices.json")
+	if err != nil {
+		c.sdClient.Log(err.Error())
+		c.SendWarnMessage(context)
+		return
+	}
+	devicesFile.Write(deviceData)
+
 	c.sendOKMessage(context)
 }
 
 type network struct {
 	IP         string          `json:"ip_used"`
+	LIFXIps    map[string]bool `json:"lifx_ips"`
 	Interfaces []interfaceInfo `json:"interfaces"`
 }
 
@@ -315,8 +326,37 @@ func getNetworkInfo() (network, error) {
 		}
 		ifInfo[i] = tmp
 	}
+	lifxIPs := getAllLifxIPs()
 	return network{
 		IP:         h,
+		LIFXIps:    lifxIPs,
 		Interfaces: ifInfo,
 	}, nil
+}
+
+func getAllLifxIPs() map[string]bool {
+	arpTable := arp.Table()
+	lifxIPs := make(map[string]bool)
+	for ip, mac := range arpTable {
+		// LIFX has been allocated D0:73:D5
+		if strings.HasPrefix(strings.ToUpper(mac), "D0:73:D5") {
+			// check for connectivity, assume it won't connect
+			lifxIPs[ip] = false
+			macInt, err := macToUint64(mac)
+			if err != nil {
+				println(err.Error())
+			}
+			// Not sure why I need this bit shift but via testing this is what I determined I needed, may be fragile
+			macInt = macInt >> 16
+			tmp := new(golifx.Device)
+			tmp.SetHardwareAddress(macInt)
+			_, err = tmp.GetLabel()
+			if err != nil {
+				println(err.Error())
+			} else {
+				lifxIPs[ip] = true
+			}
+		}
+	}
+	return lifxIPs
 }
