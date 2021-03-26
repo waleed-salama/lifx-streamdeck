@@ -21,6 +21,7 @@ snyk-scan:
     - npm install -g snyk
     - snyk auth $SNYK_TOKEN
     - snyk test
+  allow_failure: true
 
 test:
   stage: test
