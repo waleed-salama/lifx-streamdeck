@@ -1,7 +1,13 @@
+# v0.7.0 (WIP)
+## Fixes
+* Remove extra debug logs that were introduced on accident.
+
+## Features
+* Add a global setting to not use broadcasts for all light communications via the `Direct Connection` checkbox.
+
 # v0.6.2
 ## Fixes
 * Adds some new debug information
-
 
 # v0.6.1
 ## Fixes
