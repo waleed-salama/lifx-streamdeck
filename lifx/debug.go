@@ -163,17 +163,13 @@ func getAllLifxIPs() map[string]bool {
 			// check for connectivity, assume it won't connect
 			lifxIPs[ip] = false
 			macInt, err := macToUint64(mac)
-			if err != nil {
-				println(err.Error())
-			}
+
 			// Not sure why I need this bit shift but via testing this is what I determined I needed, may be fragile
 			macInt = macInt >> 16
 			tmp := new(golifx.Device)
 			tmp.SetHardwareAddress(macInt)
 			_, err = tmp.GetLabel()
-			if err != nil {
-				println(err.Error())
-			} else {
+			if err == nil {
 				lifxIPs[ip] = true
 			}
 		}
