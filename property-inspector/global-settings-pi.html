@@ -19,9 +19,14 @@
     <div class="sdpi-item">
         <div class="sdpi-item-label">Outbound IP</div>
         <input class="sdpi-item-value" id="outIP" pattern="^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$" />
-        <div style="display: flex; align-items: center; flex-basis: 100%;"><a href="#" onclick="opener.sendValueToPlugin({'type': 'outIPHelp'})" style="color: #9a9a9a;"><i class="fa fa-question"></i></a></div>
+        <div style="display: flex; align-items: center; flex-basis: 100%;"><a href="#" onclick="opener.sendValueToPlugin({'type': 'gSettingsHelp'})" style="color: #9a9a9a;"><i class="fa fa-question"></i></a></div>
     </div>
-
+    <div class="sdpi-item">
+        <div class="sdpi-item-label">Direct Communication</div>
+        <input id="directCommunication" type="checkbox" />
+        <label for="directCommunication"><span></span></label>
+        <div style="display: flex; align-items: center; flex-basis: 100%;"><a href="#" onclick="opener.sendValueToPlugin({'type': 'gSettingsHelp'})" style="color: #9a9a9a;"><i class="fa fa-question"></i></a></div>
+    </div>
     <div class="sdpi-item">
         <div class="sdpi-item-label empty"></div>
         <button class="sdpi-item-value" id="submit" onclick="onSubmit()">Submit</button>
@@ -46,6 +51,7 @@
             loaders[i].remove();
         }
         outIP.value = settings.payload.settings.outIP;
+        directComm.checked = settings.payload.settings.directComm;
     }
 
     function onSubmit() {
@@ -54,16 +60,19 @@
             return
         }
         const outboundIP = outIP.value;
-        const payload = {"version": 1, "outIP": outboundIP};
+        const isDirect = directComm.checked;
+        const payload = {"version": 2, "outIP": outboundIP, "directComm": isDirect};
         opener.UpdateGlobalSettings(payload);
     }
 
     function onReset() {
         outIP.value = "";
+        directComm.checked = false;
     }
 
     const msg = {"event": "getGlobalSettings", "context": opener.getUUID()};
     opener.getWS().send(JSON.stringify(msg))
     const outIP = document.getElementById("outIP");
+    const directComm = document.getElementById("directCommunication");
 </script>
 </body>

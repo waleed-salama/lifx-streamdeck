@@ -2,8 +2,9 @@ package lifx
 
 type (
 	GlobalSettings struct {
-		OutIP   string `mapstructure:"outIP" json:"out_ip"`
-		Version int    `mapstructure:"version" json:"version"`
+		OutIP      string `mapstructure:"outIP" json:"out_ip"`
+		Version    int    `mapstructure:"version" json:"version"`
+		DirectComm bool   `mapstructure:"directComm" json:"directComm"`
 	}
 
 	//Device represents a device in the Stream Deck settings

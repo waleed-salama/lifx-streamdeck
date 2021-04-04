@@ -87,7 +87,14 @@ func (c *Client) MigrateGlobalSettings(globalSettings map[string]interface{}) ma
 		if val, ok := globalSettings["version"]; ok {
 			switch val {
 			case 1:
-				// nothing to do here
+				globalSettings["version"] = 2
+				// if directComm doesn't exist, add it
+				if _, ok := globalSettings["directComm"]; !ok {
+					globalSettings["directComm"] = false
+				}
+				fallthrough
+			case 2:
+				// do nothing
 			}
 		}
 	}

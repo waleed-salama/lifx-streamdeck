@@ -46,8 +46,8 @@ func (c *Client) OnSendToPlugin(msg streamdeck.SendToPluginMsg) {
 		_ = open.Start("https://discord.gg/PPVYMeP")
 	case "twitch":
 		_ = open.Start("https://twitch.tv/wwsean08")
-	case "outIPHelp":
-		_ = open.Start("https://gitlab.com/wwsean08/lifx-streamdeck/-/blob/main/docs/outbound-ip.md")
+	case "gSettingsHelp":
+		_ = open.Start("https://gitlab.com/wwsean08/lifx-streamdeck/-/blob/main/docs/global-settings.md")
 	default:
 		c.sdClient.Log(fmt.Sprintf("Unknown message type recieved from Property Inspector, %s", msg.Payload["type"]))
 	}
@@ -181,4 +181,6 @@ func (c Client) UpdateGlobalSettings(settings map[string]interface{}) {
 	} else {
 		golifx.SetOutboundIP(&gSettings.OutIP)
 	}
+
+	golifx.SetAlwaysBroadcast(!gSettings.DirectComm)
 }
