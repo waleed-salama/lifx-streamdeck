@@ -86,6 +86,8 @@ type Plugin struct {
 type AppInfo struct {
 	Application Application `json:"application"`
 	Plugin      Plugin      `json:"plugin"`
+	Version     string      `json:"version"`
+	Commit      string      `json:"commit"`
 }
 
 //GenerateLIFXValues is a helper function to take care of

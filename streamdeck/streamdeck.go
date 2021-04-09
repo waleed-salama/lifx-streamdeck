@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/mitchellh/mapstructure"
 	"github.com/skratchdot/open-golang/open"
-	"github.com/spf13/viper"
 	"gitlab.com/wwsean08/golifx"
 	"gitlab.com/wwsean08/lifx-streamdeck/lifx"
 	"gitlab.com/wwsean08/lifx-streamdeck/models"
@@ -49,7 +48,7 @@ func NewClient(port, uuid string, info *models.AppInfo, controller lifx.Controll
 	client.sdClient.SetPropertyInspectorDidAppearCallback(client.OnPropertyInspectorDidAppear)
 	client.sdClient.SetWillAppearCallback(client.OnWillAppear)
 	client.sdClient.SetDidReceiveGlobalSettingsCallback(client.OnDidReceiveGlobalSettings)
-	if viper.GetString("application.version") == "develop" {
+	if info.Version == "develop" {
 		client.sdClient.SetRawCallback(client.DebugCallback)
 	}
 
