@@ -1,15 +1,17 @@
-package lifx
+package streamdeck
 
 import (
+	"gitlab.com/wwsean08/lifx-streamdeck/lifx"
 	"gitlab.com/wwsean08/streamdeck"
 	"strconv"
+	"time"
 )
 
 //MigrateActions migrates the schema of settings objects
 func (c *Client) MigrateActions(settings map[string]interface{}, action string) (map[string]interface{}, error) {
 	var err error
 	switch action {
-	case ActionSetColor:
+	case lifx.ActionSetColor:
 		if val, ok := settings["version"]; ok {
 			switch val {
 			case 1:
@@ -25,7 +27,7 @@ func (c *Client) MigrateActions(settings map[string]interface{}, action string) 
 			settings = migrateColorSettingsToV1(settings)
 			return c.MigrateActions(settings, action)
 		}
-	case ActionSetBrightness:
+	case lifx.ActionSetBrightness:
 		if val, ok := settings["version"]; ok {
 
 			switch val {
@@ -42,7 +44,7 @@ func (c *Client) MigrateActions(settings map[string]interface{}, action string) 
 			settings = migrateBrightnessSettingsToV1(settings)
 			return c.MigrateActions(settings, action)
 		}
-	case ActionTurnOnDevice, ActionTurnOffDevice:
+	case lifx.ActionTurnOnDevice, lifx.ActionTurnOffDevice:
 		if val, ok := settings["version"]; ok {
 			switch val {
 			case 1:
@@ -55,13 +57,13 @@ func (c *Client) MigrateActions(settings map[string]interface{}, action string) 
 			settings = migratePowerSettingsToV1(settings)
 			return c.MigrateActions(settings, action)
 		}
-	case ActionToggleDevice:
+	case lifx.ActionToggleDevice:
 		if val, ok := settings["version"]; ok {
 			switch val {
 			// no migrations for this yet
 			}
 		}
-	case ActionSetWaveform:
+	case lifx.ActionSetWaveform:
 		if val, ok := settings["version"]; ok {
 			switch val {
 			// no migrations for this yet
@@ -95,6 +97,10 @@ func (c *Client) MigrateGlobalSettings(globalSettings map[string]interface{}) ma
 				fallthrough
 			case 2:
 				// do nothing
+				globalSettings["version"] = 3
+				if _, ok := globalSettings["cacheTTL"]; !ok {
+					globalSettings["cacheTTL"] = time.Minute
+				}
 			}
 		}
 	}
