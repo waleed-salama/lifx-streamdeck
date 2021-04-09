@@ -2,6 +2,8 @@ package main
 
 import (
 	"encoding/json"
+	"gitlab.com/wwsean08/lifx-streamdeck/models"
+	"gitlab.com/wwsean08/lifx-streamdeck/streamdeck"
 	"log"
 	"os"
 	"syscall"
@@ -25,13 +27,13 @@ func main() {
 	port := args[1]
 	uuid := args[3]
 	info := args[7]
-	appInfo := new(lifx.AppInfo)
+	appInfo := new(models.AppInfo)
 	json.Unmarshal([]byte(info), appInfo)
-	client, err := lifx.NewClient(port, uuid, appInfo)
+	lifxController := lifx.NewLifxController()
+	_, err = streamdeck.NewClient(port, uuid, appInfo, lifxController)
 	if err != nil {
 		panic(err)
 	}
-	go client.Init()
 	for {
 		time.Sleep(time.Minute)
 	}

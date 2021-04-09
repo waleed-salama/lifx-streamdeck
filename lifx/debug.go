@@ -1,115 +1,35 @@
 package lifx
 
 import (
-	"archive/zip"
 	"encoding/json"
-	"github.com/mitchellh/go-homedir"
 	"github.com/mostlygeek/arp"
 	"gitlab.com/wwsean08/golifx"
-	"io/ioutil"
+	"gitlab.com/wwsean08/lifx-streamdeck/models"
 	"net"
-	"os"
 	"strings"
 )
 
-func (c Client) generateDebug(context string) {
-	// get app environment info
-	envData, err := json.Marshal(c.appInfo)
-	if err != nil {
-		c.sdClient.Log(err.Error())
-		c.SendWarnMessage(context)
-		return
-	}
-
-	// get global settings as json
-	gSettingsData, err := json.Marshal(c.globalSettings)
-	if err != nil {
-		c.sdClient.Log(err.Error())
-		c.SendWarnMessage(context)
-		return
-	}
+func (c *lifxClient) Debug() (*models.Debug, error) {
+	retVal := new(models.Debug)
 
 	netInfo, err := getNetworkInfo()
 	if err != nil {
-		c.sdClient.Log(err.Error())
-		c.SendWarnMessage(context)
-		return
+		return retVal, err
 	}
+
 	netData, err := json.Marshal(netInfo)
 	if err != nil {
-		c.sdClient.Log(err.Error())
-		c.SendWarnMessage(context)
-		return
+		return retVal, err
 	}
-	crashData, err := ioutil.ReadFile("crash_log")
+	deviceData, err := json.Marshal(c.deviceMap)
 	if err != nil {
-		// If the file doesn't exist, that's not a big deal
-		if !strings.HasSuffix(err.Error(), "no such file or directory") {
-			c.sdClient.Log(err.Error())
-			c.SendWarnMessage(context)
-			return
-		}
-	}
-	deviceData, err := json.Marshal(c.devices)
-
-	fName, err := homedir.Expand("~/lifx-controls-debug.zip")
-	if err != nil {
-		c.sdClient.Log(err.Error())
-		c.SendWarnMessage(context)
-		return
+		return retVal, err
 	}
 
-	zipFile, err := os.OpenFile(fName, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
-	if err != nil {
-		c.sdClient.Log(err.Error())
-		c.SendWarnMessage(context)
-		return
-	}
-	defer zipFile.Close()
-	zipw := zip.NewWriter(zipFile)
-	defer zipw.Close()
+	retVal.DeviceData = deviceData
+	retVal.NetInfo = netData
 
-	netFile, err := zipw.Create("net.json")
-	if err != nil {
-		c.sdClient.Log(err.Error())
-		c.SendWarnMessage(context)
-		return
-	}
-	netFile.Write(netData)
-
-	envFile, err := zipw.Create("env.json")
-	if err != nil {
-		c.sdClient.Log(err.Error())
-		c.SendWarnMessage(context)
-		return
-	}
-	envFile.Write(envData)
-
-	crashFile, err := zipw.Create("crash_log")
-	if err != nil {
-		c.sdClient.Log(err.Error())
-		c.SendWarnMessage(context)
-		return
-	}
-	crashFile.Write(crashData)
-
-	gSettingsFile, err := zipw.Create("gSettings.json")
-	if err != nil {
-		c.sdClient.Log(err.Error())
-		c.SendWarnMessage(context)
-		return
-	}
-	gSettingsFile.Write(gSettingsData)
-
-	devicesFile, err := zipw.Create("devices.json")
-	if err != nil {
-		c.sdClient.Log(err.Error())
-		c.SendWarnMessage(context)
-		return
-	}
-	devicesFile.Write(deviceData)
-
-	c.sendOKMessage(context)
+	return retVal, nil
 }
 
 type network struct {

@@ -1,12 +1,66 @@
-package lifx
+package streamdeck
 
 import (
 	"fmt"
 	"github.com/mitchellh/mapstructure"
 	"github.com/skratchdot/open-golang/open"
+	"github.com/spf13/viper"
 	"gitlab.com/wwsean08/golifx"
+	"gitlab.com/wwsean08/lifx-streamdeck/lifx"
+	"gitlab.com/wwsean08/lifx-streamdeck/models"
 	"gitlab.com/wwsean08/streamdeck"
 )
+
+type Client struct {
+	sdClient       *streamdeck.Client
+	devices        map[string]*golifx.Device
+	appInfo        *models.AppInfo
+	uuid           string
+	globalSettings *models.GlobalSettings
+	controller     lifx.Controller
+}
+
+// NewClient creates a client for speaking with the Stream Deck websocket
+func NewClient(port, uuid string, info *models.AppInfo, controller lifx.Controller) (*Client, error) {
+	sdClient, err := streamdeck.NewClient(port, uuid)
+	if err != nil {
+		return nil, err
+	}
+	err = sdClient.Init()
+	if err != nil {
+		return nil, err
+	}
+	gSettings := new(models.GlobalSettings)
+	client := &Client{
+		sdClient:       sdClient,
+		appInfo:        info,
+		uuid:           uuid,
+		globalSettings: gSettings,
+		controller:     controller,
+	}
+
+	deviceMap, err := controller.DiscoverDevices()
+	if err != nil {
+		return nil, err
+	}
+	client.devices = deviceMap
+	client.sdClient.SetOnKeyUpCallback(client.OnKeyUp)
+	client.sdClient.SetSendToPluginCallback(client.OnSendToPlugin)
+	client.sdClient.SetPropertyInspectorDidAppearCallback(client.OnPropertyInspectorDidAppear)
+	client.sdClient.SetWillAppearCallback(client.OnWillAppear)
+	client.sdClient.SetDidReceiveGlobalSettingsCallback(client.OnDidReceiveGlobalSettings)
+	if viper.GetString("application.version") == "develop" {
+		client.sdClient.SetRawCallback(client.DebugCallback)
+	}
+
+	// Grab global settings for initialization
+	msg := streamdeck.GetGlobalSettingsMsg{
+		Context: uuid,
+		Event:   streamdeck.GetGlobalSettingsEvent,
+	}
+	_ = client.sdClient.SendMessage(msg)
+	return client, nil
+}
 
 // OnPropertyInspectorDidAppear is called when the property inspector appears in order to send data to the property inspector
 func (c *Client) OnPropertyInspectorDidAppear(msg streamdeck.PropertyInspectorDidAppearMsg) {
@@ -37,9 +91,19 @@ func (c *Client) OnWillAppear(msg streamdeck.WillAppearMsg) {
 func (c *Client) OnSendToPlugin(msg streamdeck.SendToPluginMsg) {
 	switch msg.Payload["type"] {
 	case "discovery":
-		c.discoverDevices(msg.Action, msg.Context)
+		devices, err := c.controller.DiscoverDevices()
+		if err != nil {
+			c.SendWarnMessage(msg.Context)
+			c.sdClient.Log(err.Error())
+		}
+		c.devices = devices
+		c.sendDevicesToPropertyInspector(msg.Action, msg.Context, devices)
 	case "getColor":
-		c.getDevicesCurrentColor(msg.Action, msg.Context, msg.Payload["mac"].(string))
+		color, err := c.controller.GetCurrentColor(c.devices[msg.Payload["mac"].(string)])
+		if err != nil {
+			c.SendWarnMessage(msg.Context)
+		}
+		c.sendColorStateToPropertyInspector(msg.Action, msg.Context, color)
 	case "kofi":
 		_ = open.Start("https://ko-fi.com/P5P23OLT2")
 	case "discord":
@@ -55,21 +119,88 @@ func (c *Client) OnSendToPlugin(msg streamdeck.SendToPluginMsg) {
 
 // OnKeyUp is called when the Stream Deck key is unpressed
 func (c *Client) OnKeyUp(msg streamdeck.KeyUpMsg) {
+	context := msg.Context
 	switch msg.Action {
-	case ActionTurnOnDevice:
-		c.turnLights(msg.Context, msg.Payload.Settings, true)
-	case ActionTurnOffDevice:
-		c.turnLights(msg.Context, msg.Payload.Settings, false)
-	case ActionSetColor:
-		c.setColor(msg.Context, msg.Payload.Settings)
-	case ActionSetBrightness:
-		c.setBrightness(msg.Context, msg.Payload.Settings)
-	case ActionSetWaveform:
-		c.setWaveform(msg.Context, msg.Payload.Settings)
-	case ActionToggleDevice:
-		c.togglePower(msg.Context, msg.Payload.Settings)
-	case ActionDebug:
-		c.generateDebug(msg.Context)
+	case lifx.ActionTurnOnDevice:
+		powerSettings := new(models.PowerSettings)
+		err := mapstructure.Decode(msg.Payload.Settings, powerSettings)
+		if err != nil {
+			c.sdClient.Log(err.Error())
+			c.SendWarnMessage(context)
+			return
+		}
+		err = c.controller.SetPowerState(powerSettings, true)
+		if err != nil {
+			c.sdClient.Log(err.Error())
+		}
+	case lifx.ActionTurnOffDevice:
+		powerSettings := new(models.PowerSettings)
+		err := mapstructure.Decode(msg.Payload.Settings, powerSettings)
+		if err != nil {
+			c.sdClient.Log(err.Error())
+			c.SendWarnMessage(context)
+			return
+		}
+		err = c.controller.SetPowerState(powerSettings, false)
+		if err != nil {
+			c.sdClient.Log(err.Error())
+		}
+	case lifx.ActionSetColor:
+		colorSettings := new(models.ColorSettings)
+		err := mapstructure.Decode(msg.Payload.Settings, colorSettings)
+		if err != nil {
+			c.sdClient.Log(err.Error())
+			c.SendWarnMessage(context)
+			return
+		}
+		err = c.controller.SetColor(colorSettings)
+		if err != nil {
+			c.sdClient.Log(err.Error())
+		}
+	case lifx.ActionSetBrightness:
+		brightnessSettings := new(models.BrightnessSettings)
+		err := mapstructure.Decode(msg.Payload.Settings, brightnessSettings)
+		if err != nil {
+			c.sdClient.Log(err.Error())
+			c.SendWarnMessage(context)
+			return
+		}
+		err = c.controller.SetBrightness(brightnessSettings)
+		if err != nil {
+			c.sdClient.Log(err.Error())
+		}
+	case lifx.ActionSetWaveform:
+		waveFormSettings := new(models.WaveFormSettings)
+		err := mapstructure.Decode(msg.Payload.Settings, waveFormSettings)
+		if err != nil {
+			c.sdClient.Log(err.Error())
+			c.SendWarnMessage(context)
+			return
+		}
+		err = c.controller.SetWaveform(waveFormSettings)
+		if err != nil {
+			c.sdClient.Log(err.Error())
+		}
+	case lifx.ActionToggleDevice:
+		toggleSettings := new(models.ToggleSettings)
+		err := mapstructure.Decode(msg.Payload.Settings, toggleSettings)
+		if err != nil {
+			c.sdClient.Log(err.Error())
+			c.SendWarnMessage(context)
+			return
+		}
+		err = c.controller.TogglePowerState(toggleSettings)
+		if err != nil {
+			c.sdClient.Log(err.Error())
+		}
+	case lifx.ActionDebug:
+		debug, err := c.controller.Debug()
+		if err != nil {
+			c.sdClient.Log(err.Error())
+			c.SendWarnMessage(context)
+			return
+		}
+		c.generateDebug(msg.Context, debug)
 	default:
 		c.SendWarnMessage(msg.Context)
 		c.sdClient.Log(fmt.Sprintf("Unknown action received %s", msg.Action))
@@ -147,7 +278,7 @@ func (c *Client) sendDevicesToPropertyInspector(action string, context string, d
 		// Label for the users, mac for our usage
 		label, err := device.GetLabel()
 		if err != nil {
-			label = device.MacAddress()
+			label = mac
 		}
 		data = append(data, deviceInfo{Label: label, Mac: mac})
 	}
@@ -168,7 +299,7 @@ func (c *Client) sendDevicesToPropertyInspector(action string, context string, d
 }
 
 func (c Client) UpdateGlobalSettings(settings map[string]interface{}) {
-	var gSettings = new(GlobalSettings)
+	var gSettings = new(models.GlobalSettings)
 	err := mapstructure.Decode(settings, gSettings)
 	if err != nil {
 		c.sdClient.Log(err.Error())
@@ -176,11 +307,5 @@ func (c Client) UpdateGlobalSettings(settings map[string]interface{}) {
 	}
 
 	*c.globalSettings = *gSettings
-	if gSettings.OutIP == "" {
-		golifx.SetOutboundIP(nil)
-	} else {
-		golifx.SetOutboundIP(&gSettings.OutIP)
-	}
-
-	golifx.SetAlwaysBroadcast(!gSettings.DirectComm)
+	_ = c.controller.UpdateGlobalSettings(gSettings)
 }

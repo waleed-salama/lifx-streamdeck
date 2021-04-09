@@ -1,4 +1,4 @@
-package lifx
+package streamdeck
 
 import (
 	"testing"

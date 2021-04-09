@@ -1,10 +1,13 @@
-package lifx
+package models
+
+import "time"
 
 type (
 	GlobalSettings struct {
-		OutIP      string `mapstructure:"outIP" json:"out_ip"`
-		Version    int    `mapstructure:"version" json:"version"`
-		DirectComm bool   `mapstructure:"directComm" json:"directComm"`
+		OutIP      string        `mapstructure:"outIP" json:"out_ip"`
+		Version    int           `mapstructure:"version" json:"version"`
+		DirectComm bool          `mapstructure:"directComm" json:"directComm"`
+		CacheTTL   time.Duration `mapstructure:"cacheTTL" json:"cacheTTL"`
 	}
 
 	//Device represents a device in the Stream Deck settings
@@ -60,6 +63,11 @@ type (
 		Waveform       uint8    `mapstructure:"waveform"`
 		Devices        []Device `mapstructure:"devices"`
 		AlternateColor Color    `mapstructure:"color"`
+	}
+
+	Debug struct {
+		NetInfo    []byte `mapstructure:"netInfo" json:"netInfo"`
+		DeviceData []byte `mapstructure:"deviceData" json:"deviceData"`
 	}
 )
 
