@@ -27,6 +27,12 @@
         <label for="directCommunication"><span></span></label>
         <div style="display: flex; align-items: center; flex-basis: 100%;"><a href="#" onclick="opener.sendValueToPlugin({'type': 'gSettingsHelp'})" style="color: #9a9a9a;"><i class="fa fa-question"></i></a></div>
     </div>
+    <div class="sdpi-heading">
+        <summary>Custom Devices</summary>
+    </div>
+    <div class="sdpi-item-group" id="deviceContainer">
+
+    </div>
     <div class="sdpi-item">
         <div class="sdpi-item-label empty"></div>
         <button class="sdpi-item-value" id="submit" onclick="onSubmit()">Submit</button>
@@ -45,13 +51,46 @@
     </div>
 </div>
 <script>
+    function delDevice(item) {
+        let val = item.parentElement.parentElement;
+        val.remove()
+    }
+
+    function addDevice(value) {
+        let newDeviceContainer = document.createElement("div")
+        newDeviceContainer.setAttribute("class", "sdpi-item")
+        let newDevice = document.createElement("input");
+        if (value !== undefined) {
+            newDevice.value = value;
+        }
+        newDevice.setAttribute("class", "sdpi-item-value");
+        newDevice.setAttribute("pattern", "^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$");
+        newDeviceContainer.append(newDevice);
+        let addDiv = document.createElement("div");
+        addDiv.setAttribute("style", "display: flex; align-items: center; flex-basis: 100%;");
+        addDiv.innerHTML = "<a href=\"#\" onclick=\"addDevice()\" style=\"color: #9a9a9a;\"><i class=\"fa fa-plus\"></i></a>";
+        let delDiv = document.createElement("div");
+        delDiv.setAttribute("style", "display: flex; align-items: center; flex-basis: 100%;");
+        delDiv.innerHTML = "<a href=\"#\" onclick=\"delDevice(this)\" style=\"color: #FF0000;\"><i class=\"fa fa-minus\"></i></a>";
+        newDeviceContainer.append(addDiv);
+        newDeviceContainer.append(delDiv);
+        devContainer.append(newDeviceContainer)
+    }
+
     function setGlobalSettingsUI(settings) {
-        loaders = document.getElementsByClassName("loader")
+        loaders = document.getElementsByClassName("loader");
         for (let i = 0; i < loaders.length; i++) {
             loaders[i].remove();
         }
         outIP.value = settings.payload.settings.outIP;
         directComm.checked = settings.payload.settings.directComm;
+        if (settings.payload.settings.customDevices && settings.payload.settings.customDevices.length === 0) {
+            addDevice()
+        } else {
+            settings.payload.settings.customDevices.forEach(function (item) {
+                addDevice(item)
+            })
+        }
     }
 
     function onSubmit() {
@@ -61,8 +100,21 @@
         }
         const outboundIP = outIP.value;
         const isDirect = directComm.checked;
-        const payload = {"version": 2, "outIP": outboundIP, "directComm": isDirect};
+        allDevices = getAllCustomDevices();
+        const payload = {"version": 4, "outIP": outboundIP, "directComm": isDirect, "customDevices": allDevices};
         opener.UpdateGlobalSettings(payload);
+        console.log(payload)
+    }
+
+    function getAllCustomDevices() {
+        let deviceIPs = []
+        let inputs = devContainer.querySelectorAll("div.sdpi-item > input");
+        inputs.forEach(function(item) {
+            if (item.checkValidity() && item.value !== "" && !deviceIPs.includes(item.value)) {
+                deviceIPs.push(item.value)
+            }
+        });
+        return deviceIPs
     }
 
     function onReset() {
@@ -74,5 +126,6 @@
     opener.getWS().send(JSON.stringify(msg))
     const outIP = document.getElementById("outIP");
     const directComm = document.getElementById("directCommunication");
+    const devContainer = document.getElementById("deviceContainer");
 </script>
 </body>
