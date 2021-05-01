@@ -1,13 +1,11 @@
 package models
 
-import "time"
-
 type (
 	GlobalSettings struct {
-		OutIP      string        `mapstructure:"outIP" json:"out_ip"`
-		Version    int           `mapstructure:"version" json:"version"`
-		DirectComm bool          `mapstructure:"directComm" json:"directComm"`
-		CacheTTL   time.Duration `mapstructure:"cacheTTL" json:"cacheTTL"`
+		OutIP         string   `mapstructure:"outIP" json:"out_ip"`
+		Version       int      `mapstructure:"version" json:"version"`
+		DirectComm    bool     `mapstructure:"directComm" json:"directComm"`
+		CustomDevices []string `mapstructure:"customDevices" json:"customDevices"`
 	}
 
 	//Device represents a device in the Stream Deck settings

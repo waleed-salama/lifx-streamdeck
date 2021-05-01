@@ -3,8 +3,11 @@ package lifx
 import (
 	"encoding/binary"
 	"gitlab.com/wwsean08/lifx-streamdeck/models"
+	"net"
 	"strconv"
 	"strings"
+	"sync"
+	"time"
 
 	"gitlab.com/wwsean08/golifx"
 )
@@ -13,14 +16,19 @@ import (
 
 type lifxClient struct {
 	deviceMap map[string]*golifx.Device
+	gSettings *models.GlobalSettings
+	writeLock *sync.Mutex
 }
 
 func NewLifxController() Controller {
-	return new(lifxClient)
+	client := new(lifxClient)
+	client.deviceMap = make(map[string]*golifx.Device)
+	client.writeLock = new(sync.Mutex)
+	return client
 }
 
 type Controller interface {
-	DiscoverDevices() (map[string]*golifx.Device, error)
+	DiscoverDevices() error
 	GetCurrentColor(*golifx.Device) (*golifx.HSBK, error)
 	SetPowerState(*models.PowerSettings, bool) error
 	TogglePowerState(*models.ToggleSettings) error
@@ -28,20 +36,48 @@ type Controller interface {
 	SetBrightness(*models.BrightnessSettings) error
 	SetWaveform(*models.WaveFormSettings) error
 	UpdateGlobalSettings(*models.GlobalSettings) error
+	GetDevices() map[string]*golifx.Device
 	Debug() (*models.Debug, error)
 }
 
-func (c *lifxClient) DiscoverDevices() (map[string]*golifx.Device, error) {
+func (c *lifxClient) DiscoverDevices() error {
 	devices, err := golifx.LookupDevices()
 	if err != nil {
-		return nil, err
+		return err
 	}
-	deviceMap := map[string]*golifx.Device{}
+	c.clearDeviceMap()
+	c.addDeviceToMap(devices)
+
+	for _, ip := range c.gSettings.CustomDevices {
+		go func(ip string) {
+			q := net.ParseIP(ip)
+			addr := &net.IPAddr{q, ""}
+			device, err := golifx.LookupDeviceByIP(addr)
+			if err != nil {
+				return
+			}
+			c.addDeviceToMap([]*golifx.Device{device})
+		}(ip)
+	}
+
+	return nil
+}
+
+func (c *lifxClient) clearDeviceMap() {
+	c.writeLock.Lock()
+	defer c.writeLock.Unlock()
+	c.deviceMap = make(map[string]*golifx.Device)
+}
+
+func (c *lifxClient) addDeviceToMap(devices []*golifx.Device) {
+	c.writeLock.Lock()
+	defer c.writeLock.Unlock()
+	if c.deviceMap == nil {
+		c.deviceMap = make(map[string]*golifx.Device)
+	}
 	for _, device := range devices {
-		deviceMap[device.MacAddress()] = device
+		c.deviceMap[device.MacAddress()] = device
 	}
-	c.deviceMap = deviceMap
-	return deviceMap, nil
 }
 
 func (c *lifxClient) GetCurrentColor(device *golifx.Device) (*golifx.HSBK, error) {
@@ -169,12 +205,17 @@ func (c *lifxClient) SetWaveform(settings *models.WaveFormSettings) error {
 }
 
 func (c *lifxClient) UpdateGlobalSettings(settings *models.GlobalSettings) error {
+	c.gSettings = settings
 	golifx.SetAlwaysBroadcast(!settings.DirectComm)
-	golifx.SetCacheTTL(settings.CacheTTL)
+	golifx.SetCacheTTL(time.Minute)
 	if strings.TrimSpace(settings.OutIP) != "" {
 		golifx.SetOutboundIP(&settings.OutIP)
 	}
 	return nil
+}
+
+func (c *lifxClient) GetDevices() map[string]*golifx.Device {
+	return c.deviceMap
 }
 
 //macToUint64 takes a mac address string and converts it to a mac address that

@@ -3,20 +3,22 @@ package streamdeck
 import (
 	"fmt"
 	"github.com/mitchellh/mapstructure"
+	"github.com/reugn/go-quartz/quartz"
 	"github.com/skratchdot/open-golang/open"
 	"gitlab.com/wwsean08/golifx"
 	"gitlab.com/wwsean08/lifx-streamdeck/lifx"
 	"gitlab.com/wwsean08/lifx-streamdeck/models"
 	"gitlab.com/wwsean08/streamdeck"
+	"time"
 )
 
 type Client struct {
 	sdClient       *streamdeck.Client
-	devices        map[string]*golifx.Device
 	appInfo        *models.AppInfo
 	uuid           string
 	globalSettings *models.GlobalSettings
 	controller     lifx.Controller
+	scheduler      quartz.Scheduler
 }
 
 // NewClient creates a client for speaking with the Stream Deck websocket
@@ -37,12 +39,10 @@ func NewClient(port, uuid string, info *models.AppInfo, controller lifx.Controll
 		globalSettings: gSettings,
 		controller:     controller,
 	}
-
-	deviceMap, err := controller.DiscoverDevices()
+	go client.controller.DiscoverDevices()
 	if err != nil {
 		return nil, err
 	}
-	client.devices = deviceMap
 	client.sdClient.SetOnKeyUpCallback(client.OnKeyUp)
 	client.sdClient.SetSendToPluginCallback(client.OnSendToPlugin)
 	client.sdClient.SetPropertyInspectorDidAppearCallback(client.OnPropertyInspectorDidAppear)
@@ -63,7 +63,7 @@ func NewClient(port, uuid string, info *models.AppInfo, controller lifx.Controll
 
 // OnPropertyInspectorDidAppear is called when the property inspector appears in order to send data to the property inspector
 func (c *Client) OnPropertyInspectorDidAppear(msg streamdeck.PropertyInspectorDidAppearMsg) {
-	c.sendDevicesToPropertyInspector(msg.Action, msg.Context, c.devices)
+	c.sendDevicesToPropertyInspector(msg.Action, msg.Context, c.controller.GetDevices())
 }
 
 // OnWillAppear is called when an item is displayed on the stream deck
@@ -76,7 +76,6 @@ func (c *Client) OnWillAppear(msg streamdeck.WillAppearMsg) {
 	settings, err := c.MigrateActions(msg.Payload.Settings, msg.Action)
 	if err != nil {
 		c.sdClient.Log(err.Error())
-		panic(err)
 	}
 	settingsMsg := streamdeck.SetSettingsMsg{
 		Context: msg.Context,
@@ -90,15 +89,14 @@ func (c *Client) OnWillAppear(msg streamdeck.WillAppearMsg) {
 func (c *Client) OnSendToPlugin(msg streamdeck.SendToPluginMsg) {
 	switch msg.Payload["type"] {
 	case "discovery":
-		devices, err := c.controller.DiscoverDevices()
+		err := c.controller.DiscoverDevices()
 		if err != nil {
 			c.SendWarnMessage(msg.Context)
 			c.sdClient.Log(err.Error())
 		}
-		c.devices = devices
-		c.sendDevicesToPropertyInspector(msg.Action, msg.Context, devices)
+		c.sendDevicesToPropertyInspector(msg.Action, msg.Context, c.controller.GetDevices())
 	case "getColor":
-		color, err := c.controller.GetCurrentColor(c.devices[msg.Payload["mac"].(string)])
+		color, err := c.controller.GetCurrentColor(c.controller.GetDevices()[msg.Payload["mac"].(string)])
 		if err != nil {
 			c.SendWarnMessage(msg.Context)
 		}
@@ -209,8 +207,18 @@ func (c *Client) OnKeyUp(msg streamdeck.KeyUpMsg) {
 func (c *Client) OnDidReceiveGlobalSettings(msg streamdeck.DidReceiveGlobalSettingsMsg) {
 	settings := msg.Payload.Settings
 	// generally this will be a no-op but makes logic simpler
-	settings = c.MigrateGlobalSettings(settings)
-	c.UpdateGlobalSettings(settings)
+	migratedSettings, err := MigrateGlobalSettings(settings)
+	if err != nil {
+		c.sdClient.Log(err.Error())
+		return
+	}
+	update := streamdeck.SetGlobalSettingsMsg{
+		Event:   streamdeck.SetGlobalSettingsEvent,
+		Context: c.uuid,
+		Payload: migratedSettings,
+	}
+	c.sdClient.SendMessage(update)
+	c.UpdateGlobalSettings(migratedSettings)
 }
 
 func (c *Client) sendOKMessage(context string) {
@@ -305,6 +313,16 @@ func (c Client) UpdateGlobalSettings(settings map[string]interface{}) {
 		return
 	}
 
+	if c.scheduler == nil {
+		c.scheduler = quartz.NewStdScheduler()
+		c.scheduler.Start()
+	}
+	rediscover := RediscoverJob{controller: c.controller}
+	// job may not exist and that's fine
+	_ = c.scheduler.DeleteJob(rediscover.Key())
+	c.scheduler.ScheduleJob(rediscover, quartz.NewSimpleTrigger(time.Hour))
+
 	*c.globalSettings = *gSettings
+
 	_ = c.controller.UpdateGlobalSettings(gSettings)
 }
