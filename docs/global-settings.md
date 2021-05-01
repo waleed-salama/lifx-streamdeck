@@ -24,7 +24,7 @@ Based on the screenshot above I would enter `192.168.2.122` into the Outbound IP
 
 This is a setting that usually doesn't need to be changed which makes it so that all requests are sent to your devices directly instead of using broadcasts.  With this enabled if the IP address of your devices change, you will need to perform a rediscovery.
 
-This setting is required when configuring custom devices in a future release.
+This setting is required when configuring custom devices.
 
 # Custom Devices
 
