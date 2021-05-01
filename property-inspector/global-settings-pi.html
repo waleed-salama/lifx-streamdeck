@@ -103,7 +103,6 @@
         allDevices = getAllCustomDevices();
         const payload = {"version": 4, "outIP": outboundIP, "directComm": isDirect, "customDevices": allDevices};
         opener.UpdateGlobalSettings(payload);
-        console.log(payload)
     }
 
     function getAllCustomDevices() {
