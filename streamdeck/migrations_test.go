@@ -1,6 +1,7 @@
 package streamdeck
 
 import (
+	"math"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -123,4 +124,77 @@ func TestMigrateBrightnessSettingsFromUnversionedToCurrent(t *testing.T) {
 
 func TestMigrateWaveformSettingsFromV1ToCurrent(t *testing.T) {
 	// there are no migrations yet
+}
+
+func TestVersionToInt(t *testing.T) {
+	type testCases struct {
+		input        interface{}
+		expectOutput int
+		expectErr    bool
+	}
+
+	tests := []testCases{
+		{
+			input:        float64(42),
+			expectOutput: 42,
+			expectErr:    false,
+		},
+		{
+			input:        float32(42),
+			expectOutput: 42,
+			expectErr:    false,
+		},
+		{
+			// this will overflow, but if we get here, we fucked up
+			input:        math.MaxFloat64,
+			expectOutput: -9223372036854775808,
+			expectErr:    false,
+		},
+		{
+			input:        math.MaxInt64,
+			expectOutput: math.MaxInt64,
+			expectErr:    false,
+		},
+		{
+			input:        int(42),
+			expectOutput: 42,
+			expectErr:    false,
+		},
+		{
+			input:        int8(42),
+			expectOutput: 42,
+			expectErr:    false,
+		},
+		{
+			input:        int16(42),
+			expectOutput: 42,
+			expectErr:    false,
+		},
+		{
+			input:        int32(42),
+			expectOutput: 42,
+			expectErr:    false,
+		},
+		{
+			input:        int64(42),
+			expectOutput: 42,
+			expectErr:    false,
+		},
+		{
+			input:        "42",
+			expectOutput: -1,
+			expectErr:    true,
+		},
+	}
+
+	for _, testCase := range tests {
+		output, err := versionToInt(testCase.input)
+		if testCase.expectErr {
+			require.Error(t, err)
+		} else {
+			require.NoError(t, err)
+		}
+
+		require.Equal(t, testCase.expectOutput, output)
+	}
 }
