@@ -1,4 +1,4 @@
-package lifx
+package models
 
 import (
 	"github.com/mitchellh/mapstructure"

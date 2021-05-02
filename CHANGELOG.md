@@ -1,7 +1,17 @@
+# v0.7.0 (WIP)
+## Fixes
+* Remove extra debug logs that were introduced on accident.
+* Remove viper to fix CVE-2019-11254 as viper was only being used for debugging purposes
+* Fixed some migration issues for settings
+
+## Features
+* Add a global setting to not use broadcasts for all light communications via the `Direct Connection` checkbox.
+* Automatically rediscover devices on network every hour.
+* Add the ability to add custom IP addresses of devices for special network configurations.
+
 # v0.6.2
 ## Fixes
 * Adds some new debug information
-
 
 # v0.6.1
 ## Fixes

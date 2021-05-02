@@ -1,17 +1,22 @@
-package lifx
+package streamdeck
 
 import (
-	"gitlab.com/wwsean08/streamdeck"
+	"fmt"
+	"reflect"
 	"strconv"
+	"time"
 )
 
 //MigrateActions migrates the schema of settings objects
 func (c *Client) MigrateActions(settings map[string]interface{}, action string) (map[string]interface{}, error) {
-	var err error
 	switch action {
 	case ActionSetColor:
 		if val, ok := settings["version"]; ok {
-			switch val {
+			intVal, err := versionToInt(val)
+			if err != nil {
+				return settings, err
+			}
+			switch intVal {
 			case 1:
 				settings, err = migrateColorSettingsToV2(settings)
 				if err != nil {
@@ -27,8 +32,11 @@ func (c *Client) MigrateActions(settings map[string]interface{}, action string) 
 		}
 	case ActionSetBrightness:
 		if val, ok := settings["version"]; ok {
-
-			switch val {
+			intVal, err := versionToInt(val)
+			if err != nil {
+				return settings, err
+			}
+			switch intVal {
 			case 1:
 				settings, err = migrateBrightnessSettingsToV2(settings)
 				if err != nil {
@@ -44,7 +52,11 @@ func (c *Client) MigrateActions(settings map[string]interface{}, action string) 
 		}
 	case ActionTurnOnDevice, ActionTurnOffDevice:
 		if val, ok := settings["version"]; ok {
-			switch val {
+			intVal, err := versionToInt(val)
+			if err != nil {
+				return settings, err
+			}
+			switch intVal {
 			case 1:
 				settings = migratePowerSettingsToV2(settings)
 				fallthrough
@@ -57,13 +69,21 @@ func (c *Client) MigrateActions(settings map[string]interface{}, action string) 
 		}
 	case ActionToggleDevice:
 		if val, ok := settings["version"]; ok {
-			switch val {
+			intVal, err := versionToInt(val)
+			if err != nil {
+				return settings, err
+			}
+			switch intVal {
 			// no migrations for this yet
 			}
 		}
 	case ActionSetWaveform:
 		if val, ok := settings["version"]; ok {
-			switch val {
+			intVal, err := versionToInt(val)
+			if err != nil {
+				return settings, err
+			}
+			switch intVal {
 			// no migrations for this yet
 			}
 		}
@@ -71,27 +91,41 @@ func (c *Client) MigrateActions(settings map[string]interface{}, action string) 
 	return settings, nil
 }
 
-func (c *Client) MigrateGlobalSettings(globalSettings map[string]interface{}) map[string]interface{} {
+func MigrateGlobalSettings(globalSettings map[string]interface{}) (map[string]interface{}, error) {
 	// No settings, migrate to v1
+	var err error
 	if len(globalSettings) == 0 {
 		globalSettings["version"] = 1
 		globalSettings["outIP"] = ""
-		msg := streamdeck.SetGlobalSettingsMsg{
-			Event:   streamdeck.SetGlobalSettingsEvent,
-			Context: c.uuid,
-			Payload: globalSettings,
-		}
-		_ = c.sdClient.SendMessage(msg)
-		globalSettings = c.MigrateGlobalSettings(globalSettings)
+		globalSettings, err = MigrateGlobalSettings(globalSettings)
 	} else {
 		if val, ok := globalSettings["version"]; ok {
-			switch val {
+			intVal, err := versionToInt(val)
+			if err != nil {
+				return globalSettings, err
+			}
+			switch intVal {
 			case 1:
-				// nothing to do here
+				globalSettings["version"] = 2
+				// if directComm doesn't exist, add it
+				if _, ok := globalSettings["directComm"]; !ok {
+					globalSettings["directComm"] = false
+				}
+				fallthrough
+			case 2:
+				globalSettings["version"] = 3
+				if _, ok := globalSettings["cacheTTL"]; !ok {
+					globalSettings["cacheTTL"] = time.Minute
+				}
+				fallthrough
+			case 3:
+				globalSettings["version"] = 4
+				delete(globalSettings, "cacheTTL")
+				globalSettings["customDevices"] = []string{}
 			}
 		}
 	}
-	return globalSettings
+	return globalSettings, err
 }
 
 func migrateColorSettingsToV1(settings map[string]interface{}) map[string]interface{} {
@@ -190,4 +224,25 @@ func migratePowerSettingsToV2(settings map[string]interface{}) map[string]interf
 	settings["version"] = 2
 	settings["transition"] = 0
 	return settings
+}
+
+// versionToInt is here to make sure that the switch statements work
+func versionToInt(version interface{}) (int, error) {
+	switch version.(type) {
+	case int:
+		return version.(int), nil
+	case float64:
+		return int(version.(float64)), nil
+	case float32:
+		return int(version.(float32)), nil
+	case int8:
+		return int(version.(int8)), nil
+	case int16:
+		return int(version.(int16)), nil
+	case int32:
+		return int(version.(int32)), nil
+	case int64:
+		return int(version.(int64)), nil
+	}
+	return -1, fmt.Errorf("Error converting version to int, current type %s\n", reflect.TypeOf(version))
 }

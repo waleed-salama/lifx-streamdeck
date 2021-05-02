@@ -1,9 +1,11 @@
-package lifx
+package models
 
 type (
 	GlobalSettings struct {
-		OutIP   string `mapstructure:"outIP" json:"out_ip"`
-		Version int    `mapstructure:"version" json:"version"`
+		OutIP         string   `mapstructure:"outIP" json:"out_ip"`
+		Version       int      `mapstructure:"version" json:"version"`
+		DirectComm    bool     `mapstructure:"directComm" json:"directComm"`
+		CustomDevices []string `mapstructure:"customDevices" json:"customDevices"`
 	}
 
 	//Device represents a device in the Stream Deck settings
@@ -60,6 +62,11 @@ type (
 		Devices        []Device `mapstructure:"devices"`
 		AlternateColor Color    `mapstructure:"color"`
 	}
+
+	Debug struct {
+		NetInfo    []byte `mapstructure:"netInfo" json:"netInfo"`
+		DeviceData []byte `mapstructure:"deviceData" json:"deviceData"`
+	}
 )
 
 // Application used for debug
@@ -77,6 +84,8 @@ type Plugin struct {
 type AppInfo struct {
 	Application Application `json:"application"`
 	Plugin      Plugin      `json:"plugin"`
+	Version     string      `json:"version"`
+	Commit      string      `json:"commit"`
 }
 
 //GenerateLIFXValues is a helper function to take care of

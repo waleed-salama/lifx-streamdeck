@@ -1,4 +1,4 @@
-package lifx
+package streamdeck
 
 const (
 	//ActionTurnOnDevice is the UUID to turn on the device

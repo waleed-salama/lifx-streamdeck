@@ -108,8 +108,8 @@
                     let tmpDevice = document.createElement('div');
                     tmpDevice.setAttribute("class", "sdpi-item-child");
                     tmpDevice.innerHTML = `
-                <input id=${tmpDevice["mac"]} type="checkbox" value=${tmpDevice["label"]}>
-                <label for=${tmpDevice["mac"]} class="sdpi-item-label"><span></span>${tmpDevice["label"]}</label>
+                <input id=${device["mac"]} type="checkbox" value=${device["label"]}>
+                <label for=${device["mac"]} class="sdpi-item-label"><span></span>${device["label"]}</label>
                 `
                     deviceContainer.append(tmpDevice);
                 }

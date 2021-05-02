@@ -19,3 +19,17 @@ On mac open your `terminal` application then run the `ifconfig` command
 ![img.png](imgs/ifconfig.png)
 
 Based on the screenshot above I would enter `192.168.2.122` into the Outbound IP box as the first 3 numbers match with my LIFX Bulb, which would cause it to use this network adapter to manage the devices.
+
+# Direct Communication
+
+This is a setting that usually doesn't need to be changed which makes it so that all requests are sent to your devices directly instead of using broadcasts.  With this enabled if the IP address of your devices change, you will need to perform a rediscovery.
+
+This setting is required when configuring custom devices.
+
+# Custom Devices
+
+**Requires Direct Communication**
+
+In the case where devices are not discovered via broadcast (the normal method), you can add the IP addresses to the global settings, and discovery will be attempted by contacting those devices directly.  Note that for this to work, the devices need to be able to open new connections to your PC, if a firewall prevents that, discovery will never work.  Below is an example screenshot of how it might look:
+
+![img.png](imgs/custom-devices.png)
