@@ -2,7 +2,6 @@ package streamdeck
 
 import (
 	"fmt"
-	"gitlab.com/wwsean08/lifx-streamdeck/lifx"
 	"reflect"
 	"strconv"
 	"time"
@@ -11,7 +10,7 @@ import (
 //MigrateActions migrates the schema of settings objects
 func (c *Client) MigrateActions(settings map[string]interface{}, action string) (map[string]interface{}, error) {
 	switch action {
-	case lifx.ActionSetColor:
+	case ActionSetColor:
 		if val, ok := settings["version"]; ok {
 			intVal, err := versionToInt(val)
 			if err != nil {
@@ -31,7 +30,7 @@ func (c *Client) MigrateActions(settings map[string]interface{}, action string) 
 			settings = migrateColorSettingsToV1(settings)
 			return c.MigrateActions(settings, action)
 		}
-	case lifx.ActionSetBrightness:
+	case ActionSetBrightness:
 		if val, ok := settings["version"]; ok {
 			intVal, err := versionToInt(val)
 			if err != nil {
@@ -51,7 +50,7 @@ func (c *Client) MigrateActions(settings map[string]interface{}, action string) 
 			settings = migrateBrightnessSettingsToV1(settings)
 			return c.MigrateActions(settings, action)
 		}
-	case lifx.ActionTurnOnDevice, lifx.ActionTurnOffDevice:
+	case ActionTurnOnDevice, ActionTurnOffDevice:
 		if val, ok := settings["version"]; ok {
 			intVal, err := versionToInt(val)
 			if err != nil {
@@ -68,7 +67,7 @@ func (c *Client) MigrateActions(settings map[string]interface{}, action string) 
 			settings = migratePowerSettingsToV1(settings)
 			return c.MigrateActions(settings, action)
 		}
-	case lifx.ActionToggleDevice:
+	case ActionToggleDevice:
 		if val, ok := settings["version"]; ok {
 			intVal, err := versionToInt(val)
 			if err != nil {
@@ -78,7 +77,7 @@ func (c *Client) MigrateActions(settings map[string]interface{}, action string) 
 			// no migrations for this yet
 			}
 		}
-	case lifx.ActionSetWaveform:
+	case ActionSetWaveform:
 		if val, ok := settings["version"]; ok {
 			intVal, err := versionToInt(val)
 			if err != nil {

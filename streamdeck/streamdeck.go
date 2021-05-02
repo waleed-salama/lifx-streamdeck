@@ -118,7 +118,7 @@ func (c *Client) OnSendToPlugin(msg streamdeck.SendToPluginMsg) {
 func (c *Client) OnKeyUp(msg streamdeck.KeyUpMsg) {
 	context := msg.Context
 	switch msg.Action {
-	case lifx.ActionTurnOnDevice:
+	case ActionTurnOnDevice:
 		powerSettings := new(models.PowerSettings)
 		err := mapstructure.Decode(msg.Payload.Settings, powerSettings)
 		if err != nil {
@@ -130,7 +130,7 @@ func (c *Client) OnKeyUp(msg streamdeck.KeyUpMsg) {
 		if err != nil {
 			c.sdClient.Log(err.Error())
 		}
-	case lifx.ActionTurnOffDevice:
+	case ActionTurnOffDevice:
 		powerSettings := new(models.PowerSettings)
 		err := mapstructure.Decode(msg.Payload.Settings, powerSettings)
 		if err != nil {
@@ -142,7 +142,7 @@ func (c *Client) OnKeyUp(msg streamdeck.KeyUpMsg) {
 		if err != nil {
 			c.sdClient.Log(err.Error())
 		}
-	case lifx.ActionSetColor:
+	case ActionSetColor:
 		colorSettings := new(models.ColorSettings)
 		err := mapstructure.Decode(msg.Payload.Settings, colorSettings)
 		if err != nil {
@@ -154,7 +154,7 @@ func (c *Client) OnKeyUp(msg streamdeck.KeyUpMsg) {
 		if err != nil {
 			c.sdClient.Log(err.Error())
 		}
-	case lifx.ActionSetBrightness:
+	case ActionSetBrightness:
 		brightnessSettings := new(models.BrightnessSettings)
 		err := mapstructure.Decode(msg.Payload.Settings, brightnessSettings)
 		if err != nil {
@@ -166,7 +166,7 @@ func (c *Client) OnKeyUp(msg streamdeck.KeyUpMsg) {
 		if err != nil {
 			c.sdClient.Log(err.Error())
 		}
-	case lifx.ActionSetWaveform:
+	case ActionSetWaveform:
 		waveFormSettings := new(models.WaveFormSettings)
 		err := mapstructure.Decode(msg.Payload.Settings, waveFormSettings)
 		if err != nil {
@@ -178,7 +178,7 @@ func (c *Client) OnKeyUp(msg streamdeck.KeyUpMsg) {
 		if err != nil {
 			c.sdClient.Log(err.Error())
 		}
-	case lifx.ActionToggleDevice:
+	case ActionToggleDevice:
 		toggleSettings := new(models.ToggleSettings)
 		err := mapstructure.Decode(msg.Payload.Settings, toggleSettings)
 		if err != nil {
@@ -190,7 +190,7 @@ func (c *Client) OnKeyUp(msg streamdeck.KeyUpMsg) {
 		if err != nil {
 			c.sdClient.Log(err.Error())
 		}
-	case lifx.ActionDebug:
+	case ActionDebug:
 		debug, err := c.controller.Debug()
 		if err != nil {
 			c.sdClient.Log(err.Error())
