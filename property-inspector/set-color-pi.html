@@ -141,7 +141,6 @@
     }
 
     function devicesDiscovered(data) {
-        console.log(data)
         let devices = data["devices"];
         //TODO: Refactor label -> name like the settings
         devices.sort((a, b) => (a.label.toUpperCase() > b.label.toUpperCase()) ? 1 : -1);
