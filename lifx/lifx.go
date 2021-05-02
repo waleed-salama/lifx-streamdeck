@@ -88,15 +88,11 @@ func (c *lifxClient) GetCurrentColor(device *golifx.Device) (*golifx.HSBK, error
 func (c *lifxClient) SetPowerState(settings *models.PowerSettings, on bool) error {
 	for _, device := range settings.Devices {
 		if c.deviceMap[device.Mac] == nil {
-			tmpDevice := golifx.Device{}
-			address, err := macToUint64(device.Mac)
+			tmpDevice, err := deviceFromMac(device.Mac)
 			if err != nil {
 				return err
 			}
-			// Not sure why I need this bit shift but via testing this is what I determined I needed, may be fragile
-			address = address >> 16
-			tmpDevice.SetHardwareAddress(address)
-			c.deviceMap[device.Mac] = &tmpDevice
+			c.addDeviceToMap([]*golifx.Device{tmpDevice})
 		}
 		lifxDevice := c.deviceMap[device.Mac]
 		go func(powerSettings *models.PowerSettings) {
@@ -109,15 +105,11 @@ func (c *lifxClient) SetPowerState(settings *models.PowerSettings, on bool) erro
 func (c *lifxClient) TogglePowerState(settings *models.ToggleSettings) error {
 	for _, device := range settings.Devices {
 		if c.deviceMap[device.Mac] == nil {
-			tmpDevice := golifx.Device{}
-			address, err := macToUint64(device.Mac)
+			tmpDevice, err := deviceFromMac(device.Mac)
 			if err != nil {
 				return err
 			}
-			// Not sure why I need this bit shift but via testing this is what I determined I needed, may be fragile
-			address = address >> 16
-			tmpDevice.SetHardwareAddress(address)
-			c.deviceMap[device.Mac] = &tmpDevice
+			c.addDeviceToMap([]*golifx.Device{tmpDevice})
 		}
 		lifxDevice := c.deviceMap[device.Mac]
 		go func() {
@@ -143,10 +135,11 @@ func (c *lifxClient) SetColor(settings *models.ColorSettings) error {
 
 	for _, device := range settings.Devices {
 		if c.deviceMap[device.Mac] == nil {
-			tmpDevice := golifx.Device{}
-			mac, _ := macToUint64(device.Mac)
-			tmpDevice.SetHardwareAddress(mac)
-			c.deviceMap[device.Mac] = &tmpDevice
+			tmpDevice, err := deviceFromMac(device.Mac)
+			if err != nil {
+				return err
+			}
+			c.addDeviceToMap([]*golifx.Device{tmpDevice})
 		}
 		lifxDevice := c.deviceMap[device.Mac]
 		go func(settings *models.ColorSettings, hsbk golifx.HSBK) {
@@ -160,10 +153,11 @@ func (c *lifxClient) SetColor(settings *models.ColorSettings) error {
 func (c *lifxClient) SetBrightness(settings *models.BrightnessSettings) error {
 	for _, device := range settings.Devices {
 		if c.deviceMap[device.Mac] == nil {
-			tmpDevice := golifx.Device{}
-			mac, _ := macToUint64(device.Mac)
-			tmpDevice.SetHardwareAddress(mac)
-			c.deviceMap[device.Mac] = &tmpDevice
+			tmpDevice, err := deviceFromMac(device.Mac)
+			if err != nil {
+				return err
+			}
+			c.addDeviceToMap([]*golifx.Device{tmpDevice})
 		}
 		lifxDevice := c.deviceMap[device.Mac]
 
@@ -190,10 +184,11 @@ func (c *lifxClient) SetWaveform(settings *models.WaveFormSettings) error {
 	}
 	for _, device := range settings.Devices {
 		if c.deviceMap[device.Mac] == nil {
-			tmpDevice := golifx.Device{}
-			mac, _ := macToUint64(device.Mac)
-			tmpDevice.SetHardwareAddress(mac)
-			c.deviceMap[device.Mac] = &tmpDevice
+			tmpDevice, err := deviceFromMac(device.Mac)
+			if err != nil {
+				return err
+			}
+			c.addDeviceToMap([]*golifx.Device{tmpDevice})
 		}
 		lifxDevice := c.deviceMap[device.Mac]
 		go func(settings *models.WaveFormSettings) {
@@ -229,4 +224,17 @@ func macToUint64(mac string) (uint64, error) {
 	b := make([]byte, 8)
 	binary.BigEndian.PutUint64(b, decMac)
 	return binary.LittleEndian.Uint64(b), nil
+}
+
+//deviceFromMac takes a mac address and generates a LIFX Device from it.
+func deviceFromMac(mac string) (*golifx.Device, error) {
+	tmpDevice := new(golifx.Device)
+	address, err := macToUint64(mac)
+	if err != nil {
+		return nil, err
+	}
+	// Not sure why I need this bit shift but via testing this is what I determined I needed, may be fragile
+	address = address >> 16
+	tmpDevice.SetHardwareAddress(address)
+	return tmpDevice, nil
 }
