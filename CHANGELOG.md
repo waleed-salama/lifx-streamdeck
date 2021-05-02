@@ -1,4 +1,4 @@
-# v0.7.0 (WIP)
+# v0.7.0
 ## Fixes
 * Remove extra debug logs that were introduced on accident.
 * Remove viper to fix CVE-2019-11254 as viper was only being used for debugging purposes
