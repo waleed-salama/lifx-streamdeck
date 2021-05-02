@@ -44,7 +44,7 @@ func (c Client) generateDebug(context string, debug *models.Debug) {
 		return
 	}
 
-	zipFile, err := os.OpenFile(fName, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	zipFile, err := os.OpenFile(fName, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
 		c.sdClient.Log(err.Error())
 		c.SendWarnMessage(context)
