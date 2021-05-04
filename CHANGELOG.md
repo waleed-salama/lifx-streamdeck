@@ -1,3 +1,7 @@
+# v0.7.1
+## Features
+* Update the debug action to include more log output.
+
 # v0.7.0
 ## Fixes
 * Remove extra debug logs that were introduced on accident.
