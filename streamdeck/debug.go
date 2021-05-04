@@ -3,10 +3,12 @@ package streamdeck
 import (
 	"archive/zip"
 	"encoding/json"
+	"fmt"
 	"github.com/mitchellh/go-homedir"
 	"gitlab.com/wwsean08/lifx-streamdeck/models"
 	"io/ioutil"
 	"os"
+	"runtime"
 	"strings"
 )
 
@@ -94,5 +96,48 @@ func (c Client) generateDebug(context string, debug *models.Debug) {
 	}
 	devicesFile.Write(debug.DeviceData)
 
+	logData, err := getLogs()
+	if err != nil {
+		c.sdClient.Log(err.Error())
+		c.SendWarnMessage(context)
+		return
+	}
+	for fileName, fileContents := range logData {
+		tmp, _ := zipw.Create(fileName)
+		tmp.Write(fileContents)
+	}
+
 	c.sendOKMessage(context)
+}
+
+func getLogs() (map[string][]byte, error) {
+	logLocation := ""
+	logData := make(map[string][]byte)
+	var err error
+	if runtime.GOOS == "windows" {
+		logLocation, err = homedir.Expand("~/AppData/Roaming/Elgato/StreamDeck/logs/")
+		if err != nil {
+			return logData, err
+		}
+	} else if runtime.GOOS == "darwin" {
+		logLocation, err = homedir.Expand("~/Library/Logs/StreamDeck/")
+		if err != nil {
+			return logData, err
+		}
+	}
+	logFiles, err := ioutil.ReadDir(logLocation)
+	if err != nil {
+		return logData, err
+	}
+	for _, logFile := range logFiles {
+		// only grab logs from my plugin
+		if strings.HasPrefix(logFile.Name(), "dev.sean.lifx") {
+			logData[logFile.Name()], err = ioutil.ReadFile(fmt.Sprintf("%s/%s", logLocation, logFile.Name()))
+			if err == nil {
+				return logData, err
+			}
+		}
+	}
+
+	return logData, err
 }
