@@ -43,6 +43,10 @@ func TestMacToUint64(t *testing.T) {
 	mac, err := macToUint64("d0:73:d5:2b:a7:b8")
 	require.NoError(t, err)
 	require.Equal(t, uint64(0xb8a72bd573d00000), mac)
+
+	mac, err = macToUint64("z")
+	require.Equal(t, uint64(0), mac)
+	require.Error(t, err)
 }
 
 func TestDeviceFromMac(t *testing.T) {
@@ -50,6 +54,10 @@ func TestDeviceFromMac(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, device)
 	require.Equal(t, "d0:73:d5:2b:a7:b8", device.MacAddress())
+
+	device, err = deviceFromMac("z")
+	require.Error(t, err)
+	require.Nil(t, device)
 }
 
 func TestLifxClient_UpdateGlobalSettings(t *testing.T) {
