@@ -305,7 +305,7 @@ func (c *Client) sendDevicesToPropertyInspector(action string, context string, d
 	}
 }
 
-func (c Client) UpdateGlobalSettings(settings map[string]interface{}) {
+func (c *Client) UpdateGlobalSettings(settings map[string]interface{}) {
 	var gSettings = new(models.GlobalSettings)
 	err := mapstructure.Decode(settings, gSettings)
 	if err != nil {

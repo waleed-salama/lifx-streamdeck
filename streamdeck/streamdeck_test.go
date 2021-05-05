@@ -2,6 +2,7 @@ package streamdeck
 
 import (
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 	"gitlab.com/wwsean08/lifx-streamdeck/mocks"
 	"gitlab.com/wwsean08/lifx-streamdeck/models"
 	"gitlab.com/wwsean08/streamdeck"
@@ -226,4 +227,27 @@ func TestClient_Toggle(t *testing.T) {
 	client.OnKeyUp(msg)
 
 	testController.AssertExpectations(t)
+}
+
+func TestClient_UpdateGlobalSettings(t *testing.T) {
+	data := map[string]interface{}{
+		"version":       4,
+		"outIP":         "",
+		"directComm":    false,
+		"customDevices": nil,
+	}
+
+	client := new(Client)
+	testController := new(mocks.Controller)
+	testController.On("UpdateGlobalSettings", mock.AnythingOfType("*models.GlobalSettings")).Return(nil)
+	client.controller = testController
+	client.globalSettings = new(models.GlobalSettings)
+	require.NotNil(t, client)
+	require.Nil(t, client.scheduler)
+
+	client.UpdateGlobalSettings(data)
+	require.NotNil(t, client.scheduler)
+	require.Equal(t, []int{42}, client.scheduler.GetJobKeys())
+	client.scheduler.Clear()
+	client.scheduler.Stop()
 }
