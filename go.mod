@@ -3,7 +3,7 @@ module gitlab.com/wwsean08/lifx-streamdeck
 go 1.14
 
 require (
-	github.com/mitchellh/go-homedir v1.0.0
+	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/mapstructure v1.4.1
 	github.com/mostlygeek/arp v0.0.0-20170424181311-541a2129847a
 	github.com/reugn/go-quartz v0.3.4
