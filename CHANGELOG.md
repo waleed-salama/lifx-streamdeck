@@ -2,6 +2,10 @@
 ## Features
 * Update the debug action to include more log output.
 
+## Fixes
+* Fixed a bug around auto-rediscovery where it might not happen.
+  * Found via new unit tests
+
 # v0.7.0
 ## Fixes
 * Remove extra debug logs that were introduced on accident.
