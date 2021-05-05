@@ -8,6 +8,16 @@ import (
 	"testing"
 )
 
+func TestNewLifxController(t *testing.T) {
+	client := NewLifxController()
+	require.IsType(t, &lifxClient{}, client)
+	specificClient := client.(*lifxClient)
+
+	require.NotNil(t, specificClient.deviceMap)
+	require.NotNil(t, specificClient.writeLock)
+
+}
+
 func TestLifxClient_clearDeviceMap(t *testing.T) {
 	client := new(lifxClient)
 	client.writeLock = new(sync.Mutex)
