@@ -12,6 +12,15 @@ stages:
 variables:
   version: 0.1.0
 
+.go-cache:
+  variables:
+    GOPATH: $CI_PROJECT_DIR/.go
+  before_script:
+    - mkdir -p .go
+  cache:
+    paths:
+      - .go/pkg/mod/
+
 snyk-scan:
   stage: vulnerability
   image: node:14.2
@@ -29,6 +38,7 @@ snyk-scan:
 test:
   stage: test
   image: golang:1.16
+  extends: .go-cache
   before_script:
     - go mod download
     - go get -u github.com/jstemmer/go-junit-report
@@ -77,6 +87,7 @@ release-test:
 compile-windows:
   stage: build
   image: golang:1.16
+  extends: .go-cache
   script:
     - go mod download
     - if [ -n "$CI_COMMIT_TAG" ]; then export version=$CI_COMMIT_TAG; fi
@@ -90,6 +101,7 @@ compile-windows:
 compile-mac:
   stage: build
   image: golang:1.16
+  extends: .go-cache
   script:
     - go mod download
     - if [ -n "$CI_COMMIT_TAG" ]; then export version=$CI_COMMIT_TAG; fi
