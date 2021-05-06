@@ -31,10 +31,15 @@ test:
   image: golang:1.16
   before_script:
     - go mod download
+    - go get -u github.com/jstemmer/go-junit-report
   script:
-    - go test ./...
+    - go test ./... -v 2>&1 | go-junit-report -set-exit-code > report.xml
   except:
     - schedules
+  artifacts:
+    when: always
+    reports:
+      junit: report.xml
 
 coverage-report:
   stage: test
