@@ -62,7 +62,7 @@ func (c Client) generateDebug(context string, debug *models.Debug) {
 		c.SendWarnMessage(context)
 		return
 	}
-	netFile.Write(debug.NetInfo)
+	_, _ = netFile.Write(debug.NetInfo)
 
 	envFile, err := zipw.Create("env.json")
 	if err != nil {
@@ -70,7 +70,7 @@ func (c Client) generateDebug(context string, debug *models.Debug) {
 		c.SendWarnMessage(context)
 		return
 	}
-	envFile.Write(envData)
+	_, _ = envFile.Write(envData)
 
 	crashFile, err := zipw.Create("crash_log")
 	if err != nil {
@@ -78,7 +78,7 @@ func (c Client) generateDebug(context string, debug *models.Debug) {
 		c.SendWarnMessage(context)
 		return
 	}
-	crashFile.Write(crashData)
+	_, _ = crashFile.Write(crashData)
 
 	gSettingsFile, err := zipw.Create("gSettings.json")
 	if err != nil {
@@ -86,7 +86,7 @@ func (c Client) generateDebug(context string, debug *models.Debug) {
 		c.SendWarnMessage(context)
 		return
 	}
-	gSettingsFile.Write(gSettingsData)
+	_, _ = gSettingsFile.Write(gSettingsData)
 
 	devicesFile, err := zipw.Create("devices.json")
 	if err != nil {
@@ -94,7 +94,7 @@ func (c Client) generateDebug(context string, debug *models.Debug) {
 		c.SendWarnMessage(context)
 		return
 	}
-	devicesFile.Write(debug.DeviceData)
+	_, _ = devicesFile.Write(debug.DeviceData)
 
 	logData, err := getLogs()
 	if err != nil {
@@ -104,7 +104,7 @@ func (c Client) generateDebug(context string, debug *models.Debug) {
 	}
 	for fileName, fileContents := range logData {
 		tmp, _ := zipw.Create(fileName)
-		tmp.Write(fileContents)
+		_, _ = tmp.Write(fileContents)
 	}
 
 	c.sendOKMessage(context)

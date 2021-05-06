@@ -82,7 +82,7 @@ func (c *Client) OnWillAppear(msg streamdeck.WillAppearMsg) {
 		Event:   streamdeck.SetSettingsEvent,
 		Payload: settings,
 	}
-	c.sdClient.SendMessage(settingsMsg)
+	_ = c.sdClient.SendMessage(settingsMsg)
 }
 
 // OnSendToPlugin is called when a message is sent to the plugin (generally from the property inspector)
@@ -217,7 +217,7 @@ func (c *Client) OnDidReceiveGlobalSettings(msg streamdeck.DidReceiveGlobalSetti
 		Context: c.uuid,
 		Payload: migratedSettings,
 	}
-	c.sdClient.SendMessage(update)
+	_ = c.sdClient.SendMessage(update)
 	c.UpdateGlobalSettings(migratedSettings)
 }
 
@@ -320,7 +320,7 @@ func (c *Client) UpdateGlobalSettings(settings map[string]interface{}) {
 	rediscover := RediscoverJob{controller: c.controller}
 	// job may not exist and that's fine
 	_ = c.scheduler.DeleteJob(rediscover.Key())
-	c.scheduler.ScheduleJob(rediscover, quartz.NewSimpleTrigger(time.Hour))
+	_ = c.scheduler.ScheduleJob(rediscover, quartz.NewSimpleTrigger(time.Hour))
 
 	*c.globalSettings = *gSettings
 

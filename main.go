@@ -23,7 +23,7 @@ func main() {
 	uuid := args[3]
 	info := args[7]
 	appInfo := new(models.AppInfo)
-	json.Unmarshal([]byte(info), appInfo)
+	_ = json.Unmarshal([]byte(info), appInfo)
 	appInfo.Version = version
 	appInfo.Commit = commit
 	lifxController := lifx.NewLifxController()
