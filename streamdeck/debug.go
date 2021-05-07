@@ -52,9 +52,17 @@ func (c Client) generateDebug(context string, debug *models.Debug) {
 		c.SendWarnMessage(context)
 		return
 	}
-	defer zipFile.Close()
 	zipw := zip.NewWriter(zipFile)
-	defer zipw.Close()
+	defer func(zipw *zip.Writer, zipFile *os.File) {
+		err := zipw.Close()
+		if err != nil {
+			c.sdClient.Log(err.Error())
+		}
+		err = zipFile.Close()
+		if err != nil {
+			c.sdClient.Log(err.Error())
+		}
+	}(zipw, zipFile)
 
 	netFile, err := zipw.Create("net.json")
 	if err != nil {
