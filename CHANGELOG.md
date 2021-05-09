@@ -1,3 +1,7 @@
+# v0.7.2
+## Features 
+* Generate crash log for mac as well if there is a "panic" to help debugging in the future potentially.
+
 # v0.7.1
 ## Features
 * Update the debug action to include more log output.

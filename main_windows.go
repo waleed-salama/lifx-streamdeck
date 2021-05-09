@@ -19,7 +19,9 @@ var (
 
 func main() {
 	f, err := os.OpenFile("crash_log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
-	redirectStderr(f)
+	if err == nil {
+		redirectStderr(f)
+	}
 	args := os.Args[1:]
 	port := args[1]
 	uuid := args[3]
