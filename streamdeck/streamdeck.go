@@ -39,10 +39,9 @@ func NewClient(port, uuid string, info *models.AppInfo, controller lifx.Controll
 		globalSettings: gSettings,
 		controller:     controller,
 	}
-	go client.controller.DiscoverDevices()
-	if err != nil {
-		return nil, err
-	}
+	go func() {
+		_ = client.controller.DiscoverDevices()
+	}()
 	client.sdClient.SetOnKeyUpCallback(client.OnKeyUp)
 	client.sdClient.SetSendToPluginCallback(client.OnSendToPlugin)
 	client.sdClient.SetPropertyInspectorDidAppearCallback(client.OnPropertyInspectorDidAppear)
@@ -108,7 +107,13 @@ func (c *Client) OnSendToPlugin(msg streamdeck.SendToPluginMsg) {
 	case "twitch":
 		_ = open.Start("https://twitch.tv/wwsean08")
 	case "gSettingsHelp":
-		_ = open.Start("https://gitlab.com/wwsean08/lifx-streamdeck/-/blob/main/docs/global-settings.md")
+		version := c.appInfo.Version
+		if version == "develop" {
+			version = "main"
+		}
+		site := fmt.Sprintf("https://gitlab.com/wwsean08/lifx-streamdeck/-/blob/%s/docs/global-settings.md",
+			version)
+		_ = open.Start(site)
 	default:
 		c.sdClient.Log(fmt.Sprintf("Unknown message type recieved from Property Inspector, %s", msg.Payload["type"]))
 	}
