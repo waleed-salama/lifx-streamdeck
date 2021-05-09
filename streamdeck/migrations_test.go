@@ -1,6 +1,8 @@
 package streamdeck
 
 import (
+	"github.com/mitchellh/mapstructure"
+	"gitlab.com/wwsean08/lifx-streamdeck/models"
 	"math"
 	"testing"
 
@@ -20,6 +22,10 @@ func TestMigratePowerFromUnversionedToCurrent(t *testing.T) {
 	devices := settings["devices"].([]map[string]interface{})
 	require.Equal(t, "d0:73:d5:2b:a7:b8", devices[0]["mac"])
 	require.Equal(t, "Beam", devices[0]["name"])
+
+	settings = migratePowerSettingsToV2(settings)
+	require.Equal(t, 2, settings["version"])
+	require.Equal(t, 0, settings["transition"])
 }
 
 func TestMigrateColorSettingsFromUnversionedToCurrent(t *testing.T) {
@@ -197,4 +203,24 @@ func TestVersionToInt(t *testing.T) {
 
 		require.Equal(t, testCase.expectOutput, output)
 	}
+}
+
+func TestMigrateGlobalSettingsUnversionedToCurrent(t *testing.T) {
+	gSettings, err := MigrateGlobalSettings(make(map[string]interface{}))
+	require.NoError(t, err)
+	require.Equal(t, 4, gSettings["version"])
+	require.Zero(t, gSettings["outIP"])
+	require.False(t, gSettings["directComm"].(bool))
+	require.Len(t, gSettings["customDevices"], 0)
+
+	_, exists := gSettings["cacheTTL"]
+	require.False(t, exists)
+
+	globalSettings := new(models.GlobalSettings)
+	err = mapstructure.Decode(gSettings, globalSettings)
+	require.NoError(t, err)
+	require.Equal(t, 4, globalSettings.Version)
+	require.Equal(t, "", globalSettings.OutIP)
+	require.False(t, globalSettings.DirectComm)
+	require.Len(t, globalSettings.CustomDevices, 0)
 }
