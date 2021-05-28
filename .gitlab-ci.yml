@@ -8,6 +8,7 @@ stages:
   - build
   - dist
   - antivirus
+  - release
 
 variables:
   version: develop
@@ -157,3 +158,21 @@ virus-total-scan:
       - results.json
   except:
     - schedules
+
+do-release:
+  stage: release
+  image: ubuntu:20.04
+  only:
+    - tags
+  before_script:
+    - apt update && apt install -y curl
+  script:
+    - 'curl --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file dev.sean.lifx.streamDeckPlugin "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/lifx-streamdeck/${CI_COMMIT_TAG}/dev.sean.lifx.streamDeckPlugin"'
+
+no-release:
+  stage: release
+  image: ubuntu:20.04
+  except:
+    - tags
+  script:
+    - echo "nothing to do here"
