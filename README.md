@@ -2,6 +2,7 @@
 [![pipeline status](https://gitlab.com/wwsean08/lifx-streamdeck/badges/main/pipeline.svg)](https://gitlab.com/wwsean08/lifx-streamdeck/-/commits/main)
 [![discord](https://img.shields.io/discord/493162062524973056?label=discord)](https://discord.gg/PPVYMeP)
 [![license](https://img.shields.io/badge/license-MIT-brightgreen)](https://gitlab.com/wwsean08/lifx-streamdeck/-/blob/master/LICENSE)
+[![Go Report Card](https://goreportcard.com/badge/gitlab.com/wwsean08/lifx-streamdeck)](https://goreportcard.com/report/gitlab.com/wwsean08/lifx-streamdeck)
 [![ko-fi](https://img.shields.io/badge/tips-buy%20me%20a%20coffee-brightgreen)](https://ko-fi.com/P5P23OLT2)
 
 This plugin allows for an Elgato Stream Deck to control LIFX devices at the click of a button.  Currently, it is capable of turning devices on or off, as well as setting the color of the light.
@@ -22,7 +23,7 @@ Upgrading requires uninstalling the previous version, don't worry, your settings
 
 Once you have uninstalled the plugin you can follow the Installation instructions.
 
-## Supported Actions
+## Actions
 You can see an overview of the features at https://www.youtube.com/watch?v=PiGfuwZe3Zs
 
 ### Setting the devices power state

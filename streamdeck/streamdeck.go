@@ -115,7 +115,7 @@ func (c *Client) OnSendToPlugin(msg streamdeck.SendToPluginMsg) {
 			version)
 		_ = open.Start(site)
 	default:
-		c.sdClient.Log(fmt.Sprintf("Unknown message type recieved from Property Inspector, %s", msg.Payload["type"]))
+		c.sdClient.Log(fmt.Sprintf("Unknown message type received from Property Inspector, %s", msg.Payload["type"]))
 	}
 }
 

@@ -83,6 +83,9 @@ func getAllLifxIPs() map[string]bool {
 			// check for connectivity, assume it won't connect
 			lifxIPs[ip] = false
 			macInt, err := macToUint64(mac)
+			if err != nil {
+				continue
+			}
 
 			// Not sure why I need this bit shift but via testing this is what I determined I needed, may be fragile
 			macInt = macInt >> 16
