@@ -2,6 +2,7 @@
 ## Fixes 
 * Generate crash log for mac as well if there is a "panic" to help debugging in the future potentially.
 * Make help links open to the docs that the specific version of the plugin installed (or the main branch of develop)
+* Some minor fixes based on static code analysis.
 
 # v0.7.1
 ## Features
