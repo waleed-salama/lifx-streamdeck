@@ -1,178 +1,169 @@
----
+# You can override the included template(s) by including variable overrides
+# SAST customization: https://docs.gitlab.com/ee/user/application_security/sast/#customizing-the-sast-settings
+# Secret Detection customization: https://docs.gitlab.com/ee/user/application_security/secret_detection/#customizing-settings
+# Note that environment variables can be set in several places
+# See https://docs.gitlab.com/ee/ci/variables/#cicd-variable-precedence
 include:
-  - template: Security/SAST.gitlab-ci.yml
-
+- template: Security/SAST.gitlab-ci.yml
+- template: Security/Secret-Detection.gitlab-ci.yml
 stages:
-  - vulnerability
-  - test
-  - build
-  - dist
-  - antivirus
-  - release
-
+- vulnerability
+- test
+- build
+- dist
+- antivirus
+- release
 variables:
   version: develop
-
 snyk-scan:
   stage: vulnerability
   image: node:14.2
   before_script:
-    - apt install -y wget tar
-    - wget -q https://golang.org/dl/go1.16.linux-amd64.tar.gz -O /tmp/go1.16.linux-amd64.tar.gz
-    - tar -C /usr/local -xzf /tmp/go1.16.linux-amd64.tar.gz
+  - apt install -y wget tar
+  - wget -q https://golang.org/dl/go1.16.linux-amd64.tar.gz -O /tmp/go1.16.linux-amd64.tar.gz
+  - tar -C /usr/local -xzf /tmp/go1.16.linux-amd64.tar.gz
   script:
-    - export PATH=$PATH:/usr/local/go/bin
-    - npm install -g snyk
-    - snyk auth $SNYK_TOKEN
-    - snyk test
+  - export PATH=$PATH:/usr/local/go/bin
+  - npm install -g snyk
+  - snyk auth $SNYK_TOKEN
+  - snyk test
   allow_failure: true
-
 test:
   stage: test
   image: golang:1.16
   before_script:
-    - go mod download
-    - go get -u github.com/jstemmer/go-junit-report
+  - go mod download
+  - go get -u github.com/jstemmer/go-junit-report
   script:
-    - go test ./... -v 2>&1 | go-junit-report -set-exit-code > report.xml
+  - go test ./... -v 2>&1 | go-junit-report -set-exit-code > report.xml
   except:
-    - schedules
+  - schedules
   artifacts:
     when: always
     reports:
       junit: report.xml
-
 coverage-report:
   stage: test
   image: golang:1.16
   before_script:
-    - go mod download
+  - go mod download
   script:
-    - export PKG_LIST=$(go list ./... | grep -v /vendor/)
-    - mkdir cover
-    - for package in ${PKG_LIST}; do
-      go test -covermode=count -coverprofile "cover/${package##*/}.cov" "$package" ;
-      done
-    - "echo 'mode: count' > coverage.cov"
-    - tail -q -n +2 cover/*.cov >> coverage.cov
-    - go tool cover -func=coverage.cov
-    - go tool cover -html=coverage.cov -o index.html
+  - export PKG_LIST=$(go list ./... | grep -v /vendor/)
+  - mkdir cover
+  - for package in ${PKG_LIST}; do go test -covermode=count -coverprofile "cover/${package##*/}.cov"
+    "$package" ; done
+  - 'echo ''mode: count'' > coverage.cov'
+  - tail -q -n +2 cover/*.cov >> coverage.cov
+  - go tool cover -func=coverage.cov
+  - go tool cover -html=coverage.cov -o index.html
   artifacts:
     paths:
-      - index.html
+    - index.html
   except:
-    - schedules
-
+  - schedules
 release-test:
   stage: test
   image: ubuntu:20.04
   only:
-    - tags
+  - tags
   before_script:
-    - apt update && apt install -y jq
+  - apt update && apt install -y jq
   script:
-    - export manVersion=$(cat manifest.json | jq '"v\(.Version)"' | tr -d '"')
-    - if [[ "$CI_COMMIT_TAG" != "$manVersion" ]]; then exit -1; fi
-
-
+  - export manVersion=$(cat manifest.json | jq '"v\(.Version)"' | tr -d '"')
+  - if [[ "$CI_COMMIT_TAG" != "$manVersion" ]]; then exit -1; fi
 compile-windows:
   stage: build
   image: golang:1.16
   script:
-    - go mod download
-    - if [ -n "$CI_COMMIT_TAG" ]; then export version=$CI_COMMIT_TAG; fi
-    - GOOS=windows go build -v -ldflags "-X main.commit=$CI_COMMIT_SHORT_SHA -X main.version=$version"
+  - go mod download
+  - if [ -n "$CI_COMMIT_TAG" ]; then export version=$CI_COMMIT_TAG; fi
+  - GOOS=windows go build -v -ldflags "-X main.commit=$CI_COMMIT_SHORT_SHA -X main.version=$version"
   artifacts:
     paths:
-      - lifx-streamdeck.exe
+    - lifx-streamdeck.exe
   except:
-    - schedules
-
+  - schedules
 compile-mac:
   stage: build
   image: golang:1.16
   script:
-    - go mod download
-    - if [ -n "$CI_COMMIT_TAG" ]; then export version=$CI_COMMIT_TAG; fi
-    - GOOS=darwin GOARCH=amd64 go build -v -ldflags "-X main.commit=$CI_COMMIT_SHORT_SHA -X main.version=$version"
+  - go mod download
+  - if [ -n "$CI_COMMIT_TAG" ]; then export version=$CI_COMMIT_TAG; fi
+  - GOOS=darwin GOARCH=amd64 go build -v -ldflags "-X main.commit=$CI_COMMIT_SHORT_SHA
+    -X main.version=$version"
   artifacts:
     paths:
-      - lifx-streamdeck
+    - lifx-streamdeck
   except:
-    - schedules
-
+  - schedules
 generate-license-data:
   stage: build
   image: golang:1.16
   before_script:
-    - go get github.com/google/go-licenses
+  - go get github.com/google/go-licenses
   script:
-    # a library I am managing has a "forbidden" license, which causes it to have a bad return code.
-    # I am ok with this so forcing it to have a clean return code via the || true
-    - go-licenses save "gitlab.com/wwsean08/lifx-streamdeck" --save_path="attribution" || true
+  - go-licenses save "gitlab.com/wwsean08/lifx-streamdeck" --save_path="attribution"
+    || true
   artifacts:
     paths:
-      - "attribution"
+    - attribution
   except:
-    - schedules
-
+  - schedules
 generate-bundle:
   stage: dist
   image: ubuntu:20.04
   before_script:
-    - apt update && apt install -y zip
+  - apt update && apt install -y zip
   script:
-    - mkdir dev.sean.lifx.sdPlugin
-    - cp lifx-streamdeck.exe dev.sean.lifx.sdPlugin
-    - cp lifx-streamdeck dev.sean.lifx.sdPlugin
-    - cp manifest.json dev.sean.lifx.sdPlugin
-    - cp -r property-inspector/* dev.sean.lifx.sdPlugin
-    - cp images/* dev.sean.lifx.sdPlugin
-    - cp LICENSE dev.sean.lifx.sdPlugin
-    - cp -r attribution dev.sean.lifx.sdPlugin
-    - zip -r dev.sean.lifx.streamDeckPlugin dev.sean.lifx.sdPlugin
+  - mkdir dev.sean.lifx.sdPlugin
+  - cp lifx-streamdeck.exe dev.sean.lifx.sdPlugin
+  - cp lifx-streamdeck dev.sean.lifx.sdPlugin
+  - cp manifest.json dev.sean.lifx.sdPlugin
+  - cp -r property-inspector/* dev.sean.lifx.sdPlugin
+  - cp images/* dev.sean.lifx.sdPlugin
+  - cp LICENSE dev.sean.lifx.sdPlugin
+  - cp -r attribution dev.sean.lifx.sdPlugin
+  - zip -r dev.sean.lifx.streamDeckPlugin dev.sean.lifx.sdPlugin
   artifacts:
     paths:
-      - dev.sean.lifx.streamDeckPlugin
+    - dev.sean.lifx.streamDeckPlugin
   except:
-    - schedules
-
+  - schedules
 virus-total-scan:
   stage: antivirus
   image: ubuntu:20.04
-  # Generally failures are false positives, but they should be investigated (elgato will ask about them)
   allow_failure: true
   before_script:
-    - apt update && apt install -y curl jq
+  - apt update && apt install -y curl jq
   script:
-    - curl --request POST --url 'https://www.virustotal.com/vtapi/v2/file/scan' -o upload.json --form "apikey=$VT_API_KEY" --form 'file=@./dev.sean.lifx.streamDeckPlugin'
-    - export SCANID=$(cat upload.json | jq .sha256 | tr -d '"')
-    - sleep 300
-    - curl --request GET -o results.json --url "https://www.virustotal.com/vtapi/v2/file/report?apikey=$VT_API_KEY&resource=$SCANID"
-    - echo "Positives Found $(cat results.json | jq .positives), results at $(cat results.json | jq .permalink)"
-    # if there are 0 results then this will be successful, otherwise the job will fail.
-    - exit $(cat results.json | jq .positives)
+  - curl --request POST --url 'https://www.virustotal.com/vtapi/v2/file/scan' -o upload.json
+    --form "apikey=$VT_API_KEY" --form 'file=@./dev.sean.lifx.streamDeckPlugin'
+  - export SCANID=$(cat upload.json | jq .sha256 | tr -d '"')
+  - sleep 300
+  - curl --request GET -o results.json --url "https://www.virustotal.com/vtapi/v2/file/report?apikey=$VT_API_KEY&resource=$SCANID"
+  - echo "Positives Found $(cat results.json | jq .positives), results at $(cat results.json
+    | jq .permalink)"
+  - exit $(cat results.json | jq .positives)
   artifacts:
     paths:
-      - upload.json
-      - results.json
+    - upload.json
+    - results.json
   except:
-    - schedules
-
+  - schedules
 do-release:
   stage: release
   image: ubuntu:20.04
   only:
-    - tags
+  - tags
   before_script:
-    - apt update && apt install -y curl
+  - apt update && apt install -y curl
   script:
-    - 'curl --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file dev.sean.lifx.streamDeckPlugin "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/lifx-streamdeck/${CI_COMMIT_TAG}/dev.sean.lifx.streamDeckPlugin"'
-
+  - 'curl --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file dev.sean.lifx.streamDeckPlugin
+    "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/lifx-streamdeck/${CI_COMMIT_TAG}/dev.sean.lifx.streamDeckPlugin"'
 no-release:
   stage: release
   image: ubuntu:20.04
   except:
-    - tags
+  - tags
   script:
-    - echo "nothing to do here"
+  - echo "nothing to do here"
