@@ -73,30 +73,20 @@ release-test:
     - export manVersion=$(cat manifest.json | jq '"v\(.Version)"' | tr -d '"')
     - if [[ "$CI_COMMIT_TAG" != "$manVersion" ]]; then exit -1; fi
 
-compile-windows:
+compile:
   stage: build
   image: golang:1.16
+  parallel:
+    matrix:
+      - GOOS: ["darwin", "windows"]
+        GOARCH: "amd64"
   script:
     - go mod download
     - if [ -n "$CI_COMMIT_TAG" ]; then export version=$CI_COMMIT_TAG; fi
-    - GOOS=windows go build -v -ldflags "-X main.commit=$CI_COMMIT_SHORT_SHA -X main.version=$version"
+    - go build -v -ldflags "-X main.commit=$CI_COMMIT_SHORT_SHA -X main.version=$version"
   artifacts:
     paths:
-      - lifx-streamdeck.exe
-  except:
-    - schedules
-
-compile-mac:
-  stage: build
-  image: golang:1.16
-  script:
-    - go mod download
-    - if [ -n "$CI_COMMIT_TAG" ]; then export version=$CI_COMMIT_TAG; fi
-    - GOOS=darwin GOARCH=amd64 go build -v -ldflags "-X main.commit=$CI_COMMIT_SHORT_SHA
-      -X main.version=$version"
-  artifacts:
-    paths:
-      - lifx-streamdeck
+      - lifx-streamdeck*
   except:
     - schedules
 
