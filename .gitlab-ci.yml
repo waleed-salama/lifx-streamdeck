@@ -50,8 +50,7 @@ coverage-report:
   script:
     - export PKG_LIST=$(go list ./... | grep -v /vendor/)
     - mkdir cover
-    - for package in ${PKG_LIST}; do go test -covermode=count -coverprofile "cover/${package##*/}.cov"
-      "$package" ; done
+    - for package in ${PKG_LIST}; do go test -covermode=count -coverprofile "cover/${package##*/}.cov" "$package" ; done
     - 'echo ''mode: count'' > coverage.cov'
     - tail -q -n +2 cover/*.cov >> coverage.cov
     - go tool cover -func=coverage.cov
@@ -96,8 +95,7 @@ generate-license-data:
   before_script:
     - go get github.com/google/go-licenses
   script:
-    - go-licenses save "gitlab.com/wwsean08/lifx-streamdeck" --save_path="attribution"
-      || true
+    - go-licenses save "gitlab.com/wwsean08/lifx-streamdeck" --save_path="attribution" || true
   artifacts:
     paths:
       - attribution
@@ -132,13 +130,11 @@ virus-total-scan:
   before_script:
     - apt update && apt install -y curl jq
   script:
-    - curl --request POST --url 'https://www.virustotal.com/vtapi/v2/file/scan' -o upload.json
-      --form "apikey=$VT_API_KEY" --form 'file=@./dev.sean.lifx.streamDeckPlugin'
+    - curl --request POST --url 'https://www.virustotal.com/vtapi/v2/file/scan' -o upload.json --form "apikey=$VT_API_KEY" --form 'file=@./dev.sean.lifx.streamDeckPlugin'
     - export SCANID=$(cat upload.json | jq .sha256 | tr -d '"')
     - sleep 300
     - curl --request GET -o results.json --url "https://www.virustotal.com/vtapi/v2/file/report?apikey=$VT_API_KEY&resource=$SCANID"
-    - echo "Positives Found $(cat results.json | jq .positives), results at $(cat results.json
-      | jq .permalink)"
+    - echo "Positives Found $(cat results.json | jq .positives), results at $(cat results.json | jq .permalink)"
     - exit $(cat results.json | jq .positives)
   artifacts:
     paths:
@@ -155,8 +151,7 @@ do-release:
   before_script:
     - apt update && apt install -y curl
   script:
-    - 'curl --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file dev.sean.lifx.streamDeckPlugin
-    "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/lifx-streamdeck/${CI_COMMIT_TAG}/dev.sean.lifx.streamDeckPlugin"'
+    - 'curl --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file dev.sean.lifx.streamDeckPlugin "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/lifx-streamdeck/${CI_COMMIT_TAG}/dev.sean.lifx.streamDeckPlugin"'
 
 no-release:
   stage: release
