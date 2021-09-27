@@ -25,25 +25,8 @@
     <div class="sdpi-item" id="color-select">
         <div class="sdpi-item-label">Settings to copy</div>
         <select class="sdpi-item-value select" id="device_dropdown">
-
         </select>
         <button class="sdpi-item-value" id="getColorButton" onclick="getColor()">Get Settings</button>
-    </div>
-    <div class="sdpi-item">
-        <div class="sdpi-item-label">Hue</div>
-        <input class="sdpi-item-value" min="0" max="360" type="number" onchange=onColorChanged() id="hue" required placeholder="The degrees between 0-360 for the hue"></input>
-    </div>
-    <div class="sdpi-item">
-        <div class="sdpi-item-label">Saturation</div>
-        <input class="sdpi-item-value" min="0" max="100" type="number" onchange="onColorChanged()" id="saturation" required placeholder="The saturation between 0-100%"></input>
-    </div>
-    <div class="sdpi-item">
-        <div class="sdpi-item-label">Brightness</div>
-        <input class="sdpi-item-value" min="0" max="100" type="number" onchange="onColorChanged()" id="brightness" required placeholder="The brightness between 0-100%"></input>
-    </div>
-    <div class="sdpi-item">
-        <div class="sdpi-item-label">Kelvin</div>
-        <input class="sdpi-item-value" min="1500" max="9000" type="number" onchange="onColorChanged()" id="kelvin" required placeholder="The kelvin temperature of white light"></input>
     </div>
     <div class="sdpi-item">
         <div class="sdpi-item-label">Transition</div>
@@ -61,21 +44,13 @@
             actionInfo.payload.settings["devices"] = [];
         }
         if (!actionInfo.payload.settings["color"]) {
-            actionInfo.payload.settings["color"] = {};
+            actionInfo.payload.settings["color"] = [];
         } else {
-            let hueBox = document.getElementById('hue');
-            hueBox.value = actionInfo.payload.settings["color"]['hue'];
-            let saturationBox = document.getElementById('saturation');
-            saturationBox.value = actionInfo.payload.settings["color"]['saturation'];
-            let brightnessBox = document.getElementById('brightness');
-            brightnessBox.value = actionInfo.payload.settings["color"]['brightness'];
-            let kelvinBox = document.getElementById('kelvin');
-            kelvinBox.value = actionInfo.payload.settings["color"]['kelvin'];
             let transitionBox = document.getElementById('transition');
-            transitionBox.value = actionInfo.payload.settings['color']['transition']
+            transitionBox.value = actionInfo.payload.settings['transition']
         }
         if (!actionInfo.payload.settings["version"])  {
-            actionInfo.payload.settings["version"] = 2
+            actionInfo.payload.settings["version"] = 1
         }
 
         // if connection was established, the websocket sends
@@ -96,7 +71,7 @@
                 const data = jsonObj['payload']
                 if (data['type'] === 'discovery') {
                     devicesDiscovered(data);
-                } else if (data['type'] === 'getColor') {
+                } else if (data['type'] === 'getMultizone') {
                     colorReceived(data['color']);
                 }
             } else if (sdEvent === "didReceiveGlobalSettings") {
@@ -113,7 +88,7 @@
         let loader = document.createElement('div');
         const dropdown = document.getElementById('device_dropdown');
         const deviceMac = dropdown[dropdown.selectedIndex].value;
-        const payload = {'type': 'getColor', 'mac': deviceMac};
+        const payload = {'type': 'getMultizone', 'mac': deviceMac};
         sendValueToPlugin(payload);
         loader.setAttribute('class', 'loader');
         getColorButton.setAttribute('disabled', 'disabled');
@@ -129,14 +104,6 @@
         }
         getColorButton.removeAttribute('disabled');
 
-        let hueBox = document.getElementById('hue');
-        hueBox.value = data['hue'];
-        let saturationBox = document.getElementById('saturation');
-        saturationBox.value = data['saturation'];
-        let brightnessBox = document.getElementById('brightness');
-        brightnessBox.value = data['brightness'];
-        let kelvinBox = document.getElementById('kelvin');
-        kelvinBox.value = data['kelvin'];
         onColorChanged();
     }
 
@@ -215,20 +182,12 @@
     }
 
     function onColorChanged() {
-        const hueBox = document.getElementById('hue');
-        const saturationBox = document.getElementById('saturation');
-        const brightnessBox = document.getElementById('brightness');
-        const kelvinBox = document.getElementById('kelvin');
         const transitionBox = document.getElementById('transition');
 
         if (!actionInfo.payload.settings["color"]) {
             actionInfo.payload.settings["color"] = {};
         }
-        actionInfo.payload.settings["color"]["hue"] = parseInt(hueBox.value, 10);
-        actionInfo.payload.settings["color"]["saturation"] = parseInt(saturationBox.value, 10);
-        actionInfo.payload.settings["color"]["brightness"] = parseInt(brightnessBox.value, 10);
-        actionInfo.payload.settings["color"]["kelvin"] = parseInt(kelvinBox.value, 10);
-        actionInfo.payload.settings["color"]["transition"] = parseInt(transitionBox.value, 10);
+        actionInfo.payload.settings["transition"] = parseInt(transitionBox.value, 10);
         UpdateSettings();
     }
 </script>
