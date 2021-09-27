@@ -15,4 +15,6 @@ const (
 	ActionSetWaveform = "dev.sean.lifx.waveform"
 	//ActionDebug is the UUID to generate a debug bundle
 	ActionDebug = "dev.sean.lifx.debug"
+	// ActionSetMultizone is the UUID to set a multi-zone device
+	ActionSetMultizone = "dev.sean.lifx.multizone"
 )

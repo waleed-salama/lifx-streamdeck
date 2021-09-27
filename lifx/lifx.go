@@ -36,6 +36,8 @@ type Controller interface {
 	SetBrightness(*models.BrightnessSettings) error
 	SetWaveform(*models.WaveFormSettings) error
 	UpdateGlobalSettings(*models.GlobalSettings) error
+	SetMultizoneState(settings *models.MultizoneSettings) error
+	GetCurrentMultizoneColors(device *golifx.Device) ([]golifx.HSBK, error)
 	GetDevices() map[string]*golifx.Device
 	Debug() (*models.Debug, error)
 }
@@ -197,6 +199,14 @@ func (c *lifxClient) SetWaveform(settings *models.WaveFormSettings) error {
 		}(settings)
 	}
 	return nil
+}
+
+func (c *lifxClient) SetMultizoneState(settings *models.MultizoneSettings) error {
+	panic("implement me")
+}
+
+func (c *lifxClient) GetCurrentMultizoneColors(device *golifx.Device) ([]golifx.HSBK, error) {
+	panic("implement me")
 }
 
 func (c *lifxClient) UpdateGlobalSettings(settings *models.GlobalSettings) error {

@@ -67,6 +67,12 @@ type (
 		NetInfo    []byte `mapstructure:"netInfo" json:"netInfo"`
 		DeviceData []byte `mapstructure:"deviceData" json:"deviceData"`
 	}
+
+	MultizoneSettings struct {
+		Devices    []Device `mapstructure:"device"`
+		Colors     []Color  `mapstructure:"colors"`
+		Transition uint32   `mapstructure:"transition"`
+	}
 )
 
 // Application used for debug

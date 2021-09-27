@@ -100,6 +100,12 @@ func (c *Client) OnSendToPlugin(msg streamdeck.SendToPluginMsg) {
 			c.SendWarnMessage(msg.Context)
 		}
 		c.sendColorStateToPropertyInspector(msg.Action, msg.Context, color)
+	case "getMultizone":
+		colors, err := c.controller.GetCurrentMultizoneColors(c.controller.GetDevices()[msg.Payload["mac"].(string)])
+		if err != nil {
+			c.SendWarnMessage(msg.Context)
+		}
+		c.sdClient.Log(fmt.Sprintf("%d", colors[0].Kelvin))
 	case "kofi":
 		_ = open.Start("https://ko-fi.com/P5P23OLT2")
 	case "discord":
@@ -203,6 +209,18 @@ func (c *Client) OnKeyUp(msg streamdeck.KeyUpMsg) {
 			return
 		}
 		c.generateDebug(msg.Context, debug)
+	case ActionSetMultizone:
+		multizoneSettings := new(models.MultizoneSettings)
+		err := mapstructure.Decode(msg.Payload.Settings, multizoneSettings)
+		if err != nil {
+			c.sdClient.Log(err.Error())
+			c.SendWarnMessage(context)
+			return
+		}
+		err = c.controller.SetMultizoneState(multizoneSettings)
+		if err != nil {
+			c.sdClient.Log(err.Error())
+		}
 	default:
 		c.SendWarnMessage(msg.Context)
 		c.sdClient.Log(fmt.Sprintf("Unknown action received %s", msg.Action))

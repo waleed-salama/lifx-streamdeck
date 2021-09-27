@@ -104,6 +104,21 @@
       "Tooltip": "Generate debug bundle",
       "UUID": "dev.sean.lifx.debug",
       "PropertyInspectorPath": "debug-pi.html"
+    },
+    {
+      "Icon": "multiZoneColor",
+      "Name": "Set MultiZone Color",
+      "States": [
+        {
+          "Image": "debugKey",
+          "TitleAlignment": "middle",
+          "FontSize": "16"
+        }
+      ],
+      "SupportedInMultiActions": true,
+      "Tooltip": "Set MultiZone lights like LIFX Beam or Z-Strip",
+      "UUID": "dev.sean.lifx.multizone",
+      "PropertyInspectorPath": "set-multizone-pi.html"
     }
   ],
   "SDKVersion": 2,
@@ -116,7 +131,7 @@
   "CategoryIcon": "categoryIcon",
   "Icon": "pluginIcon",
   "URL": "https://sean.dev",
-  "Version": "0.7.2",
+  "Version": "0.8.0",
   "OS": [
     {
       "Platform": "windows",

@@ -1,0 +1,235 @@
+<head>
+    <meta charset="utf-8" />
+    <title>My Property Inspector</title>
+    <link rel="stylesheet" href="sdpi.css">
+    <link rel="stylesheet" href="custom.css">
+    <link rel="stylesheet" href="fa-all.min.css">
+    <script type="text/javascript" src="utils.js"></script>
+</head>
+
+<body>
+<div class="sdpi-wrapper" id="global-wrapper">
+    <div class="sdpi-item" id="discover-container">
+        <div class="sdpi-item-label empty"></div>
+        <button class="sdpi-item-value" id="discovery" onclick="DiscoverDevices()">Discover Devices</button>
+        <button onclick="launchGlobalSettings()" title="Global Settings"><i class="fas fa-cog"></i></button>
+    </div>
+    <div class="sdpi-item" id="device_select">
+        <div class="sdpi-item-label">Devices</div>
+        <div class="sdpi-item" type="checkbox">
+            <div class="sdpi-item-value min100" id="device_container">
+                <div class="loader"></div>
+            </div>
+        </div>
+    </div>
+    <div class="sdpi-item" id="color-select">
+        <div class="sdpi-item-label">Settings to copy</div>
+        <select class="sdpi-item-value select" id="device_dropdown">
+
+        </select>
+        <button class="sdpi-item-value" id="getColorButton" onclick="getColor()">Get Settings</button>
+    </div>
+    <div class="sdpi-item">
+        <div class="sdpi-item-label">Hue</div>
+        <input class="sdpi-item-value" min="0" max="360" type="number" onchange=onColorChanged() id="hue" required placeholder="The degrees between 0-360 for the hue"></input>
+    </div>
+    <div class="sdpi-item">
+        <div class="sdpi-item-label">Saturation</div>
+        <input class="sdpi-item-value" min="0" max="100" type="number" onchange="onColorChanged()" id="saturation" required placeholder="The saturation between 0-100%"></input>
+    </div>
+    <div class="sdpi-item">
+        <div class="sdpi-item-label">Brightness</div>
+        <input class="sdpi-item-value" min="0" max="100" type="number" onchange="onColorChanged()" id="brightness" required placeholder="The brightness between 0-100%"></input>
+    </div>
+    <div class="sdpi-item">
+        <div class="sdpi-item-label">Kelvin</div>
+        <input class="sdpi-item-value" min="1500" max="9000" type="number" onchange="onColorChanged()" id="kelvin" required placeholder="The kelvin temperature of white light"></input>
+    </div>
+    <div class="sdpi-item">
+        <div class="sdpi-item-label">Transition</div>
+        <input class="sdpi-item-value" min="0" max="15000" type="number" onchange="onColorChanged()" id="transition" value="0" required placeholder="The transition time in milliseconds"></input>
+    </div>
+</div>
+<script>
+    function connectElgatoStreamDeckSocket(inPort, inUUID, inRegisterEvent, inInfo, inActionInfo) {
+        uuid = inUUID;
+        // please note: the incoming arguments are of type STRING, so
+        // in case of the inActionInfo, we must parse it into JSON first
+        actionInfo = JSON.parse(inActionInfo); // cache the info
+        websocket = new WebSocket('ws://localhost:' + inPort);
+        if (!actionInfo.payload.settings["devices"]) {
+            actionInfo.payload.settings["devices"] = [];
+        }
+        if (!actionInfo.payload.settings["color"]) {
+            actionInfo.payload.settings["color"] = {};
+        } else {
+            let hueBox = document.getElementById('hue');
+            hueBox.value = actionInfo.payload.settings["color"]['hue'];
+            let saturationBox = document.getElementById('saturation');
+            saturationBox.value = actionInfo.payload.settings["color"]['saturation'];
+            let brightnessBox = document.getElementById('brightness');
+            brightnessBox.value = actionInfo.payload.settings["color"]['brightness'];
+            let kelvinBox = document.getElementById('kelvin');
+            kelvinBox.value = actionInfo.payload.settings["color"]['kelvin'];
+            let transitionBox = document.getElementById('transition');
+            transitionBox.value = actionInfo.payload.settings['color']['transition']
+        }
+        if (!actionInfo.payload.settings["version"])  {
+            actionInfo.payload.settings["version"] = 2
+        }
+
+        // if connection was established, the websocket sends
+        // an 'onopen' event, where we need to register our PI
+        websocket.onopen = function () {
+            const json = {
+                event:  inRegisterEvent,
+                uuid:   inUUID
+            };
+            // register property inspector to Stream Deck
+            websocket.send(JSON.stringify(json));
+        }
+        websocket.onmessage = function (event) {
+            const jsonObj = JSON.parse(event.data);
+            const sdEvent = jsonObj['event'];
+
+            if (sdEvent === 'sendToPropertyInspector') {
+                const data = jsonObj['payload']
+                if (data['type'] === 'discovery') {
+                    devicesDiscovered(data);
+                } else if (data['type'] === 'getColor') {
+                    colorReceived(data['color']);
+                }
+            } else if (sdEvent === "didReceiveGlobalSettings") {
+                if (gsWindow) {
+                    gsWindow.setGlobalSettingsUI(jsonObj);
+                }
+            }
+        }
+    }
+
+    function getColor() {
+        let container = document.getElementById('color-select');
+        let getColorButton = document.getElementById('getColorButton');
+        let loader = document.createElement('div');
+        const dropdown = document.getElementById('device_dropdown');
+        const deviceMac = dropdown[dropdown.selectedIndex].value;
+        const payload = {'type': 'getColor', 'mac': deviceMac};
+        sendValueToPlugin(payload);
+        loader.setAttribute('class', 'loader');
+        getColorButton.setAttribute('disabled', 'disabled');
+        container.append(loader);
+    }
+
+    function colorReceived(data) {
+        let container = document.getElementById('color-select');
+        let getColorButton = document.getElementById('getColorButton');
+        let loader = container.getElementsByClassName("loader");
+        for (let i = 0; i < loader.length; i++) {
+            loader[i].remove();
+        }
+        getColorButton.removeAttribute('disabled');
+
+        let hueBox = document.getElementById('hue');
+        hueBox.value = data['hue'];
+        let saturationBox = document.getElementById('saturation');
+        saturationBox.value = data['saturation'];
+        let brightnessBox = document.getElementById('brightness');
+        brightnessBox.value = data['brightness'];
+        let kelvinBox = document.getElementById('kelvin');
+        kelvinBox.value = data['kelvin'];
+        onColorChanged();
+    }
+
+    function devicesDiscovered(data) {
+        let devices = data["devices"];
+        //TODO: Refactor label -> name like the settings
+        devices.sort((a, b) => (a.label.toUpperCase() > b.label.toUpperCase()) ? 1 : -1);
+        let discoveryContainer = document.getElementById("discover-container");
+        let discoveryButton = document.getElementById('discovery');
+        let loader = discoveryContainer.getElementsByClassName("loader");
+        for (let i = 0; i < loader.length; i++) {
+            loader[i].remove();
+        }
+
+        discoveryButton.removeAttribute('disabled');
+
+        let deviceContainer = document.getElementById('device_container');
+        let deviceDropdown = document.getElementById('device_dropdown');
+        deviceContainer.innerHTML = '';
+        deviceDropdown.innerHTML = '';
+        devices.forEach(d => {
+                let tmpDevice = document.createElement('div');
+                tmpDevice.setAttribute("class", "sdpi-item-child");
+                tmpDevice.innerHTML = `
+                <input id=${d['mac']} type="checkbox" value=${d['mac']}>
+                <label for=${d['mac']} class="sdpi-item-label"><span></span>${d['label']}</label>
+                `
+                deviceContainer.append(tmpDevice);
+
+                let dropDownItem = document.createElement('option');
+                dropDownItem.setAttribute('value', d['mac']);
+                dropDownItem.textContent = d['label'];
+                deviceDropdown.append(dropDownItem);
+            }
+        )
+
+        const tempDevices = actionInfo.payload.settings["devices"]
+            if (tempDevices) {
+                for (let index = 0; index < tempDevices.length; index++) {
+                    const device = tempDevices[index];
+                    const exists = document.getElementById(device["mac"]);
+                    if (!exists) {
+                        let tmpDevice = document.createElement('div');
+                        tmpDevice.setAttribute("class", "sdpi-item-child");
+                        tmpDevice.innerHTML = `
+                <input id=${device["mac"]} type="checkbox" value=${device["label"]}>
+                <label for=${device["mac"]} class="sdpi-item-label"><span></span>${device["label"]}</label>
+                `
+                        deviceContainer.append(tmpDevice);
+                    }
+                }
+            }
+
+            if (devices.length === 0 && tempDevices.length === 0) {
+                deviceContainer.innerText = 'No devices found.  Please verify your devices are turned on and try again.'
+            }
+
+            const children = deviceContainer.getElementsByTagName("input");
+            for (let i = 0; i < children.length; i++) {
+                children[i].onclick = onCheckBoxClicked;
+                for (let index = 0; index < tempDevices.length; index++)
+                    if (tempDevices[index].mac === children[i].id) {
+                        // if the device is in the settings then we want to control it
+                        children[i].setAttribute("checked", "true");
+                        break
+                    }
+            }
+    }
+
+    function onCheckBoxClicked() {
+        if (this.checked) {
+            AddDevice(this.value, this.nextElementSibling.textContent);
+        } else {
+            RemoveDevice(this.value);
+        }
+    }
+
+    function onColorChanged() {
+        const hueBox = document.getElementById('hue');
+        const saturationBox = document.getElementById('saturation');
+        const brightnessBox = document.getElementById('brightness');
+        const kelvinBox = document.getElementById('kelvin');
+        const transitionBox = document.getElementById('transition');
+
+        if (!actionInfo.payload.settings["color"]) {
+            actionInfo.payload.settings["color"] = {};
+        }
+        actionInfo.payload.settings["color"]["hue"] = parseInt(hueBox.value, 10);
+        actionInfo.payload.settings["color"]["saturation"] = parseInt(saturationBox.value, 10);
+        actionInfo.payload.settings["color"]["brightness"] = parseInt(brightnessBox.value, 10);
+        actionInfo.payload.settings["color"]["kelvin"] = parseInt(kelvinBox.value, 10);
+        actionInfo.payload.settings["color"]["transition"] = parseInt(transitionBox.value, 10);
+        UpdateSettings();
+    }
+</script>
+</body>
