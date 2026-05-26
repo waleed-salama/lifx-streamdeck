@@ -41,3 +41,18 @@ button.red {
     touch-action: none;
     user-select: none;
 }
+
+.scene-color-item {
+    align-items: center;
+    display: flex;
+    gap: 8px;
+    min-height: 24px;
+}
+
+.scene-color-swatch {
+    border: 1px solid #777;
+    display: inline-block;
+    height: 14px;
+    min-width: 14px;
+    width: 14px;
+}

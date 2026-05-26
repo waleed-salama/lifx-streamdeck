@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
+	"gitlab.com/wwsean08/golifx"
 	"gitlab.com/wwsean08/lifx-streamdeck/models"
 )
 
@@ -52,6 +53,38 @@ func TestBuildSceneCommandsPreloadsDarkColorBeforePowerOn(t *testing.T) {
 	require.Nil(t, commands[0].Power)
 	require.NotNil(t, commands[1].Power)
 	require.True(t, *commands[1].Power)
+}
+
+func TestBuildSceneCommandsUsesPerDeviceSceneColors(t *testing.T) {
+	left := "d0:73:d5:01:df:8f"
+	right := "d0:73:d5:01:be:91"
+	settings := &models.SceneSettings{
+		Preset:   "sweep",
+		Duration: 1000,
+		Devices: []models.Device{
+			{Name: "Left", Mac: left},
+			{Name: "Right", Mac: right},
+		},
+		TargetColor: models.Color{Hue: 30, Saturation: 0, Brightness: 80, Kelvin: 3200},
+		DeviceColors: []models.SceneDeviceColor{
+			{Mac: left, Color: models.Color{Hue: 240, Saturation: 100, Brightness: 60, Kelvin: 3500}},
+			{Mac: right, Color: models.Color{Hue: 0, Saturation: 100, Brightness: 70, Kelvin: 4000}},
+		},
+	}
+
+	commands := buildSceneCommands(settings)
+
+	leftColor := finalBrightColor(commands, left)
+	rightColor := finalBrightColor(commands, right)
+	require.NotNil(t, leftColor)
+	require.NotNil(t, rightColor)
+	require.Equal(t, uint16(43680), leftColor.Hue)
+	require.Equal(t, uint16(65500), leftColor.Saturation)
+	require.Equal(t, uint16(39300), leftColor.Brightness)
+	require.Equal(t, uint16(3500), leftColor.Kelvin)
+	require.Equal(t, uint16(0), rightColor.Hue)
+	require.Equal(t, uint16(45850), rightColor.Brightness)
+	require.Equal(t, uint16(4000), rightColor.Kelvin)
 }
 
 func TestBuildSceneCommandsQuantizesNearbySweepDelays(t *testing.T) {
@@ -173,6 +206,21 @@ func TestNormalizeSceneSettingsClampsUntrustedPayload(t *testing.T) {
 	require.Equal(t, uint(100), settings.TargetColor.Saturation)
 	require.Equal(t, uint(100), settings.TargetColor.Brightness)
 	require.Equal(t, uint16(9000), settings.TargetColor.Kelvin)
+}
+
+func TestNormalizeSceneSettingsClampsPerDeviceColors(t *testing.T) {
+	settings := &models.SceneSettings{
+		DeviceColors: []models.SceneDeviceColor{
+			{Mac: "d0:73:d5:01:df:8f", Color: models.Color{Hue: 500, Saturation: 500, Brightness: 500, Kelvin: 100}},
+		},
+	}
+
+	normalizeSceneSettings(settings)
+
+	require.Equal(t, uint(360), settings.DeviceColors[0].Color.Hue)
+	require.Equal(t, uint(100), settings.DeviceColors[0].Color.Saturation)
+	require.Equal(t, uint(100), settings.DeviceColors[0].Color.Brightness)
+	require.Equal(t, uint16(1500), settings.DeviceColors[0].Color.Kelvin)
 }
 
 func TestBuildSceneCommandsReverseArrivalUsesMirroredRoleOrder(t *testing.T) {
@@ -304,4 +352,14 @@ func transitionForDevice(commands []sceneCommand, mac string, delay time.Duratio
 		}
 	}
 	return 0
+}
+
+func finalBrightColor(commands []sceneCommand, mac string) *golifx.HSBK {
+	var color *golifx.HSBK
+	for _, command := range commands {
+		if command.DeviceMac == mac && command.Color != nil && command.Color.Brightness > 0 {
+			color = command.Color
+		}
+	}
+	return color
 }

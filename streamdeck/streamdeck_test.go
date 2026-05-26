@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+	"gitlab.com/wwsean08/golifx"
 	"gitlab.com/wwsean08/lifx-streamdeck/mocks"
 	"gitlab.com/wwsean08/lifx-streamdeck/models"
 	"gitlab.com/wwsean08/streamdeck"
@@ -248,6 +249,26 @@ func TestClient_AnimatedScene(t *testing.T) {
 	client.OnKeyUp(msg)
 
 	testController.AssertExpectations(t)
+}
+
+func TestPayloadStringSlice(t *testing.T) {
+	require.Equal(t, []string{"a", "b"}, payloadStringSlice([]interface{}{"a", "", "b", 12}))
+	require.Equal(t, []string{"a", "b"}, payloadStringSlice([]string{"a", "b"}))
+	require.Nil(t, payloadStringSlice("a"))
+}
+
+func TestColorStateFromHSBK(t *testing.T) {
+	state := colorStateFromHSBK(&golifx.HSBK{
+		Hue:        182 * 120,
+		Saturation: 655 * 80,
+		Brightness: 655 * 70,
+		Kelvin:     4000,
+	})
+
+	require.Equal(t, 120, state.Hue)
+	require.Equal(t, 80, state.Saturation)
+	require.Equal(t, 70, state.Brightness)
+	require.Equal(t, 4000, state.Kelvin)
 }
 
 func TestClient_Toggle(t *testing.T) {

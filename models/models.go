@@ -71,18 +71,24 @@ type (
 		TimingOffset int32   `mapstructure:"timingOffset" json:"timingOffset"`
 	}
 
+	SceneDeviceColor struct {
+		Mac   string `mapstructure:"mac" json:"mac"`
+		Color Color  `mapstructure:"color" json:"color"`
+	}
+
 	SceneSettings struct {
-		Version     int                    `mapstructure:"version"`
-		Devices     []Device               `mapstructure:"devices"`
-		Placements  []SceneDevicePlacement `mapstructure:"placements"`
-		Preset      string                 `mapstructure:"preset"`
-		Reverse     bool                   `mapstructure:"reverse"`
-		Direction   string                 `mapstructure:"direction"`
-		Duration    uint32                 `mapstructure:"duration"`
-		Stagger     uint32                 `mapstructure:"stagger"`
-		Intensity   uint                   `mapstructure:"intensity"`
-		ColorTravel string                 `mapstructure:"colorTravel"`
-		TargetColor Color                  `mapstructure:"color"`
+		Version      int                    `mapstructure:"version"`
+		Devices      []Device               `mapstructure:"devices"`
+		Placements   []SceneDevicePlacement `mapstructure:"placements"`
+		DeviceColors []SceneDeviceColor     `mapstructure:"deviceColors"`
+		Preset       string                 `mapstructure:"preset"`
+		Reverse      bool                   `mapstructure:"reverse"`
+		Direction    string                 `mapstructure:"direction"`
+		Duration     uint32                 `mapstructure:"duration"`
+		Stagger      uint32                 `mapstructure:"stagger"`
+		Intensity    uint                   `mapstructure:"intensity"`
+		ColorTravel  string                 `mapstructure:"colorTravel"`
+		TargetColor  Color                  `mapstructure:"color"`
 	}
 
 	Debug struct {

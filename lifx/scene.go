@@ -49,7 +49,6 @@ func buildSceneCommands(settings *models.SceneSettings) []sceneCommand {
 	stagger := uint32(float64(settings.Stagger) * (0.5 + clampFloat(float64(settings.Intensity), 0, 100)/100))
 
 	placements := placementMap(&sceneSettings)
-	target := hsbkFromColor(settings.TargetColor)
 	commands := make([]sceneCommand, 0, len(settings.Devices)*4)
 	devices := make([]computedSceneDevice, 0, len(settings.Devices))
 	maxDelay := time.Duration(0)
@@ -71,6 +70,7 @@ func buildSceneCommands(settings *models.SceneSettings) []sceneCommand {
 	}
 
 	for _, device := range devices {
+		target := sceneTargetColor(&sceneSettings, device.mac)
 		baseDelay := device.offset
 		delay := device.delay + device.offset
 		if reverse {
@@ -172,21 +172,32 @@ func normalizeSceneSettings(settings *models.SceneSettings) {
 	if len(settings.Placements) > maxScenePlacements {
 		settings.Placements = settings.Placements[:maxScenePlacements]
 	}
+	if len(settings.DeviceColors) > maxSceneDevices {
+		settings.DeviceColors = settings.DeviceColors[:maxSceneDevices]
+	}
 	for index := range settings.Placements {
 		settings.Placements[index].TimingOffset = int32(clampFloat(float64(settings.Placements[index].TimingOffset), -maxSceneTimingOffset, maxSceneTimingOffset))
 	}
-	settings.TargetColor.Hue = uint(clampFloat(float64(settings.TargetColor.Hue), 0, 360))
-	settings.TargetColor.Saturation = uint(clampFloat(float64(settings.TargetColor.Saturation), 0, 100))
-	settings.TargetColor.Brightness = uint(clampFloat(float64(settings.TargetColor.Brightness), 0, 100))
-	if settings.TargetColor.Kelvin == 0 {
-		settings.TargetColor.Kelvin = 3200
+	settings.TargetColor = normalizeSceneColor(settings.TargetColor)
+	for index := range settings.DeviceColors {
+		settings.DeviceColors[index].Color = normalizeSceneColor(settings.DeviceColors[index].Color)
 	}
-	if settings.TargetColor.Kelvin < 1500 {
-		settings.TargetColor.Kelvin = 1500
+}
+
+func normalizeSceneColor(color models.Color) models.Color {
+	color.Hue = uint(clampFloat(float64(color.Hue), 0, 360))
+	color.Saturation = uint(clampFloat(float64(color.Saturation), 0, 100))
+	color.Brightness = uint(clampFloat(float64(color.Brightness), 0, 100))
+	if color.Kelvin == 0 {
+		color.Kelvin = 3200
 	}
-	if settings.TargetColor.Kelvin > 9000 {
-		settings.TargetColor.Kelvin = 9000
+	if color.Kelvin < 1500 {
+		color.Kelvin = 1500
 	}
+	if color.Kelvin > 9000 {
+		color.Kelvin = 9000
+	}
+	return color
 }
 
 func isValidScenePreset(preset string) bool {
@@ -302,6 +313,15 @@ func placementMap(settings *models.SceneSettings) map[string]models.SceneDeviceP
 		placements[placement.Mac] = placement
 	}
 	return placements
+}
+
+func sceneTargetColor(settings *models.SceneSettings, mac string) golifx.HSBK {
+	for _, deviceColor := range settings.DeviceColors {
+		if deviceColor.Mac == mac {
+			return hsbkFromColor(deviceColor.Color)
+		}
+	}
+	return hsbkFromColor(settings.TargetColor)
 }
 
 func defaultPlacement(mac string, index int, total int) models.SceneDevicePlacement {

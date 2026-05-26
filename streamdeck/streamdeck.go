@@ -116,6 +116,16 @@ func (c *Client) OnSendToPlugin(msg streamdeck.SendToPluginMsg) {
 			return
 		}
 		c.sendColorStateToPropertyInspector(msg.Action, msg.Context, color)
+	case "getSceneColors":
+		macs := payloadStringSlice(msg.Payload["macs"])
+		if len(macs) == 0 {
+			c.SendWarnMessage(msg.Context)
+			err := fmt.Errorf("getSceneColors requested without device macs")
+			c.sdClient.Log(err.Error())
+			c.sendSceneColorsErrorToPropertyInspector(msg.Action, msg.Context, err)
+			return
+		}
+		c.sendSceneColorsToPropertyInspector(msg.Action, msg.Context, macs)
 	case "kofi":
 		_ = open.Start("https://ko-fi.com/P5P23OLT2")
 	case "discord":
@@ -133,6 +143,23 @@ func (c *Client) OnSendToPlugin(msg streamdeck.SendToPluginMsg) {
 	default:
 		c.sdClient.Log(fmt.Sprintf("Unknown message type received from Property Inspector, %s", msg.Payload["type"]))
 	}
+}
+
+func payloadStringSlice(value interface{}) []string {
+	if values, ok := value.([]string); ok {
+		return values
+	}
+	values, ok := value.([]interface{})
+	if !ok {
+		return nil
+	}
+	result := make([]string, 0, len(values))
+	for _, value := range values {
+		if text, ok := value.(string); ok && text != "" {
+			result = append(result, text)
+		}
+	}
+	return result
 }
 
 func (c *Client) logf(format string, args ...interface{}) {
@@ -288,20 +315,24 @@ func (c *Client) DebugCallback(msg []byte) {
 	c.sdClient.Log(string(msg))
 }
 
-func (c *Client) sendColorStateToPropertyInspector(action, context string, hsbk *golifx.HSBK) {
-	type colorState struct {
-		Hue        int `json:"hue"`
-		Saturation int `json:"saturation"`
-		Brightness int `json:"brightness"`
-		Kelvin     int `json:"kelvin"`
-	}
+type colorState struct {
+	Hue        int `json:"hue"`
+	Saturation int `json:"saturation"`
+	Brightness int `json:"brightness"`
+	Kelvin     int `json:"kelvin"`
+}
 
-	data := colorState{
+func colorStateFromHSBK(hsbk *golifx.HSBK) colorState {
+	return colorState{
 		Hue:        int(hsbk.Hue / 182), // don't ask about the 182 :P
 		Saturation: int(hsbk.Saturation / 655),
 		Brightness: int(hsbk.Brightness / 655),
 		Kelvin:     int(hsbk.Kelvin),
 	}
+}
+
+func (c *Client) sendColorStateToPropertyInspector(action, context string, hsbk *golifx.HSBK) {
+	data := colorStateFromHSBK(hsbk)
 
 	msg := streamdeck.SendToPropertyInspectorMsg{
 		Action:  action,
@@ -318,6 +349,50 @@ func (c *Client) sendColorStateToPropertyInspector(action, context string, hsbk 
 	}
 }
 
+func (c *Client) sendSceneColorsToPropertyInspector(action, context string, macs []string) {
+	devices := c.controller.GetDevices()
+	for _, mac := range macs {
+		if devices[mac] == nil {
+			if err := c.controller.DiscoverDevices(); err != nil {
+				c.sdClient.Log(err.Error())
+			}
+			devices = c.controller.GetDevices()
+			break
+		}
+	}
+	colors := make(map[string]colorState)
+	errors := make(map[string]string)
+	for _, mac := range macs {
+		color, err := c.controller.GetCurrentColor(devices[mac])
+		if err != nil {
+			errors[mac] = err.Error()
+			c.sdClient.Log(fmt.Sprintf("getSceneColors failed mac=%s err=%v", mac, err))
+			continue
+		}
+		colors[mac] = colorStateFromHSBK(color)
+	}
+	if len(colors) == 0 {
+		c.SendWarnMessage(context)
+		err := fmt.Errorf("unable to capture current scene colors")
+		c.sendSceneColorsErrorToPropertyInspector(action, context, err)
+		return
+	}
+	msg := streamdeck.SendToPropertyInspectorMsg{
+		Action:  action,
+		Context: context,
+		Event:   streamdeck.SendToPropertyInspectorEvent,
+		Payload: map[string]interface{}{
+			"type":   "getSceneColors",
+			"colors": colors,
+			"errors": errors,
+		},
+	}
+	sendErr := c.sdClient.SendMessage(msg)
+	if sendErr != nil {
+		c.sdClient.Log(sendErr.Error())
+	}
+}
+
 func (c *Client) sendColorErrorToPropertyInspector(action, context string, err error) {
 	msg := streamdeck.SendToPropertyInspectorMsg{
 		Action:  action,
@@ -325,6 +400,22 @@ func (c *Client) sendColorErrorToPropertyInspector(action, context string, err e
 		Event:   streamdeck.SendToPropertyInspectorEvent,
 		Payload: map[string]interface{}{
 			"type":  "getColorError",
+			"error": err.Error(),
+		},
+	}
+	sendErr := c.sdClient.SendMessage(msg)
+	if sendErr != nil {
+		c.sdClient.Log(sendErr.Error())
+	}
+}
+
+func (c *Client) sendSceneColorsErrorToPropertyInspector(action, context string, err error) {
+	msg := streamdeck.SendToPropertyInspectorMsg{
+		Action:  action,
+		Context: context,
+		Event:   streamdeck.SendToPropertyInspectorEvent,
+		Payload: map[string]interface{}{
+			"type":  "getSceneColorsError",
 			"error": err.Error(),
 		},
 	}

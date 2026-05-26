@@ -45,6 +45,14 @@
         <select class="sdpi-item-value select" id="device_dropdown"></select>
         <button class="sdpi-item-value" id="getColorButton" onclick="getColor()">Get Settings</button>
     </div>
+    <div class="sdpi-item" id="scene-capture">
+        <div class="sdpi-item-label">Scene colors</div>
+        <button class="sdpi-item-value" id="captureSceneButton" onclick="captureScene()">Capture Current Scene</button>
+    </div>
+    <div class="sdpi-item">
+        <div class="sdpi-item-label empty"></div>
+        <div class="sdpi-item-value min100" id="scene-color-list"></div>
+    </div>
     <div class="sdpi-item">
         <div class="sdpi-item-label">Preset</div>
         <select class="sdpi-item-value select" id="preset" onchange="onSettingChanged()">
@@ -141,6 +149,10 @@
                     colorReceived(data['color']);
                 } else if (data['type'] === 'getColorError') {
                     colorRequestFailed(data['error']);
+                } else if (data['type'] === 'getSceneColors') {
+                    sceneColorsReceived(data);
+                } else if (data['type'] === 'getSceneColorsError') {
+                    sceneColorsFailed(data['error']);
                 }
             } else if (sdEvent === "didReceiveGlobalSettings" && gsWindow) {
                 gsWindow.setGlobalSettingsUI(jsonObj);
@@ -153,6 +165,7 @@
         if (!settings["version"]) settings["version"] = 1;
         if (!settings["devices"]) settings["devices"] = [];
         if (!settings["placements"]) settings["placements"] = [];
+        if (!settings["deviceColors"]) settings["deviceColors"] = [];
         if (!settings["preset"]) settings["preset"] = "arrival";
         if (settings["preset"] === "depart") {
             settings["preset"] = "arrival";
@@ -184,6 +197,7 @@
         document.getElementById('kelvin').value = settings["color"]["kelvin"];
         renderCanvas();
         renderRoleSelector();
+        renderSceneColors();
     }
 
     function wireCanvas() {
@@ -257,6 +271,7 @@
         renderDeviceList();
         renderCanvas();
         renderRoleSelector();
+        renderSceneColors();
     }
 
     function renderDeviceList() {
@@ -320,6 +335,7 @@
         }
         renderCanvas();
         renderRoleSelector();
+        renderSceneColors();
         UpdateSettings();
     }
 
@@ -338,6 +354,105 @@
         const settings = actionInfo.payload.settings;
         settings["devices"] = settings["devices"].filter(device => device.mac !== mac);
         settings["placements"] = settings["placements"].filter(placement => placement.mac !== mac);
+        settings["deviceColors"] = settings["deviceColors"].filter(deviceColor => deviceColor.mac !== mac);
+    }
+
+    function captureScene() {
+        const settings = actionInfo.payload.settings;
+        const macs = settings["devices"].map(device => device.mac);
+        if (macs.length === 0) return;
+        const container = document.getElementById('scene-capture');
+        const button = document.getElementById('captureSceneButton');
+        resetSceneCapture();
+        button.setAttribute('disabled', 'disabled');
+        const loader = document.createElement('div');
+        loader.setAttribute('class', 'loader');
+        container.append(loader);
+        sendValueToPlugin({'type': 'getSceneColors', 'macs': macs});
+        window.sceneCaptureTimeout = setTimeout(resetSceneCapture, 12000);
+    }
+
+    function sceneColorsReceived(data) {
+        resetSceneCapture();
+        const colors = data["colors"] || {};
+        Object.keys(colors).forEach(mac => setDeviceColor(mac, colors[mac]));
+        const firstMac = Object.keys(colors)[0];
+        if (firstMac) {
+            actionInfo.payload.settings["color"] = Object.assign({}, colors[firstMac], {"transition": 0});
+            hydrateControls();
+        } else {
+            renderSceneColors();
+        }
+        if (data["errors"]) console.warn(data["errors"]);
+        UpdateSettings();
+    }
+
+    function sceneColorsFailed(error) {
+        console.warn(error || 'Unable to capture scene colors');
+        resetSceneCapture();
+    }
+
+    function resetSceneCapture() {
+        const container = document.getElementById('scene-capture');
+        const button = document.getElementById('captureSceneButton');
+        const loader = container.getElementsByClassName("loader");
+        for (let i = loader.length - 1; i >= 0; i--) loader[i].remove();
+        button.removeAttribute('disabled');
+        if (window.sceneCaptureTimeout) {
+            clearTimeout(window.sceneCaptureTimeout);
+            window.sceneCaptureTimeout = null;
+        }
+    }
+
+    function setDeviceColor(mac, color) {
+        const settings = actionInfo.payload.settings;
+        const normalized = {
+            "hue": parseInt(color["hue"], 10) || 0,
+            "saturation": parseInt(color["saturation"], 10) || 0,
+            "brightness": parseInt(color["brightness"], 10) || 0,
+            "kelvin": parseInt(color["kelvin"], 10) || 3200,
+            "transition": 0
+        };
+        const existing = settings["deviceColors"].find(deviceColor => deviceColor.mac === mac);
+        if (existing) {
+            existing.color = normalized;
+        } else {
+            settings["deviceColors"].push({"mac": mac, "color": normalized});
+        }
+        renderSceneColors();
+    }
+
+    function renderSceneColors() {
+        const list = document.getElementById('scene-color-list');
+        if (!list) return;
+        list.innerHTML = '';
+        const settings = actionInfo.payload.settings;
+        if (settings["devices"].length === 0) {
+            list.innerText = 'Select devices to capture a scene.';
+            return;
+        }
+        settings["devices"].forEach(device => {
+            const item = document.createElement('div');
+            item.setAttribute('class', 'scene-color-item');
+            const color = deviceSceneColor(device.mac);
+            const swatch = document.createElement('span');
+            swatch.setAttribute('class', 'scene-color-swatch');
+            if (color) {
+                swatch.style.backgroundColor = `hsl(${color.hue}, ${color.saturation}%, ${Math.max(color.brightness, 12)}%)`;
+            }
+            const label = document.createElement('span');
+            label.textContent = color
+                ? `${device.name || device.mac}: H ${color.hue} S ${color.saturation} B ${color.brightness} K ${color.kelvin}`
+                : `${device.name || device.mac}: uses default color`;
+            item.append(swatch);
+            item.append(label);
+            list.append(item);
+        });
+    }
+
+    function deviceSceneColor(mac) {
+        const entry = actionInfo.payload.settings["deviceColors"].find(deviceColor => deviceColor.mac === mac);
+        return entry ? entry.color : null;
     }
 
     function renderCanvas() {
@@ -420,6 +535,7 @@
         placement.x = clamp((point.x / canvas.width) * 100, 0, 100);
         placement.y = clamp((point.y / canvas.height) * 100, 0, 100);
         renderCanvas();
+        renderSceneColors();
     }
 
     function endDrag() {
