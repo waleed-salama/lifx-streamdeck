@@ -1,12 +1,14 @@
 package streamdeck
 
 import (
+	"testing"
+	"time"
+
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"gitlab.com/wwsean08/lifx-streamdeck/mocks"
 	"gitlab.com/wwsean08/lifx-streamdeck/models"
 	"gitlab.com/wwsean08/streamdeck"
-	"testing"
 )
 
 func TestClient_TurnOnDevice(t *testing.T) {
@@ -247,7 +249,9 @@ func TestClient_UpdateGlobalSettings(t *testing.T) {
 
 	client.UpdateGlobalSettings(data)
 	require.NotNil(t, client.scheduler)
-	require.Equal(t, []int{42}, client.scheduler.GetJobKeys())
+	require.Eventually(t, func() bool {
+		return len(client.scheduler.GetJobKeys()) == 1 && client.scheduler.GetJobKeys()[0] == 42
+	}, time.Second, time.Millisecond)
 	client.scheduler.Clear()
 	client.scheduler.Stop()
 }

@@ -151,11 +151,10 @@ func TestVersionToInt(t *testing.T) {
 			expectErr:    false,
 		},
 		{
-			// this will overflow, but if we get here, we fucked up
-			// Note on different CPU architectures you may get a different expectedOutput
+			// Oversized values should fail instead of depending on CPU-specific overflow behavior.
 			input:        math.MaxFloat64,
-			expectOutput: -9223372036854775808,
-			expectErr:    false,
+			expectOutput: -1,
+			expectErr:    true,
 		},
 		{
 			input:        math.MaxInt64,

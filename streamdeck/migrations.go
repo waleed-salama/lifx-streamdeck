@@ -2,6 +2,7 @@ package streamdeck
 
 import (
 	"fmt"
+	"math"
 	"reflect"
 	"strconv"
 	"time"
@@ -232,6 +233,9 @@ func versionToInt(version interface{}) (int, error) {
 	case int:
 		return version.(int), nil
 	case float64:
+		if version.(float64) > float64(math.MaxInt64) || version.(float64) < float64(math.MinInt64) {
+			return -1, fmt.Errorf("Error converting version to int, current type %s\n", reflect.TypeOf(version))
+		}
 		return int(version.(float64)), nil
 	case float32:
 		return int(version.(float32)), nil
@@ -242,6 +246,9 @@ func versionToInt(version interface{}) (int, error) {
 	case int32:
 		return int(version.(int32)), nil
 	case int64:
+		if strconv.IntSize == 32 && (version.(int64) > math.MaxInt32 || version.(int64) < math.MinInt32) {
+			return -1, fmt.Errorf("Error converting version to int, current type %s\n", reflect.TypeOf(version))
+		}
 		return int(version.(int64)), nil
 	}
 	return -1, fmt.Errorf("Error converting version to int, current type %s\n", reflect.TypeOf(version))

@@ -1,18 +1,18 @@
 # LIFX Stream Deck
-[![pipeline status](https://gitlab.com/wwsean08/lifx-streamdeck/badges/main/pipeline.svg)](https://gitlab.com/wwsean08/lifx-streamdeck/-/commits/main)
+[![CI](https://github.com/waleed-salama/lifx-streamdeck/actions/workflows/ci.yml/badge.svg)](https://github.com/waleed-salama/lifx-streamdeck/actions/workflows/ci.yml)
 [![discord](https://img.shields.io/discord/493162062524973056?label=discord)](https://discord.gg/PPVYMeP)
-[![license](https://img.shields.io/badge/license-MIT-brightgreen)](https://gitlab.com/wwsean08/lifx-streamdeck/-/blob/master/LICENSE)
+[![license](https://img.shields.io/badge/license-MIT-brightgreen)](https://github.com/waleed-salama/lifx-streamdeck/blob/main/LICENSE)
 [![Go Report Card](https://goreportcard.com/badge/gitlab.com/wwsean08/lifx-streamdeck)](https://goreportcard.com/report/gitlab.com/wwsean08/lifx-streamdeck)
 [![ko-fi](https://img.shields.io/badge/tips-buy%20me%20a%20coffee-brightgreen)](https://ko-fi.com/P5P23OLT2)
 
 This plugin allows for an Elgato Stream Deck to control LIFX devices at the click of a button.  Currently, it is capable of turning devices on or off, as well as setting the color of the light.
 
 ## Contributions
-All contributions are welcome, whether it's creating/updating docs, creating issues, requesting new features, or opening pull requests.  Feedback is welcome both via GitLab issues or via discord in the lifx-streamdeck-feedback channel. 
+All contributions are welcome, whether it's creating/updating docs, creating issues, requesting new features, or opening pull requests.  Feedback is welcome both via GitHub issues or via discord in the lifx-streamdeck-feedback channel. 
 
 ## Installation and Upgrading
 ### Installing
-Installing the application is as simple as downloading the latest version of the application from the [releases page](https://gitlab.com/wwsean08/lifx-streamdeck/-/releases) and then running it and accepting the warning:
+Installing the application is as simple as downloading the latest version of the application from the [releases page](https://github.com/waleed-salama/lifx-streamdeck/releases) and then running it and accepting the warning:
 
 ![Example of the warning](screenshots/warning.png)
 
