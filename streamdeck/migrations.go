@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-//MigrateActions migrates the schema of settings objects
+// MigrateActions migrates the schema of settings objects
 func (c *Client) MigrateActions(settings map[string]interface{}, action string) (map[string]interface{}, error) {
 	switch action {
 	case ActionSetColor:
@@ -87,6 +87,10 @@ func (c *Client) MigrateActions(settings map[string]interface{}, action string) 
 			switch intVal {
 			// no migrations for this yet
 			}
+		}
+	case ActionAnimatedScene:
+		if _, ok := settings["version"]; !ok {
+			settings["version"] = 1
 		}
 	}
 	return settings, nil

@@ -1,3 +1,14 @@
+# v0.8.0
+## Features
+* Add an Animated Scene action with device placement, position-aware presets, reversible exit scenes, per-device timing offsets, target color controls, and customizable timing.
+* Add scene-aware cancellation so normal power, color, brightness, toggle, and waveform actions stop any in-progress scene before sending new commands.
+* Add fallback handling for bulbs that respond more reliably through broadcast than direct unicast.
+* Improve Get Settings failure handling so the property inspector stops loading and reports lookup errors instead of spinning indefinitely.
+* Keep the plugin-owned crash log bounded by rotating it when it grows beyond 1 MiB.
+
+## Fixes
+* Preserve selected device MAC addresses in property inspectors so saved settings do not accidentally store labels such as `Top Light` as invalid MAC values.
+
 # v0.7.2
 ## Fixes 
 * Generate crash log for mac as well if there is a "panic" to help debugging in the future potentially.

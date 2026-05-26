@@ -39,6 +39,11 @@ func NewClient(port, uuid string, info *models.AppInfo, controller lifx.Controll
 		globalSettings: gSettings,
 		controller:     controller,
 	}
+	if logger, ok := controller.(interface{ SetLogger(func(string)) }); ok {
+		logger.SetLogger(func(msg string) {
+			client.sdClient.Log(msg)
+		})
+	}
 	go func() {
 		_ = client.controller.DiscoverDevices()
 	}()
@@ -95,9 +100,20 @@ func (c *Client) OnSendToPlugin(msg streamdeck.SendToPluginMsg) {
 		}
 		c.sendDevicesToPropertyInspector(msg.Action, msg.Context, c.controller.GetDevices())
 	case "getColor":
-		color, err := c.controller.GetCurrentColor(c.controller.GetDevices()[msg.Payload["mac"].(string)])
+		mac, ok := msg.Payload["mac"].(string)
+		if !ok || mac == "" {
+			c.SendWarnMessage(msg.Context)
+			err := fmt.Errorf("getColor requested without a device mac")
+			c.sdClient.Log(err.Error())
+			c.sendColorErrorToPropertyInspector(msg.Action, msg.Context, err)
+			return
+		}
+		color, err := c.controller.GetCurrentColor(c.controller.GetDevices()[mac])
 		if err != nil {
 			c.SendWarnMessage(msg.Context)
+			c.sdClient.Log(err.Error())
+			c.sendColorErrorToPropertyInspector(msg.Action, msg.Context, err)
+			return
 		}
 		c.sendColorStateToPropertyInspector(msg.Action, msg.Context, color)
 	case "kofi":
@@ -119,9 +135,16 @@ func (c *Client) OnSendToPlugin(msg streamdeck.SendToPluginMsg) {
 	}
 }
 
+func (c *Client) logf(format string, args ...interface{}) {
+	if c.sdClient != nil {
+		c.sdClient.Log(fmt.Sprintf(format, args...))
+	}
+}
+
 // OnKeyUp is called when the Stream Deck key is unpressed
 func (c *Client) OnKeyUp(msg streamdeck.KeyUpMsg) {
 	context := msg.Context
+	c.logf("lifx-plus keyUp action=%s", msg.Action)
 	switch msg.Action {
 	case ActionTurnOnDevice:
 		powerSettings := new(models.PowerSettings)
@@ -131,6 +154,7 @@ func (c *Client) OnKeyUp(msg streamdeck.KeyUpMsg) {
 			c.SendWarnMessage(context)
 			return
 		}
+		c.logf("lifx-plus power decoded action=%s devices=%d transition=%d", msg.Action, len(powerSettings.Devices), powerSettings.Transition)
 		err = c.controller.SetPowerState(powerSettings, true)
 		if err != nil {
 			c.sdClient.Log(err.Error())
@@ -143,6 +167,7 @@ func (c *Client) OnKeyUp(msg streamdeck.KeyUpMsg) {
 			c.SendWarnMessage(context)
 			return
 		}
+		c.logf("lifx-plus power decoded action=%s devices=%d transition=%d", msg.Action, len(powerSettings.Devices), powerSettings.Transition)
 		err = c.controller.SetPowerState(powerSettings, false)
 		if err != nil {
 			c.sdClient.Log(err.Error())
@@ -180,6 +205,19 @@ func (c *Client) OnKeyUp(msg streamdeck.KeyUpMsg) {
 			return
 		}
 		err = c.controller.SetWaveform(waveFormSettings)
+		if err != nil {
+			c.sdClient.Log(err.Error())
+		}
+	case ActionAnimatedScene:
+		sceneSettings := new(models.SceneSettings)
+		err := mapstructure.Decode(msg.Payload.Settings, sceneSettings)
+		if err != nil {
+			c.sdClient.Log(err.Error())
+			c.SendWarnMessage(context)
+			return
+		}
+		c.logf("lifx-plus scene decoded devices=%d preset=%s reverse=%v duration=%d stagger=%d", len(sceneSettings.Devices), sceneSettings.Preset, sceneSettings.Reverse, sceneSettings.Duration, sceneSettings.Stagger)
+		err = c.controller.SetScene(sceneSettings)
 		if err != nil {
 			c.sdClient.Log(err.Error())
 		}
@@ -277,6 +315,22 @@ func (c *Client) sendColorStateToPropertyInspector(action, context string, hsbk 
 	err := c.sdClient.SendMessage(msg)
 	if err != nil {
 		c.sdClient.Log(err.Error())
+	}
+}
+
+func (c *Client) sendColorErrorToPropertyInspector(action, context string, err error) {
+	msg := streamdeck.SendToPropertyInspectorMsg{
+		Action:  action,
+		Context: context,
+		Event:   streamdeck.SendToPropertyInspectorEvent,
+		Payload: map[string]interface{}{
+			"type":  "getColorError",
+			"error": err.Error(),
+		},
+	}
+	sendErr := c.sdClient.SendMessage(msg)
+	if sendErr != nil {
+		c.sdClient.Log(sendErr.Error())
 	}
 }
 

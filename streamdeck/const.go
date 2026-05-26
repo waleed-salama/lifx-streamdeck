@@ -13,6 +13,8 @@ const (
 	ActionSetBrightness = "com.waleed-salama.lifx-plus.brightness"
 	//ActionSetWaveform is the UUID to set a waveform on the device
 	ActionSetWaveform = "com.waleed-salama.lifx-plus.waveform"
+	//ActionAnimatedScene is the UUID to play a position-aware animated scene
+	ActionAnimatedScene = "com.waleed-salama.lifx-plus.scene"
 	//ActionDebug is the UUID to generate a debug bundle
 	ActionDebug = "com.waleed-salama.lifx-plus.debug"
 )

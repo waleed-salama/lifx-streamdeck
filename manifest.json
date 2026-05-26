@@ -91,6 +91,21 @@
       "PropertyInspectorPath": "set-waveform-pi.html"
     },
     {
+      "Icon": "waveAction",
+      "Name": "Animated Scene",
+      "States": [
+        {
+          "Image": "waveKey",
+          "TitleAlignment": "middle",
+          "FontSize": "16"
+        }
+      ],
+      "SupportedInMultiActions": true,
+      "Tooltip": "Play a position-aware animated scene across LIFX devices",
+      "UUID": "com.waleed-salama.lifx-plus.scene",
+      "PropertyInspectorPath": "set-scene-pi.html"
+    },
+    {
       "Icon": "debugAction",
       "Name": "Debug",
       "States": [
@@ -116,7 +131,7 @@
   "CategoryIcon": "categoryIcon",
   "Icon": "pluginIcon",
   "URL": "https://github.com/waleed-salama/lifx-streamdeck",
-  "Version": "0.7.2",
+  "Version": "0.8.0",
   "OS": [
     {
       "Platform": "windows",

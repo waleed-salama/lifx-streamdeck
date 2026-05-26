@@ -132,6 +132,19 @@ func TestMigrateWaveformSettingsFromV1ToCurrent(t *testing.T) {
 	// there are no migrations yet
 }
 
+func TestMigrateSceneSettingsFromUnversionedToCurrent(t *testing.T) {
+	client := new(Client)
+	settings := map[string]interface{}{
+		"preset": "arrival",
+	}
+
+	settings, err := client.MigrateActions(settings, ActionAnimatedScene)
+
+	require.NoError(t, err)
+	require.Equal(t, 1, settings["version"])
+	require.Equal(t, "arrival", settings["preset"])
+}
+
 func TestVersionToInt(t *testing.T) {
 	type testCases struct {
 		input        interface{}

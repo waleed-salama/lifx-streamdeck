@@ -1,0 +1,523 @@
+<head>
+    <meta charset="utf-8" />
+    <title>Animated Scene</title>
+    <link rel="stylesheet" href="sdpi.css">
+    <link rel="stylesheet" href="custom.css">
+    <link rel="stylesheet" href="fa-all.min.css">
+    <script type="text/javascript" src="utils.js"></script>
+</head>
+
+<body>
+<div class="sdpi-wrapper" id="global-wrapper">
+    <div class="sdpi-item" id="discover-container">
+        <div class="sdpi-item-label empty"></div>
+        <button class="sdpi-item-value" id="discovery" onclick="DiscoverDevices()">Discover Devices</button>
+        <button onclick="launchGlobalSettings()" title="Global Settings"><i class="fas fa-cog"></i></button>
+    </div>
+    <div class="sdpi-item" id="device_select">
+        <div class="sdpi-item-label">Devices</div>
+        <div class="sdpi-item" type="checkbox">
+            <div class="sdpi-item-value min100" id="device_container">
+                <div class="loader"></div>
+            </div>
+        </div>
+    </div>
+    <div class="sdpi-item">
+        <div class="sdpi-item-label">Layout</div>
+        <div class="sdpi-item-value scene-layout-wrap">
+            <canvas id="placement-canvas" width="300" height="180"></canvas>
+        </div>
+    </div>
+    <div class="sdpi-item" id="role_select">
+        <div class="sdpi-item-label">Device tuning</div>
+        <select class="sdpi-item-value select" id="role-device" onchange="syncRoleSelect()"></select>
+        <select class="sdpi-item-value select" id="role" onchange="onRoleChanged()">
+            <option value="">Auto</option>
+            <option value="overhead">Overhead</option>
+            <option value="front">Front</option>
+            <option value="side">Side</option>
+            <option value="back">Back</option>
+        </select>
+        <input class="sdpi-item-value" min="-30000" max="30000" type="number" onchange="onTimingOffsetChanged()" id="timing-offset" required placeholder="Offset ms">
+    </div>
+    <div class="sdpi-item" id="color-select">
+        <div class="sdpi-item-label">Settings to copy</div>
+        <select class="sdpi-item-value select" id="device_dropdown"></select>
+        <button class="sdpi-item-value" id="getColorButton" onclick="getColor()">Get Settings</button>
+    </div>
+    <div class="sdpi-item">
+        <div class="sdpi-item-label">Preset</div>
+        <select class="sdpi-item-value select" id="preset" onchange="onSettingChanged()">
+            <option value="arrival">Arrival</option>
+            <option value="bloom">Bloom</option>
+            <option value="sweep">Sweep</option>
+            <option value="ignition">Ignition</option>
+            <option value="breathe">Breathe In</option>
+        </select>
+    </div>
+    <div class="sdpi-item" type="checkbox">
+        <div class="sdpi-item-label">Exit</div>
+        <div class="sdpi-item">
+            <div class="sdpi-item-value min100">
+                <div class="sdpi-item-child">
+                    <input type="checkbox" onchange="onSettingChanged()" id="reverse">
+                    <label class="sdpi-item-label" for="reverse"><span></span>Reverse animation</label>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="sdpi-item">
+        <div class="sdpi-item-label">Direction</div>
+        <select class="sdpi-item-value select" id="direction" onchange="onSettingChanged()">
+            <option value="left-right">Left to Right</option>
+            <option value="right-left">Right to Left</option>
+            <option value="front-back">Front to Back</option>
+            <option value="back-front">Back to Front</option>
+        </select>
+    </div>
+    <div class="sdpi-item">
+        <div class="sdpi-item-label">Color Travel</div>
+        <select class="sdpi-item-value select" id="colorTravel" onchange="onSettingChanged()">
+            <option value="none">None</option>
+            <option value="warm">Warm Ignition</option>
+            <option value="hue">Hue Shift</option>
+        </select>
+    </div>
+    <div class="sdpi-item">
+        <div class="sdpi-item-label">Duration (ms)</div>
+        <input class="sdpi-item-value" min="200" max="15000" type="number" onchange="onSettingChanged()" id="duration" required>
+    </div>
+    <div class="sdpi-item">
+        <div class="sdpi-item-label">Stagger (ms)</div>
+        <input class="sdpi-item-value" min="0" max="10000" type="number" onchange="onSettingChanged()" id="stagger" required>
+    </div>
+    <div class="sdpi-item">
+        <div class="sdpi-item-label">Intensity</div>
+        <input class="sdpi-item-value" min="0" max="100" type="number" onchange="onSettingChanged()" id="intensity" required>
+    </div>
+    <hr />
+    <div class="sdpi-item">
+        <div class="sdpi-item-label">Hue</div>
+        <input class="sdpi-item-value" min="0" max="360" type="number" onchange="onSettingChanged()" id="hue" required>
+    </div>
+    <div class="sdpi-item">
+        <div class="sdpi-item-label">Saturation</div>
+        <input class="sdpi-item-value" min="0" max="100" type="number" onchange="onSettingChanged()" id="saturation" required>
+    </div>
+    <div class="sdpi-item">
+        <div class="sdpi-item-label">Brightness</div>
+        <input class="sdpi-item-value" min="0" max="100" type="number" onchange="onSettingChanged()" id="brightness" required>
+    </div>
+    <div class="sdpi-item">
+        <div class="sdpi-item-label">Kelvin</div>
+        <input class="sdpi-item-value" min="1500" max="9000" type="number" onchange="onSettingChanged()" id="kelvin" required>
+    </div>
+</div>
+</body>
+<script>
+    let draggingMac = null;
+    let discoveredDevices = [];
+
+    function connectElgatoStreamDeckSocket(inPort, inUUID, inRegisterEvent, inInfo, inActionInfo) {
+        uuid = inUUID;
+        actionInfo = JSON.parse(inActionInfo);
+        websocket = new WebSocket('ws://localhost:' + inPort);
+        initializeSettings();
+        hydrateControls();
+        wireCanvas();
+
+        websocket.onopen = function () {
+            websocket.send(JSON.stringify({event: inRegisterEvent, uuid: inUUID}));
+        }
+        websocket.onmessage = function (event) {
+            const jsonObj = JSON.parse(event.data);
+            const sdEvent = jsonObj['event'];
+
+            if (sdEvent === 'sendToPropertyInspector') {
+                const data = jsonObj['payload'];
+                if (data['type'] === 'discovery') {
+                    devicesDiscovered(data);
+                } else if (data['type'] === 'getColor') {
+                    colorReceived(data['color']);
+                } else if (data['type'] === 'getColorError') {
+                    colorRequestFailed(data['error']);
+                }
+            } else if (sdEvent === "didReceiveGlobalSettings" && gsWindow) {
+                gsWindow.setGlobalSettingsUI(jsonObj);
+            }
+        }
+    }
+
+    function initializeSettings() {
+        const settings = actionInfo.payload.settings;
+        if (!settings["version"]) settings["version"] = 1;
+        if (!settings["devices"]) settings["devices"] = [];
+        if (!settings["placements"]) settings["placements"] = [];
+        if (!settings["preset"]) settings["preset"] = "arrival";
+        if (settings["preset"] === "depart") {
+            settings["preset"] = "arrival";
+            settings["reverse"] = true;
+        }
+        if (settings["reverse"] === undefined) settings["reverse"] = false;
+        if (!settings["direction"]) settings["direction"] = "left-right";
+        if (!settings["duration"]) settings["duration"] = 1600;
+        if (!settings["stagger"]) settings["stagger"] = 500;
+        if (!settings["intensity"]) settings["intensity"] = 70;
+        if (!settings["colorTravel"]) settings["colorTravel"] = "none";
+        if (!settings["color"]) {
+            settings["color"] = {"hue": 30, "saturation": 0, "brightness": 80, "kelvin": 3200, "transition": 0};
+        }
+    }
+
+    function hydrateControls() {
+        const settings = actionInfo.payload.settings;
+        document.getElementById('preset').value = settings["preset"];
+        document.getElementById('reverse').checked = settings["reverse"] === true;
+        document.getElementById('direction').value = settings["direction"];
+        document.getElementById('colorTravel').value = settings["colorTravel"];
+        document.getElementById('duration').value = settings["duration"];
+        document.getElementById('stagger').value = settings["stagger"];
+        document.getElementById('intensity').value = settings["intensity"];
+        document.getElementById('hue').value = settings["color"]["hue"];
+        document.getElementById('saturation').value = settings["color"]["saturation"];
+        document.getElementById('brightness').value = settings["color"]["brightness"];
+        document.getElementById('kelvin').value = settings["color"]["kelvin"];
+        renderCanvas();
+        renderRoleSelector();
+    }
+
+    function wireCanvas() {
+        const canvas = document.getElementById('placement-canvas');
+        if (window.PointerEvent) {
+            canvas.addEventListener('pointerdown', startDrag);
+            document.addEventListener('pointermove', drag);
+            document.addEventListener('pointerup', endDrag);
+            document.addEventListener('pointercancel', endDrag);
+        } else {
+            canvas.addEventListener('mousedown', startDrag);
+            document.addEventListener('mousemove', drag);
+            document.addEventListener('mouseup', endDrag);
+            canvas.addEventListener('touchstart', startDrag);
+            document.addEventListener('touchmove', drag);
+            document.addEventListener('touchend', endDrag);
+            document.addEventListener('touchcancel', endDrag);
+        }
+    }
+
+    function getColor() {
+        const container = document.getElementById('color-select');
+        const getColorButton = document.getElementById('getColorButton');
+        const loader = document.createElement('div');
+        const dropdown = document.getElementById('device_dropdown');
+        if (!dropdown[dropdown.selectedIndex]) return;
+        resetColorRequest();
+        sendValueToPlugin({'type': 'getColor', 'mac': dropdown[dropdown.selectedIndex].value});
+        loader.setAttribute('class', 'loader');
+        getColorButton.setAttribute('disabled', 'disabled');
+        container.append(loader);
+        window.getColorTimeout = setTimeout(resetColorRequest, 8000);
+    }
+
+    function colorReceived(data) {
+        resetColorRequest();
+
+        document.getElementById('hue').value = data['hue'];
+        document.getElementById('saturation').value = data['saturation'];
+        document.getElementById('brightness').value = data['brightness'];
+        document.getElementById('kelvin').value = data['kelvin'];
+        onSettingChanged();
+    }
+
+    function colorRequestFailed(error) {
+        console.warn(error || 'Unable to get current color');
+        resetColorRequest();
+    }
+
+    function resetColorRequest() {
+        const container = document.getElementById('color-select');
+        const getColorButton = document.getElementById('getColorButton');
+        const loader = container.getElementsByClassName("loader");
+        for (let i = 0; i < loader.length; i++) loader[i].remove();
+        getColorButton.removeAttribute('disabled');
+        if (window.getColorTimeout) {
+            clearTimeout(window.getColorTimeout);
+            window.getColorTimeout = null;
+        }
+    }
+
+    function devicesDiscovered(data) {
+        discoveredDevices = data["devices"];
+        discoveredDevices.sort((a, b) => (a.label.toUpperCase() > b.label.toUpperCase()) ? 1 : -1);
+        const discoveryContainer = document.getElementById("discover-container");
+        const discoveryButton = document.getElementById('discovery');
+        const loader = discoveryContainer.getElementsByClassName("loader");
+        for (let i = 0; i < loader.length; i++) loader[i].remove();
+        discoveryButton.removeAttribute('disabled');
+
+        renderDeviceList();
+        renderCanvas();
+        renderRoleSelector();
+    }
+
+    function renderDeviceList() {
+        const deviceContainer = document.getElementById('device_container');
+        const deviceDropdown = document.getElementById('device_dropdown');
+        const knownDevices = mergeKnownDevices();
+        deviceContainer.innerHTML = '';
+        deviceDropdown.innerHTML = '';
+
+        knownDevices.forEach(device => {
+            const tmpDevice = document.createElement('div');
+            tmpDevice.setAttribute("class", "sdpi-item-child");
+            const checkbox = document.createElement('input');
+            checkbox.id = device.mac;
+            checkbox.type = 'checkbox';
+            checkbox.value = device.mac;
+            const label = document.createElement('label');
+            label.setAttribute('for', device.mac);
+            label.setAttribute('class', 'sdpi-item-label');
+            label.append(document.createElement('span'));
+            label.append(document.createTextNode(device.name));
+            tmpDevice.append(checkbox);
+            tmpDevice.append(label);
+            deviceContainer.append(tmpDevice);
+
+            const dropDownItem = document.createElement('option');
+            dropDownItem.setAttribute('value', device.mac);
+            dropDownItem.textContent = device.name;
+            deviceDropdown.append(dropDownItem);
+        });
+
+        if (knownDevices.length === 0) {
+            deviceContainer.innerText = 'No devices found.';
+        }
+
+        const selectedDevices = actionInfo.payload.settings["devices"];
+        const children = deviceContainer.getElementsByTagName("input");
+        for (let i = 0; i < children.length; i++) {
+            children[i].onclick = onCheckBoxClicked;
+            if (selectedDevices.some(device => device.mac === children[i].id)) {
+                children[i].setAttribute("checked", "true");
+            }
+        }
+    }
+
+    function mergeKnownDevices() {
+        const byMac = {};
+        discoveredDevices.forEach(device => byMac[device.mac] = {"mac": device.mac, "name": device.label});
+        actionInfo.payload.settings["devices"].forEach(device => {
+            byMac[device.mac] = {"mac": device.mac, "name": device.name || device.label || device.mac};
+        });
+        return Object.values(byMac);
+    }
+
+    function onCheckBoxClicked() {
+        const name = this.nextElementSibling.textContent;
+        if (this.checked) {
+            addSceneDevice(this.value, name);
+        } else {
+            removeSceneDevice(this.value);
+        }
+        renderCanvas();
+        renderRoleSelector();
+        UpdateSettings();
+    }
+
+    function addSceneDevice(mac, name) {
+        const settings = actionInfo.payload.settings;
+        if (!settings["devices"].some(device => device.mac === mac)) {
+            settings["devices"].push({"mac": mac, "name": name});
+        }
+        if (!settings["placements"].some(placement => placement.mac === mac)) {
+            const count = settings["placements"].length;
+            settings["placements"].push({"mac": mac, "x": 25 + (count % 3) * 25, "y": 35 + Math.floor(count / 3) * 25, "role": "", "timingOffset": 0});
+        }
+    }
+
+    function removeSceneDevice(mac) {
+        const settings = actionInfo.payload.settings;
+        settings["devices"] = settings["devices"].filter(device => device.mac !== mac);
+        settings["placements"] = settings["placements"].filter(placement => placement.mac !== mac);
+    }
+
+    function renderCanvas() {
+        const canvas = document.getElementById('placement-canvas');
+        const ctx = canvas.getContext('2d');
+        const settings = actionInfo.payload.settings;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#151515';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#a8a8a8';
+        ctx.font = '10px sans-serif';
+        ctx.fillText('Front', 8, 14);
+        ctx.fillText('Back', 8, canvas.height - 8);
+        ctx.fillText('Left', 8, canvas.height / 2);
+        ctx.fillText('Right', canvas.width - 36, canvas.height / 2);
+        ctx.strokeStyle = '#3c3c3c';
+        ctx.lineWidth = 1;
+        for (let x = 50; x < canvas.width; x += 50) {
+            ctx.beginPath();
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x, canvas.height);
+            ctx.stroke();
+        }
+        for (let y = 45; y < canvas.height; y += 45) {
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(canvas.width, y);
+            ctx.stroke();
+        }
+
+        settings["devices"].forEach(device => {
+            const placement = placementFor(device.mac);
+            const x = placement.x / 100 * canvas.width;
+            const y = placement.y / 100 * canvas.height;
+            ctx.beginPath();
+            ctx.arc(x, y, 12, 0, 2 * Math.PI);
+            ctx.fillStyle = '#f7d774';
+            ctx.fill();
+            ctx.strokeStyle = '#ffffff';
+            ctx.stroke();
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '10px sans-serif';
+            ctx.fillText((device.name || device.mac).slice(0, 12), x + 16, y + 4);
+        });
+    }
+
+    function placementFor(mac) {
+        const settings = actionInfo.payload.settings;
+        let placement = settings["placements"].find(item => item.mac === mac);
+        if (!placement) {
+            placement = {"mac": mac, "x": 50, "y": 50, "role": "", "timingOffset": 0};
+            settings["placements"].push(placement);
+        }
+        if (placement.timingOffset === undefined) placement.timingOffset = 0;
+        return placement;
+    }
+
+    function startDrag(event) {
+        event.preventDefault();
+        const hit = hitTest(event);
+        if (hit) {
+            draggingMac = hit;
+            moveDraggingDevice(event);
+            if (event.target.setPointerCapture && event.pointerId !== undefined) {
+                event.target.setPointerCapture(event.pointerId);
+            }
+        }
+    }
+
+    function drag(event) {
+        if (!draggingMac) return;
+        event.preventDefault();
+        moveDraggingDevice(event);
+    }
+
+    function moveDraggingDevice(event) {
+        const canvas = document.getElementById('placement-canvas');
+        const placement = placementFor(draggingMac);
+        const point = canvasPoint(event);
+        placement.x = clamp((point.x / canvas.width) * 100, 0, 100);
+        placement.y = clamp((point.y / canvas.height) * 100, 0, 100);
+        renderCanvas();
+    }
+
+    function endDrag() {
+        if (draggingMac) {
+            draggingMac = null;
+            UpdateSettings();
+        }
+    }
+
+    function hitTest(event) {
+        const canvas = document.getElementById('placement-canvas');
+        const point = canvasPoint(event);
+        for (const device of actionInfo.payload.settings["devices"]) {
+            const placement = placementFor(device.mac);
+            const px = placement.x / 100 * canvas.width;
+            const py = placement.y / 100 * canvas.height;
+            const distance = Math.sqrt(Math.pow(point.x - px, 2) + Math.pow(point.y - py, 2));
+            if (distance <= 22) return device.mac;
+        }
+        return null;
+    }
+
+    function canvasPoint(event) {
+        const canvas = document.getElementById('placement-canvas');
+        const rect = canvas.getBoundingClientRect();
+        const source = event.touches && event.touches.length > 0 ? event.touches[0] : event;
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        return {
+            "x": (source.clientX - rect.left) * scaleX,
+            "y": (source.clientY - rect.top) * scaleY
+        };
+    }
+
+    function renderRoleSelector() {
+        const roleDevice = document.getElementById('role-device');
+        const current = roleDevice.value;
+        roleDevice.innerHTML = '';
+        actionInfo.payload.settings["devices"].forEach(device => {
+            const option = document.createElement('option');
+            option.setAttribute('value', device.mac);
+            option.textContent = device.name || device.mac;
+            roleDevice.append(option);
+        });
+        if (current) roleDevice.value = current;
+        syncRoleSelect();
+    }
+
+    function syncRoleSelect() {
+        const roleDevice = document.getElementById('role-device');
+        const role = document.getElementById('role');
+        const timingOffset = document.getElementById('timing-offset');
+        if (!roleDevice.value) {
+            role.value = "";
+            timingOffset.value = 0;
+            timingOffset.setAttribute('disabled', 'disabled');
+            return;
+        }
+        const placement = placementFor(roleDevice.value);
+        role.value = placement.role || "";
+        timingOffset.value = placement.timingOffset || 0;
+        timingOffset.removeAttribute('disabled');
+    }
+
+    function onRoleChanged() {
+        const roleDevice = document.getElementById('role-device');
+        if (!roleDevice.value) return;
+        placementFor(roleDevice.value).role = document.getElementById('role').value;
+        UpdateSettings();
+    }
+
+    function onTimingOffsetChanged() {
+        const roleDevice = document.getElementById('role-device');
+        if (!roleDevice.value) return;
+        const offset = parseInt(document.getElementById('timing-offset').value, 10);
+        placementFor(roleDevice.value).timingOffset = clamp(Number.isNaN(offset) ? 0 : offset, -30000, 30000);
+        document.getElementById('timing-offset').value = placementFor(roleDevice.value).timingOffset;
+        UpdateSettings();
+    }
+
+    function onSettingChanged() {
+        const settings = actionInfo.payload.settings;
+        settings["preset"] = document.getElementById('preset').value;
+        settings["reverse"] = document.getElementById('reverse').checked;
+        settings["direction"] = document.getElementById('direction').value;
+        settings["colorTravel"] = document.getElementById('colorTravel').value;
+        settings["duration"] = parseInt(document.getElementById('duration').value, 10);
+        settings["stagger"] = parseInt(document.getElementById('stagger').value, 10);
+        settings["intensity"] = parseInt(document.getElementById('intensity').value, 10);
+        settings["color"]["hue"] = parseInt(document.getElementById('hue').value, 10);
+        settings["color"]["saturation"] = parseInt(document.getElementById('saturation').value, 10);
+        settings["color"]["brightness"] = parseInt(document.getElementById('brightness').value, 10);
+        settings["color"]["kelvin"] = parseInt(document.getElementById('kelvin').value, 10);
+        settings["color"]["transition"] = 0;
+        UpdateSettings();
+    }
+
+    function clamp(value, min, max) {
+        return Math.min(Math.max(value, min), max);
+    }
+</script>

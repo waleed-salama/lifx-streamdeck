@@ -5,7 +5,7 @@
 [![Go Report Card](https://goreportcard.com/badge/gitlab.com/wwsean08/lifx-streamdeck)](https://goreportcard.com/report/gitlab.com/wwsean08/lifx-streamdeck)
 [![ko-fi](https://img.shields.io/badge/tips-buy%20me%20a%20coffee-brightgreen)](https://ko-fi.com/P5P23OLT2)
 
-This plugin allows for an Elgato Stream Deck to control LIFX devices at the click of a button.  Currently, it is capable of turning devices on or off, as well as setting the color of the light.
+This plugin allows for an Elgato Stream Deck to control LIFX devices at the click of a button.  Currently, it is capable of turning devices on or off, setting color and brightness, running wave effects, and playing animated scenes across room-positioned lights.
 
 ## Contributions
 All contributions are welcome, whether it's creating/updating docs, creating issues, requesting new features, or opening pull requests.  Feedback is welcome both via GitHub issues or via discord in the lifx-streamdeck-feedback channel. 
@@ -40,6 +40,9 @@ You can change the device's brightness independent of its current color (as brig
 
 ### Setting the wave effect
 You can setup a "wave" effect where your button press causes the device to go between two colors over time.  For more information on how the settings work I recommend reading LIFX's [official documentation](https://lan.developer.lifx.com/docs/waveforms).
+
+### Playing animated scenes
+You can setup an animated scene by selecting multiple devices, placing them on a small room layout, and choosing a position-aware preset.  Presets include arrival, bloom, sweep, ignition, and breathe in.  Scene settings support target color, duration in milliseconds, stagger in milliseconds, intensity, direction, optional warm or hue-shift color travel, per-device timing offsets, and a reverse animation option for exit scenes.
 
 ## Known Issues
 1. Sometimes the device mac address is shown instead of the devices label, if the devices label isn't returned in time then the mac address will be shown as opposed to nothing.

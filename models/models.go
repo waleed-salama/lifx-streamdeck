@@ -63,6 +63,28 @@ type (
 		AlternateColor Color    `mapstructure:"color"`
 	}
 
+	SceneDevicePlacement struct {
+		Mac          string  `mapstructure:"mac" json:"mac"`
+		X            float64 `mapstructure:"x" json:"x"`
+		Y            float64 `mapstructure:"y" json:"y"`
+		Role         string  `mapstructure:"role" json:"role"`
+		TimingOffset int32   `mapstructure:"timingOffset" json:"timingOffset"`
+	}
+
+	SceneSettings struct {
+		Version     int                    `mapstructure:"version"`
+		Devices     []Device               `mapstructure:"devices"`
+		Placements  []SceneDevicePlacement `mapstructure:"placements"`
+		Preset      string                 `mapstructure:"preset"`
+		Reverse     bool                   `mapstructure:"reverse"`
+		Direction   string                 `mapstructure:"direction"`
+		Duration    uint32                 `mapstructure:"duration"`
+		Stagger     uint32                 `mapstructure:"stagger"`
+		Intensity   uint                   `mapstructure:"intensity"`
+		ColorTravel string                 `mapstructure:"colorTravel"`
+		TargetColor Color                  `mapstructure:"color"`
+	}
+
 	Debug struct {
 		NetInfo    []byte `mapstructure:"netInfo" json:"netInfo"`
 		DeviceData []byte `mapstructure:"deviceData" json:"deviceData"`
@@ -88,8 +110,8 @@ type AppInfo struct {
 	Commit      string      `json:"commit"`
 }
 
-//GenerateLIFXValues is a helper function to take care of
-//the math convertting user input to proper values for lifx
+// GenerateLIFXValues is a helper function to take care of
+// the math convertting user input to proper values for lifx
 func (c Color) GenerateLIFXValues() (uint16, uint16, uint16, uint16, uint32) {
 	hue := 182 * c.Hue
 	sat := 655 * c.Saturation
@@ -98,7 +120,7 @@ func (c Color) GenerateLIFXValues() (uint16, uint16, uint16, uint16, uint32) {
 	return uint16(hue), uint16(sat), uint16(bri), c.Kelvin, c.Transition
 }
 
-//GetSkewRatio converts the input skew into a format that LIFX
+// GetSkewRatio converts the input skew into a format that LIFX
 // understands
 func (w WaveFormSettings) GetSkewRatio() int16 {
 	return w.Skew * 327

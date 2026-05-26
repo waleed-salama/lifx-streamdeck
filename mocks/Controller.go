@@ -133,6 +133,20 @@ func (_m *Controller) SetPowerState(_a0 *models.PowerSettings, _a1 bool) error {
 	return r0
 }
 
+// SetScene provides a mock function with given fields: _a0
+func (_m *Controller) SetScene(_a0 *models.SceneSettings) error {
+	ret := _m.Called(_a0)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(*models.SceneSettings) error); ok {
+		r0 = rf(_a0)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // SetWaveform provides a mock function with given fields: _a0
 func (_m *Controller) SetWaveform(_a0 *models.WaveFormSettings) error {
 	ret := _m.Called(_a0)

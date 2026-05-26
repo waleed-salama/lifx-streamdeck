@@ -197,6 +197,59 @@ func TestClient_Waveform(t *testing.T) {
 	testController.AssertExpectations(t)
 }
 
+func TestClient_AnimatedScene(t *testing.T) {
+	data := map[string]interface{}{
+		"version":     1,
+		"preset":      "arrival",
+		"direction":   "left-right",
+		"duration":    1600,
+		"stagger":     500,
+		"intensity":   70,
+		"colorTravel": "warm",
+		"color": models.Color{
+			Hue:        30,
+			Saturation: 0,
+			Brightness: 80,
+			Kelvin:     3200,
+		},
+		"devices": []models.Device{
+			{
+				Name: "foo",
+				Mac:  "bar",
+			},
+		},
+		"placements": []models.SceneDevicePlacement{
+			{
+				Mac:  "bar",
+				X:    50,
+				Y:    10,
+				Role: "overhead",
+			},
+		},
+	}
+	testController := new(mocks.Controller)
+	testController.On("SetScene", mock.AnythingOfType("*models.SceneSettings")).Return(nil)
+
+	client := new(Client)
+	client.controller = testController
+	msg := streamdeck.KeyUpMsg{
+		Action: ActionAnimatedScene,
+		Payload: struct {
+			Settings    map[string]interface{} `json:"settings"`
+			Coordinates streamdeck.Coordinates `json:"coordinates"`
+		}(struct {
+			Settings    map[string]interface{}
+			Coordinates streamdeck.Coordinates
+		}{Settings: data, Coordinates: streamdeck.Coordinates(struct {
+			Column uint
+			Row    uint
+		}{Column: 0, Row: 0})}),
+	}
+	client.OnKeyUp(msg)
+
+	testController.AssertExpectations(t)
+}
+
 func TestClient_Toggle(t *testing.T) {
 	data := map[string]interface{}{
 		"version":    2,
