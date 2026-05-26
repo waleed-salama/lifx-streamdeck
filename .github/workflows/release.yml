@@ -17,11 +17,6 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: "1.16.x"
-
       - name: Validate manifest version
         run: |
           manifest_version="$(python3 -c 'import json; print("v" + json.load(open("manifest.json"))["Version"])')"
@@ -29,6 +24,7 @@ jobs:
 
       - name: Build binaries
         run: |
+          go version
           COMMIT="${GITHUB_SHA::7}"
           GOOS=darwin GOARCH=amd64 go build -v -ldflags "-X main.commit=$COMMIT -X main.version=$GITHUB_REF_NAME" -o lifx-streamdeck
           GOOS=windows GOARCH=amd64 go build -v -ldflags "-X main.commit=$COMMIT -X main.version=$GITHUB_REF_NAME" -o lifx-streamdeck.exe
