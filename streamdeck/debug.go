@@ -138,8 +138,8 @@ func getLogs() (map[string][]byte, error) {
 		return logData, err
 	}
 	for _, logFile := range logFiles {
-		// only grab logs from my plugin
-		if strings.HasPrefix(logFile.Name(), "dev.sean.lifx") {
+		// only grab logs from this plugin
+		if strings.HasPrefix(logFile.Name(), "com.waleed-salama.lifx-plus") {
 			logData[logFile.Name()], err = ioutil.ReadFile(fmt.Sprintf("%s/%s", logLocation, logFile.Name()))
 			if err == nil {
 				return logData, err

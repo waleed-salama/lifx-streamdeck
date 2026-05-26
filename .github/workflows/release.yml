@@ -31,16 +31,16 @@ jobs:
 
       - name: Build Stream Deck plugin bundle
         run: |
-          mkdir -p dev.sean.lifx.sdPlugin/attribution
-          cp lifx-streamdeck.exe dev.sean.lifx.sdPlugin
-          cp lifx-streamdeck dev.sean.lifx.sdPlugin
-          cp manifest.json dev.sean.lifx.sdPlugin
-          cp -r property-inspector/* dev.sean.lifx.sdPlugin
-          cp images/* dev.sean.lifx.sdPlugin
-          cp LICENSE dev.sean.lifx.sdPlugin
-          zip -r dev.sean.lifx.streamDeckPlugin dev.sean.lifx.sdPlugin
+          mkdir -p com.waleed-salama.lifx-plus.sdPlugin/attribution
+          cp lifx-streamdeck.exe com.waleed-salama.lifx-plus.sdPlugin
+          cp lifx-streamdeck com.waleed-salama.lifx-plus.sdPlugin
+          cp manifest.json com.waleed-salama.lifx-plus.sdPlugin
+          cp -r property-inspector/* com.waleed-salama.lifx-plus.sdPlugin
+          cp images/* com.waleed-salama.lifx-plus.sdPlugin
+          cp LICENSE com.waleed-salama.lifx-plus.sdPlugin
+          zip -r com.waleed-salama.lifx-plus.streamDeckPlugin com.waleed-salama.lifx-plus.sdPlugin
 
       - name: Publish GitHub release
         uses: softprops/action-gh-release@v2
         with:
-          files: dev.sean.lifx.streamDeckPlugin
+          files: com.waleed-salama.lifx-plus.streamDeckPlugin

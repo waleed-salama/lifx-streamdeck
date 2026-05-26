@@ -116,3 +116,5 @@ modules.xml
 /lifx-streamdeck
 dev.sean.lifx.sdPlugin
 dev.sean.lifx.streamDeckPlugin
+com.waleed-salama.lifx-plus.sdPlugin
+com.waleed-salama.lifx-plus.streamDeckPlugin

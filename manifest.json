@@ -12,7 +12,7 @@
       ],
       "SupportedInMultiActions": true,
       "Tooltip": "Turn on LIFX devices using your Stream Deck",
-      "UUID": "dev.sean.lifx.on",
+      "UUID": "com.waleed-salama.lifx-plus.on",
       "PropertyInspectorPath": "on-off-pi.html"
     },
     {
@@ -27,7 +27,7 @@
       ],
       "SupportedInMultiActions": true,
       "Tooltip": "Turn off LIFX devices using your Stream Deck",
-      "UUID": "dev.sean.lifx.off",
+      "UUID": "com.waleed-salama.lifx-plus.off",
       "PropertyInspectorPath": "on-off-pi.html"
     },
     {
@@ -42,7 +42,7 @@
       ],
       "SupportedInMultiActions": true,
       "Tooltip": "Turn on or off LIFX devices using your Stream Deck",
-      "UUID": "dev.sean.lifx.toggle",
+      "UUID": "com.waleed-salama.lifx-plus.toggle",
       "PropertyInspectorPath": "toggle-pi.html"
     },
     {
@@ -57,7 +57,7 @@
       ],
       "SupportedInMultiActions": true,
       "Tooltip": "Set the color on LIFX devices using your Stream Deck",
-      "UUID": "dev.sean.lifx.color",
+      "UUID": "com.waleed-salama.lifx-plus.color",
       "PropertyInspectorPath": "set-color-pi.html"
     },
     {
@@ -72,7 +72,7 @@
       ],
       "SupportedInMultiActions": true,
       "Tooltip": "Set the brightness of the LIFX Device independent of the color",
-      "UUID": "dev.sean.lifx.brightness",
+      "UUID": "com.waleed-salama.lifx-plus.brightness",
       "PropertyInspectorPath": "set-brightness-pi.html"
     },
     {
@@ -87,7 +87,7 @@
       ],
       "SupportedInMultiActions": true,
       "Tooltip": "Start a waveform on your LIFX Device(s)",
-      "UUID": "dev.sean.lifx.waveform",
+      "UUID": "com.waleed-salama.lifx-plus.waveform",
       "PropertyInspectorPath": "set-waveform-pi.html"
     },
     {
@@ -102,20 +102,20 @@
       ],
       "SupportedInMultiActions": false,
       "Tooltip": "Generate debug bundle",
-      "UUID": "dev.sean.lifx.debug",
+      "UUID": "com.waleed-salama.lifx-plus.debug",
       "PropertyInspectorPath": "debug-pi.html"
     }
   ],
   "SDKVersion": 2,
-  "Author": "wwsean08",
+  "Author": "Waleed Salama",
   "CodePath": "lifx-streamdeck.exe",
   "CodePathMac": "lifx-streamdeck",
   "Description": "This lets you control your LIFX devices at the push of a button.  Note that I have no association with LIFX, all rights reserved.",
-  "Name": "LIFX Control",
-  "Category": "LIFX Controls",
+  "Name": "LIFX+",
+  "Category": "LIFX+ Controls",
   "CategoryIcon": "categoryIcon",
   "Icon": "pluginIcon",
-  "URL": "https://sean.dev",
+  "URL": "https://github.com/waleed-salama/lifx-streamdeck",
   "Version": "0.7.2",
   "OS": [
     {

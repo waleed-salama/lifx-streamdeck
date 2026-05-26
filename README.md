@@ -1,4 +1,4 @@
-# LIFX Stream Deck
+# LIFX+
 [![CI](https://github.com/waleed-salama/lifx-streamdeck/actions/workflows/ci.yml/badge.svg)](https://github.com/waleed-salama/lifx-streamdeck/actions/workflows/ci.yml)
 [![discord](https://img.shields.io/discord/493162062524973056?label=discord)](https://discord.gg/PPVYMeP)
 [![license](https://img.shields.io/badge/license-MIT-brightgreen)](https://github.com/waleed-salama/lifx-streamdeck/blob/main/LICENSE)
