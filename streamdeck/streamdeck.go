@@ -39,6 +39,11 @@ func NewClient(port, uuid string, info *models.AppInfo, controller lifx.Controll
 		globalSettings: gSettings,
 		controller:     controller,
 	}
+	if logger, ok := controller.(interface{ SetLogger(func(string)) }); ok {
+		logger.SetLogger(func(msg string) {
+			client.sdClient.Log(msg)
+		})
+	}
 	go func() {
 		_ = client.controller.DiscoverDevices()
 	}()
@@ -95,11 +100,32 @@ func (c *Client) OnSendToPlugin(msg streamdeck.SendToPluginMsg) {
 		}
 		c.sendDevicesToPropertyInspector(msg.Action, msg.Context, c.controller.GetDevices())
 	case "getColor":
-		color, err := c.controller.GetCurrentColor(c.controller.GetDevices()[msg.Payload["mac"].(string)])
+		mac, ok := msg.Payload["mac"].(string)
+		if !ok || mac == "" {
+			c.SendWarnMessage(msg.Context)
+			err := fmt.Errorf("getColor requested without a device mac")
+			c.sdClient.Log(err.Error())
+			c.sendColorErrorToPropertyInspector(msg.Action, msg.Context, err)
+			return
+		}
+		color, err := c.controller.GetCurrentColor(c.controller.GetDevices()[mac])
 		if err != nil {
 			c.SendWarnMessage(msg.Context)
+			c.sdClient.Log(err.Error())
+			c.sendColorErrorToPropertyInspector(msg.Action, msg.Context, err)
+			return
 		}
 		c.sendColorStateToPropertyInspector(msg.Action, msg.Context, color)
+	case "getSceneColors":
+		macs := payloadStringSlice(msg.Payload["macs"])
+		if len(macs) == 0 {
+			c.SendWarnMessage(msg.Context)
+			err := fmt.Errorf("getSceneColors requested without device macs")
+			c.sdClient.Log(err.Error())
+			c.sendSceneColorsErrorToPropertyInspector(msg.Action, msg.Context, err)
+			return
+		}
+		c.sendSceneColorsToPropertyInspector(msg.Action, msg.Context, macs)
 	case "kofi":
 		_ = open.Start("https://ko-fi.com/P5P23OLT2")
 	case "discord":
@@ -119,9 +145,33 @@ func (c *Client) OnSendToPlugin(msg streamdeck.SendToPluginMsg) {
 	}
 }
 
+func payloadStringSlice(value interface{}) []string {
+	if values, ok := value.([]string); ok {
+		return values
+	}
+	values, ok := value.([]interface{})
+	if !ok {
+		return nil
+	}
+	result := make([]string, 0, len(values))
+	for _, value := range values {
+		if text, ok := value.(string); ok && text != "" {
+			result = append(result, text)
+		}
+	}
+	return result
+}
+
+func (c *Client) logf(format string, args ...interface{}) {
+	if c.sdClient != nil {
+		c.sdClient.Log(fmt.Sprintf(format, args...))
+	}
+}
+
 // OnKeyUp is called when the Stream Deck key is unpressed
 func (c *Client) OnKeyUp(msg streamdeck.KeyUpMsg) {
 	context := msg.Context
+	c.logf("lifx-plus keyUp action=%s", msg.Action)
 	switch msg.Action {
 	case ActionTurnOnDevice:
 		powerSettings := new(models.PowerSettings)
@@ -131,6 +181,7 @@ func (c *Client) OnKeyUp(msg streamdeck.KeyUpMsg) {
 			c.SendWarnMessage(context)
 			return
 		}
+		c.logf("lifx-plus power decoded action=%s devices=%d transition=%d", msg.Action, len(powerSettings.Devices), powerSettings.Transition)
 		err = c.controller.SetPowerState(powerSettings, true)
 		if err != nil {
 			c.sdClient.Log(err.Error())
@@ -143,6 +194,7 @@ func (c *Client) OnKeyUp(msg streamdeck.KeyUpMsg) {
 			c.SendWarnMessage(context)
 			return
 		}
+		c.logf("lifx-plus power decoded action=%s devices=%d transition=%d", msg.Action, len(powerSettings.Devices), powerSettings.Transition)
 		err = c.controller.SetPowerState(powerSettings, false)
 		if err != nil {
 			c.sdClient.Log(err.Error())
@@ -180,6 +232,19 @@ func (c *Client) OnKeyUp(msg streamdeck.KeyUpMsg) {
 			return
 		}
 		err = c.controller.SetWaveform(waveFormSettings)
+		if err != nil {
+			c.sdClient.Log(err.Error())
+		}
+	case ActionAnimatedScene:
+		sceneSettings := new(models.SceneSettings)
+		err := mapstructure.Decode(msg.Payload.Settings, sceneSettings)
+		if err != nil {
+			c.sdClient.Log(err.Error())
+			c.SendWarnMessage(context)
+			return
+		}
+		c.logf("lifx-plus scene decoded devices=%d preset=%s reverse=%v duration=%d stagger=%d", len(sceneSettings.Devices), sceneSettings.Preset, sceneSettings.Reverse, sceneSettings.Duration, sceneSettings.Stagger)
+		err = c.controller.SetScene(sceneSettings)
 		if err != nil {
 			c.sdClient.Log(err.Error())
 		}
@@ -250,20 +315,25 @@ func (c *Client) DebugCallback(msg []byte) {
 	c.sdClient.Log(string(msg))
 }
 
-func (c *Client) sendColorStateToPropertyInspector(action, context string, hsbk *golifx.HSBK) {
-	type colorState struct {
-		Hue        int `json:"hue"`
-		Saturation int `json:"saturation"`
-		Brightness int `json:"brightness"`
-		Kelvin     int `json:"kelvin"`
-	}
+type colorState struct {
+	Hue        int   `json:"hue"`
+	Saturation int   `json:"saturation"`
+	Brightness int   `json:"brightness"`
+	Kelvin     int   `json:"kelvin"`
+	PowerOn    *bool `json:"powerOn,omitempty"`
+}
 
-	data := colorState{
+func colorStateFromHSBK(hsbk *golifx.HSBK) colorState {
+	return colorState{
 		Hue:        int(hsbk.Hue / 182), // don't ask about the 182 :P
 		Saturation: int(hsbk.Saturation / 655),
 		Brightness: int(hsbk.Brightness / 655),
 		Kelvin:     int(hsbk.Kelvin),
 	}
+}
+
+func (c *Client) sendColorStateToPropertyInspector(action, context string, hsbk *golifx.HSBK) {
+	data := colorStateFromHSBK(hsbk)
 
 	msg := streamdeck.SendToPropertyInspectorMsg{
 		Action:  action,
@@ -277,6 +347,84 @@ func (c *Client) sendColorStateToPropertyInspector(action, context string, hsbk 
 	err := c.sdClient.SendMessage(msg)
 	if err != nil {
 		c.sdClient.Log(err.Error())
+	}
+}
+
+func (c *Client) sendSceneColorsToPropertyInspector(action, context string, macs []string) {
+	devices := c.controller.GetDevices()
+	for _, mac := range macs {
+		if devices[mac] == nil {
+			if err := c.controller.DiscoverDevices(); err != nil {
+				c.sdClient.Log(err.Error())
+			}
+			devices = c.controller.GetDevices()
+			break
+		}
+	}
+	colors := make(map[string]colorState)
+	errors := make(map[string]string)
+	for _, mac := range macs {
+		currentState, err := c.controller.GetCurrentState(devices[mac])
+		if err != nil {
+			errors[mac] = err.Error()
+			c.sdClient.Log(fmt.Sprintf("getSceneColors failed mac=%s err=%v", mac, err))
+			continue
+		}
+		state := colorStateFromHSBK(currentState.Color)
+		state.PowerOn = &currentState.Power
+		colors[mac] = state
+	}
+	if len(colors) == 0 {
+		c.SendWarnMessage(context)
+		err := fmt.Errorf("unable to capture current scene colors")
+		c.sendSceneColorsErrorToPropertyInspector(action, context, err)
+		return
+	}
+	msg := streamdeck.SendToPropertyInspectorMsg{
+		Action:  action,
+		Context: context,
+		Event:   streamdeck.SendToPropertyInspectorEvent,
+		Payload: map[string]interface{}{
+			"type":   "getSceneColors",
+			"colors": colors,
+			"errors": errors,
+		},
+	}
+	sendErr := c.sdClient.SendMessage(msg)
+	if sendErr != nil {
+		c.sdClient.Log(sendErr.Error())
+	}
+}
+
+func (c *Client) sendColorErrorToPropertyInspector(action, context string, err error) {
+	msg := streamdeck.SendToPropertyInspectorMsg{
+		Action:  action,
+		Context: context,
+		Event:   streamdeck.SendToPropertyInspectorEvent,
+		Payload: map[string]interface{}{
+			"type":  "getColorError",
+			"error": err.Error(),
+		},
+	}
+	sendErr := c.sdClient.SendMessage(msg)
+	if sendErr != nil {
+		c.sdClient.Log(sendErr.Error())
+	}
+}
+
+func (c *Client) sendSceneColorsErrorToPropertyInspector(action, context string, err error) {
+	msg := streamdeck.SendToPropertyInspectorMsg{
+		Action:  action,
+		Context: context,
+		Event:   streamdeck.SendToPropertyInspectorEvent,
+		Payload: map[string]interface{}{
+			"type":  "getSceneColorsError",
+			"error": err.Error(),
+		},
+	}
+	sendErr := c.sdClient.SendMessage(msg)
+	if sendErr != nil {
+		c.sdClient.Log(sendErr.Error())
 	}
 }
 

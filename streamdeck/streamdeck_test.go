@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+	"gitlab.com/wwsean08/golifx"
 	"gitlab.com/wwsean08/lifx-streamdeck/mocks"
 	"gitlab.com/wwsean08/lifx-streamdeck/models"
 	"gitlab.com/wwsean08/streamdeck"
@@ -195,6 +196,79 @@ func TestClient_Waveform(t *testing.T) {
 	client.OnKeyUp(msg)
 
 	testController.AssertExpectations(t)
+}
+
+func TestClient_AnimatedScene(t *testing.T) {
+	data := map[string]interface{}{
+		"version":     1,
+		"preset":      "arrival",
+		"direction":   "left-right",
+		"duration":    1600,
+		"stagger":     500,
+		"intensity":   70,
+		"colorTravel": "warm",
+		"color": models.Color{
+			Hue:        30,
+			Saturation: 0,
+			Brightness: 80,
+			Kelvin:     3200,
+		},
+		"devices": []models.Device{
+			{
+				Name: "foo",
+				Mac:  "bar",
+			},
+		},
+		"placements": []models.SceneDevicePlacement{
+			{
+				Mac:  "bar",
+				X:    50,
+				Y:    10,
+				Role: "overhead",
+			},
+		},
+	}
+	testController := new(mocks.Controller)
+	testController.On("SetScene", mock.AnythingOfType("*models.SceneSettings")).Return(nil)
+
+	client := new(Client)
+	client.controller = testController
+	msg := streamdeck.KeyUpMsg{
+		Action: ActionAnimatedScene,
+		Payload: struct {
+			Settings    map[string]interface{} `json:"settings"`
+			Coordinates streamdeck.Coordinates `json:"coordinates"`
+		}(struct {
+			Settings    map[string]interface{}
+			Coordinates streamdeck.Coordinates
+		}{Settings: data, Coordinates: streamdeck.Coordinates(struct {
+			Column uint
+			Row    uint
+		}{Column: 0, Row: 0})}),
+	}
+	client.OnKeyUp(msg)
+
+	testController.AssertExpectations(t)
+}
+
+func TestPayloadStringSlice(t *testing.T) {
+	require.Equal(t, []string{"a", "b"}, payloadStringSlice([]interface{}{"a", "", "b", 12}))
+	require.Equal(t, []string{"a", "b"}, payloadStringSlice([]string{"a", "b"}))
+	require.Nil(t, payloadStringSlice("a"))
+}
+
+func TestColorStateFromHSBK(t *testing.T) {
+	state := colorStateFromHSBK(&golifx.HSBK{
+		Hue:        182 * 120,
+		Saturation: 655 * 80,
+		Brightness: 655 * 70,
+		Kelvin:     4000,
+	})
+
+	require.Equal(t, 120, state.Hue)
+	require.Equal(t, 80, state.Saturation)
+	require.Equal(t, 70, state.Brightness)
+	require.Equal(t, 4000, state.Kelvin)
 }
 
 func TestClient_Toggle(t *testing.T) {

@@ -70,7 +70,10 @@ function RemoveDevice(deviceMac) {
 }
 
 function AddDevice(deviceMac, deviceLabel) {
-    device = {"mac": deviceMac, "label": deviceLabel};
+    if (!deviceMac || actionInfo.payload.settings["devices"].some(device => device["mac"] === deviceMac)) {
+        return;
+    }
+    const device = {"mac": deviceMac, "label": deviceLabel};
     actionInfo.payload.settings["devices"].push(device);
     UpdateSettings();
 }

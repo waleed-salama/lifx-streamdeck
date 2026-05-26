@@ -18,7 +18,7 @@ var (
 )
 
 func main() {
-	f, err := os.OpenFile("crash_log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
+	f, err := openCrashLog(0666)
 	if err == nil {
 		redirectStderr(f)
 	}

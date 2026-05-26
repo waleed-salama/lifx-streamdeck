@@ -112,13 +112,13 @@
                     const device = tempDevices[index];
                     const exists = document.getElementById(device["mac"]);
                     if (!exists) {
-                        let tmpDevice = document.createElement('div');
-                        tmpDevice.setAttribute("class", "sdpi-item-child");
-                        tmpDevice.innerHTML = `
-                <input id=${device["mac"]} type="checkbox" value=${device["label"]}>
+                    let tmpDevice = document.createElement('div');
+                    tmpDevice.setAttribute("class", "sdpi-item-child");
+                    tmpDevice.innerHTML = `
+                <input id=${device["mac"]} type="checkbox" value=${device["mac"]}>
                 <label for=${device["mac"]} class="sdpi-item-label"><span></span>${device["label"]}</label>
                 `
-                        deviceContainer.append(tmpDevice);
+                    deviceContainer.append(tmpDevice);
                     }
                 }
             }

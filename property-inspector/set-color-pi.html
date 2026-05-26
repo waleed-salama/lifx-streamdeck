@@ -98,6 +98,8 @@
                     devicesDiscovered(data);
                 } else if (data['type'] === 'getColor') {
                     colorReceived(data['color']);
+                } else if (data['type'] === 'getColorError') {
+                    colorRequestFailed(data['error']);
                 }
             } else if (sdEvent === "didReceiveGlobalSettings") {
                 if (gsWindow) {
@@ -112,22 +114,19 @@
         let getColorButton = document.getElementById('getColorButton');
         let loader = document.createElement('div');
         const dropdown = document.getElementById('device_dropdown');
+        if (!dropdown[dropdown.selectedIndex]) return;
         const deviceMac = dropdown[dropdown.selectedIndex].value;
         const payload = {'type': 'getColor', 'mac': deviceMac};
+        resetColorRequest();
         sendValueToPlugin(payload);
         loader.setAttribute('class', 'loader');
         getColorButton.setAttribute('disabled', 'disabled');
         container.append(loader);
+        window.getColorTimeout = setTimeout(resetColorRequest, 8000);
     }
 
     function colorReceived(data) {
-        let container = document.getElementById('color-select');
-        let getColorButton = document.getElementById('getColorButton');
-        let loader = container.getElementsByClassName("loader");
-        for (let i = 0; i < loader.length; i++) {
-            loader[i].remove();
-        }
-        getColorButton.removeAttribute('disabled');
+        resetColorRequest();
 
         let hueBox = document.getElementById('hue');
         hueBox.value = data['hue'];
@@ -138,6 +137,25 @@
         let kelvinBox = document.getElementById('kelvin');
         kelvinBox.value = data['kelvin'];
         onColorChanged();
+    }
+
+    function colorRequestFailed(error) {
+        console.warn(error || 'Unable to get current color');
+        resetColorRequest();
+    }
+
+    function resetColorRequest() {
+        let container = document.getElementById('color-select');
+        let getColorButton = document.getElementById('getColorButton');
+        let loader = container.getElementsByClassName("loader");
+        for (let i = 0; i < loader.length; i++) {
+            loader[i].remove();
+        }
+        getColorButton.removeAttribute('disabled');
+        if (window.getColorTimeout) {
+            clearTimeout(window.getColorTimeout);
+            window.getColorTimeout = null;
+        }
     }
 
     function devicesDiscovered(data) {
@@ -179,13 +197,13 @@
                     const device = tempDevices[index];
                     const exists = document.getElementById(device["mac"]);
                     if (!exists) {
-                        let tmpDevice = document.createElement('div');
-                        tmpDevice.setAttribute("class", "sdpi-item-child");
-                        tmpDevice.innerHTML = `
-                <input id=${device["mac"]} type="checkbox" value=${device["label"]}>
+                    let tmpDevice = document.createElement('div');
+                    tmpDevice.setAttribute("class", "sdpi-item-child");
+                    tmpDevice.innerHTML = `
+                <input id=${device["mac"]} type="checkbox" value=${device["mac"]}>
                 <label for=${device["mac"]} class="sdpi-item-label"><span></span>${device["label"]}</label>
                 `
-                        deviceContainer.append(tmpDevice);
+                    deviceContainer.append(tmpDevice);
                     }
                 }
             }

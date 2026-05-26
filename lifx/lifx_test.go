@@ -15,6 +15,7 @@ func TestNewLifxController(t *testing.T) {
 
 	require.NotNil(t, specificClient.deviceMap)
 	require.NotNil(t, specificClient.writeLock)
+	require.NotNil(t, specificClient.sceneLock)
 
 }
 
@@ -70,6 +71,48 @@ func TestDeviceFromMac(t *testing.T) {
 	require.Nil(t, device)
 }
 
+func TestResolveDevicesSkipsInvalidMacEntries(t *testing.T) {
+	client := &lifxClient{
+		deviceMap: make(map[string]*golifx.Device),
+		writeLock: new(sync.Mutex),
+	}
+	device, err := deviceFromMac("d0:73:d5:2b:a7:b8")
+	require.NoError(t, err)
+	client.addDeviceToMap([]*golifx.Device{device})
+
+	devices, err := client.resolveDevices([]models.Device{
+		{Name: "Beam", Mac: "d0:73:d5:2b:a7:b8"},
+		{Name: "Bad", Mac: "Top"},
+	})
+
+	require.NoError(t, err)
+	require.Len(t, devices, 1)
+	require.Equal(t, device, devices["d0:73:d5:2b:a7:b8"])
+}
+
+func TestResolveDevicesReturnsErrorWhenNoValidMacsSelected(t *testing.T) {
+	client := &lifxClient{
+		deviceMap: make(map[string]*golifx.Device),
+		writeLock: new(sync.Mutex),
+	}
+
+	devices, err := client.resolveDevices([]models.Device{{Name: "Bad", Mac: "Top"}})
+
+	require.Error(t, err)
+	require.Nil(t, devices)
+}
+
+func TestBroadcastOnlyCache(t *testing.T) {
+	client := &lifxClient{writeLock: new(sync.Mutex)}
+	mac := "d0:73:d5:10:97:74"
+
+	require.False(t, client.shouldUseBroadcastOnly(mac))
+	client.markBroadcastOnly(mac)
+	require.True(t, client.shouldUseBroadcastOnly(mac))
+	client.clearBroadcastOnly(mac)
+	require.False(t, client.shouldUseBroadcastOnly(mac))
+}
+
 func TestLifxClient_UpdateGlobalSettings(t *testing.T) {
 	client := new(lifxClient)
 	client.writeLock = new(sync.Mutex)
@@ -81,4 +124,34 @@ func TestLifxClient_UpdateGlobalSettings(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "1.2.3.4", client.gSettings.OutIP)
 	require.True(t, client.gSettings.DirectComm)
+}
+
+func TestLifxClient_startSceneCancelsPreviousScene(t *testing.T) {
+	client := new(lifxClient)
+	first := client.startScene()
+	second := client.startScene()
+
+	select {
+	case <-first:
+	default:
+		t.Fatal("expected previous scene to be canceled")
+	}
+	select {
+	case <-second:
+		t.Fatal("new scene should stay active")
+	default:
+	}
+}
+
+func TestLifxClient_cancelSceneCancelsActiveScene(t *testing.T) {
+	client := new(lifxClient)
+	active := client.startScene()
+
+	client.cancelScene()
+
+	select {
+	case <-active:
+	default:
+		t.Fatal("expected active scene to be canceled")
+	}
 }
