@@ -31,6 +31,11 @@ type sceneCommand struct {
 	Power      *bool
 }
 
+type sceneTarget struct {
+	Color   golifx.HSBK
+	PowerOn bool
+}
+
 func buildSceneCommands(settings *models.SceneSettings) []sceneCommand {
 	if settings == nil || len(settings.Devices) == 0 {
 		return nil
@@ -70,7 +75,7 @@ func buildSceneCommands(settings *models.SceneSettings) []sceneCommand {
 	}
 
 	for _, device := range devices {
-		target := sceneTargetColor(&sceneSettings, device.mac)
+		target := sceneTargetForDevice(&sceneSettings, device.mac)
 		baseDelay := device.offset
 		delay := device.delay + device.offset
 		if reverse {
@@ -78,17 +83,32 @@ func buildSceneCommands(settings *models.SceneSettings) []sceneCommand {
 		}
 
 		if reverse {
-			commands = append(commands, buildReverseColorTravelCommands(device.mac, delay, device.transition, target, sceneSettings.ColorTravel)...)
+			commands = append(commands, buildReverseColorTravelCommands(device.mac, delay, device.transition, target.Color, sceneSettings.ColorTravel)...)
 			off := false
 			powerOffDelay := delay + time.Duration(device.transition)*time.Millisecond
 			commands = append(commands, sceneCommand{DeviceMac: device.mac, Delay: powerOffDelay, Power: &off})
-			if target.Brightness > 0 {
-				commands = append(commands, sceneCommand{DeviceMac: device.mac, Delay: powerOffDelay + sceneOffRestoreDelay, Transition: 0, Color: &target})
+			if target.Color.Brightness > 0 {
+				commands = append(commands, sceneCommand{DeviceMac: device.mac, Delay: powerOffDelay + sceneOffRestoreDelay, Transition: 0, Color: &target.Color})
+			}
+			continue
+		}
+		if !target.PowerOn {
+			off := false
+			commands = append(commands, sceneCommand{DeviceMac: device.mac, Delay: delay, Transition: device.transition, Power: &off})
+			continue
+		}
+		if sceneSettings.StartFromCurrent {
+			on := true
+			commands = append(commands, sceneCommand{DeviceMac: device.mac, Delay: delay, Transition: device.transition, Power: &on})
+			if sceneSettings.ColorTravel != "none" {
+				commands = append(commands, buildColorTravelCommands(device.mac, delay, device.transition, target.Color, sceneSettings.ColorTravel)...)
+			} else {
+				commands = append(commands, sceneCommand{DeviceMac: device.mac, Delay: delay, Transition: device.transition, Color: &target.Color})
 			}
 			continue
 		}
 		on := true
-		start := target
+		start := target.Color
 		start.Brightness = 0
 		commands = append(commands,
 			sceneCommand{DeviceMac: device.mac, Delay: baseDelay, Transition: 0, Color: &start},
@@ -96,9 +116,9 @@ func buildSceneCommands(settings *models.SceneSettings) []sceneCommand {
 		)
 
 		if sceneSettings.ColorTravel != "none" {
-			commands = append(commands, buildColorTravelCommands(device.mac, delay, device.transition, target, sceneSettings.ColorTravel)...)
+			commands = append(commands, buildColorTravelCommands(device.mac, delay, device.transition, target.Color, sceneSettings.ColorTravel)...)
 		} else {
-			commands = append(commands, sceneCommand{DeviceMac: device.mac, Delay: delay, Transition: device.transition, Color: &target})
+			commands = append(commands, sceneCommand{DeviceMac: device.mac, Delay: delay, Transition: device.transition, Color: &target.Color})
 		}
 	}
 
@@ -315,13 +335,19 @@ func placementMap(settings *models.SceneSettings) map[string]models.SceneDeviceP
 	return placements
 }
 
-func sceneTargetColor(settings *models.SceneSettings, mac string) golifx.HSBK {
+func sceneTargetForDevice(settings *models.SceneSettings, mac string) sceneTarget {
 	for _, deviceColor := range settings.DeviceColors {
 		if deviceColor.Mac == mac {
-			return hsbkFromColor(deviceColor.Color)
+			powerOn := true
+			if deviceColor.PowerOn != nil {
+				powerOn = *deviceColor.PowerOn
+			} else if deviceColor.Color.PowerOn != nil {
+				powerOn = *deviceColor.Color.PowerOn
+			}
+			return sceneTarget{Color: hsbkFromColor(deviceColor.Color), PowerOn: powerOn}
 		}
 	}
-	return hsbkFromColor(settings.TargetColor)
+	return sceneTarget{Color: hsbkFromColor(settings.TargetColor), PowerOn: true}
 }
 
 func defaultPlacement(mac string, index int, total int) models.SceneDevicePlacement {

@@ -74,6 +74,17 @@
             </div>
         </div>
     </div>
+    <div class="sdpi-item" type="checkbox">
+        <div class="sdpi-item-label">Scene switch</div>
+        <div class="sdpi-item">
+            <div class="sdpi-item-value min100">
+                <div class="sdpi-item-child">
+                    <input type="checkbox" onchange="onSettingChanged()" id="startFromCurrent">
+                    <label class="sdpi-item-label" for="startFromCurrent"><span></span>Start from current state</label>
+                </div>
+            </div>
+        </div>
+    </div>
     <div class="sdpi-item">
         <div class="sdpi-item-label">Direction</div>
         <select class="sdpi-item-value select" id="direction" onchange="onSettingChanged()">
@@ -172,6 +183,7 @@
             settings["reverse"] = true;
         }
         if (settings["reverse"] === undefined) settings["reverse"] = false;
+        if (settings["startFromCurrent"] === undefined) settings["startFromCurrent"] = false;
         if (!settings["direction"]) settings["direction"] = "left-right";
         if (!settings["duration"]) settings["duration"] = 1600;
         if (!settings["stagger"]) settings["stagger"] = 500;
@@ -186,6 +198,7 @@
         const settings = actionInfo.payload.settings;
         document.getElementById('preset').value = settings["preset"];
         document.getElementById('reverse').checked = settings["reverse"] === true;
+        document.getElementById('startFromCurrent').checked = settings["startFromCurrent"] === true;
         document.getElementById('direction').value = settings["direction"];
         document.getElementById('colorTravel').value = settings["colorTravel"];
         document.getElementById('duration').value = settings["duration"];
@@ -378,7 +391,7 @@
         Object.keys(colors).forEach(mac => setDeviceColor(mac, colors[mac]));
         const firstMac = Object.keys(colors)[0];
         if (firstMac) {
-            actionInfo.payload.settings["color"] = Object.assign({}, colors[firstMac], {"transition": 0});
+            actionInfo.payload.settings["color"] = colorWithoutPower(colors[firstMac]);
             hydrateControls();
         } else {
             renderSceneColors();
@@ -413,13 +426,25 @@
             "kelvin": parseInt(color["kelvin"], 10) || 3200,
             "transition": 0
         };
+        const powerOn = color["powerOn"] !== false;
         const existing = settings["deviceColors"].find(deviceColor => deviceColor.mac === mac);
         if (existing) {
             existing.color = normalized;
+            existing.powerOn = powerOn;
         } else {
-            settings["deviceColors"].push({"mac": mac, "color": normalized});
+            settings["deviceColors"].push({"mac": mac, "color": normalized, "powerOn": powerOn});
         }
         renderSceneColors();
+    }
+
+    function colorWithoutPower(color) {
+        return {
+            "hue": parseInt(color["hue"], 10) || 0,
+            "saturation": parseInt(color["saturation"], 10) || 0,
+            "brightness": parseInt(color["brightness"], 10) || 0,
+            "kelvin": parseInt(color["kelvin"], 10) || 3200,
+            "transition": 0
+        };
     }
 
     function renderSceneColors() {
@@ -442,7 +467,7 @@
             }
             const label = document.createElement('span');
             label.textContent = color
-                ? `${device.name || device.mac}: H ${color.hue} S ${color.saturation} B ${color.brightness} K ${color.kelvin}`
+                ? `${device.name || device.mac}: ${color.powerOn === false ? 'off' : 'on'} H ${color.hue} S ${color.saturation} B ${color.brightness} K ${color.kelvin}`
                 : `${device.name || device.mac}: uses default color`;
             item.append(swatch);
             item.append(label);
@@ -452,7 +477,10 @@
 
     function deviceSceneColor(mac) {
         const entry = actionInfo.payload.settings["deviceColors"].find(deviceColor => deviceColor.mac === mac);
-        return entry ? entry.color : null;
+        if (!entry) return null;
+        return Object.assign({}, entry.color, {
+            "powerOn": entry.powerOn !== undefined ? entry.powerOn : entry.color.powerOn
+        });
     }
 
     function renderCanvas() {
@@ -620,6 +648,7 @@
         const settings = actionInfo.payload.settings;
         settings["preset"] = document.getElementById('preset').value;
         settings["reverse"] = document.getElementById('reverse').checked;
+        settings["startFromCurrent"] = document.getElementById('startFromCurrent').checked;
         settings["direction"] = document.getElementById('direction').value;
         settings["colorTravel"] = document.getElementById('colorTravel').value;
         settings["duration"] = parseInt(document.getElementById('duration').value, 10);

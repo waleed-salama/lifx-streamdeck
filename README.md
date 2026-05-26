@@ -42,7 +42,7 @@ You can change the device's brightness independent of its current color (as brig
 You can setup a "wave" effect where your button press causes the device to go between two colors over time.  For more information on how the settings work I recommend reading LIFX's [official documentation](https://lan.developer.lifx.com/docs/waveforms).
 
 ### Playing animated scenes
-You can setup an animated scene by selecting multiple devices, placing them on a small room layout, and choosing a position-aware preset.  Presets include arrival, bloom, sweep, ignition, and breathe in.  Scene settings support a fallback target color, captured per-device scene colors, duration in milliseconds, stagger in milliseconds, intensity, direction, optional warm or hue-shift color travel, per-device timing offsets, and a reverse animation option for exit scenes.
+You can setup an animated scene by selecting multiple devices, placing them on a small room layout, and choosing a position-aware preset.  Presets include arrival, bloom, sweep, ignition, and breathe in.  Scene settings support a fallback target color, captured per-device scene colors and power states, duration in milliseconds, stagger in milliseconds, intensity, direction, optional warm or hue-shift color travel, per-device timing offsets, a reverse animation option for exit scenes, and a scene-switch mode that starts from the bulbs' current state instead of fading in from black.
 
 ## Known Issues
 1. Sometimes the device mac address is shown instead of the devices label, if the devices label isn't returned in time then the mac address will be shown as opposed to nothing.

@@ -2,6 +2,8 @@
 ## Features
 * Add an Animated Scene action with device placement, position-aware presets, reversible exit scenes, per-device timing offsets, target color controls, and customizable timing.
 * Add per-device scene colors and a Capture Current Scene button so each selected bulb can keep its own hue, saturation, brightness, and Kelvin target.
+* Capture and restore per-device power states so animated scenes can intentionally leave selected bulbs off.
+* Add a scene-switch option that starts animation from the bulbs' current state instead of fading in from black.
 * Add scene-aware cancellation so normal power, color, brightness, toggle, and waveform actions stop any in-progress scene before sending new commands.
 * Add fallback handling for bulbs that respond more reliably through broadcast than direct unicast.
 * Improve Get Settings failure handling so the property inspector stops loading and reports lookup errors instead of spinning indefinitely.

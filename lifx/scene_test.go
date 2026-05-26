@@ -55,6 +55,47 @@ func TestBuildSceneCommandsPreloadsDarkColorBeforePowerOn(t *testing.T) {
 	require.True(t, *commands[1].Power)
 }
 
+func TestBuildSceneCommandsStartFromCurrentSkipsDarkPreloadAndEnsuresPowerOn(t *testing.T) {
+	settings := &models.SceneSettings{
+		Preset:           "sweep",
+		StartFromCurrent: true,
+		Duration:         1000,
+		Devices:          []models.Device{{Name: "Desk", Mac: "d0:73:d5:2b:a7:b8"}},
+		TargetColor:      models.Color{Hue: 30, Saturation: 0, Brightness: 80, Kelvin: 3200},
+	}
+
+	commands := buildSceneCommands(settings)
+
+	require.Empty(t, darkColorDelays(commands, "d0:73:d5:2b:a7:b8"))
+	require.Contains(t, powerOnDelays(commands, "d0:73:d5:2b:a7:b8"), 0*time.Millisecond)
+	require.Contains(t, colorDelays(commands, "d0:73:d5:2b:a7:b8"), 0*time.Millisecond)
+	require.Equal(t, uint32(1000), transitionForDevice(commands, "d0:73:d5:2b:a7:b8", 0))
+}
+
+func TestBuildSceneCommandsStartFromCurrentStillUsesColorTravel(t *testing.T) {
+	settings := &models.SceneSettings{
+		Preset:           "ignition",
+		StartFromCurrent: true,
+		ColorTravel:      "warm",
+		Duration:         900,
+		Devices:          []models.Device{{Name: "Desk", Mac: "d0:73:d5:2b:a7:b8"}},
+		TargetColor:      models.Color{Hue: 30, Saturation: 0, Brightness: 80, Kelvin: 3200},
+	}
+
+	commands := buildSceneCommands(settings)
+
+	require.Len(t, commands, 4)
+	require.Contains(t, powerOnDelays(commands, "d0:73:d5:2b:a7:b8"), 0*time.Millisecond)
+	for _, command := range commands {
+		if command.Power != nil {
+			require.True(t, *command.Power)
+			continue
+		}
+		require.NotNil(t, command.Color)
+		require.Greater(t, command.Color.Brightness, uint16(0))
+	}
+}
+
 func TestBuildSceneCommandsUsesPerDeviceSceneColors(t *testing.T) {
 	left := "d0:73:d5:01:df:8f"
 	right := "d0:73:d5:01:be:91"
@@ -85,6 +126,66 @@ func TestBuildSceneCommandsUsesPerDeviceSceneColors(t *testing.T) {
 	require.Equal(t, uint16(0), rightColor.Hue)
 	require.Equal(t, uint16(45850), rightColor.Brightness)
 	require.Equal(t, uint16(4000), rightColor.Kelvin)
+}
+
+func TestBuildSceneCommandsRestoresCapturedOffPowerState(t *testing.T) {
+	mac := "d0:73:d5:01:df:8f"
+	powerOff := false
+	settings := &models.SceneSettings{
+		Preset:      "sweep",
+		Duration:    1000,
+		Devices:     []models.Device{{Name: "Left", Mac: mac}},
+		TargetColor: models.Color{Hue: 30, Saturation: 0, Brightness: 80, Kelvin: 3200},
+		DeviceColors: []models.SceneDeviceColor{
+			{Mac: mac, Color: models.Color{Hue: 240, Saturation: 100, Brightness: 60, Kelvin: 3500}, PowerOn: &powerOff},
+		},
+	}
+
+	commands := buildSceneCommands(settings)
+
+	require.Len(t, commands, 1)
+	require.Nil(t, commands[0].Color)
+	require.NotNil(t, commands[0].Power)
+	require.False(t, *commands[0].Power)
+	require.Equal(t, uint32(1000), commands[0].Transition)
+}
+
+func TestBuildSceneCommandsTreatsLegacyCapturedColorsAsOn(t *testing.T) {
+	mac := "d0:73:d5:01:df:8f"
+	settings := &models.SceneSettings{
+		Preset:      "sweep",
+		Duration:    1000,
+		Devices:     []models.Device{{Name: "Left", Mac: mac}},
+		TargetColor: models.Color{Hue: 30, Saturation: 0, Brightness: 80, Kelvin: 3200},
+		DeviceColors: []models.SceneDeviceColor{
+			{Mac: mac, Color: models.Color{Hue: 240, Saturation: 100, Brightness: 60, Kelvin: 3500}},
+		},
+	}
+
+	commands := buildSceneCommands(settings)
+
+	require.NotEmpty(t, colorDelays(commands, mac))
+	require.Empty(t, powerOffDelays(commands, mac))
+}
+
+func TestBuildSceneCommandsRestoresNestedCapturedOffPowerState(t *testing.T) {
+	mac := "d0:73:d5:01:df:8f"
+	powerOff := false
+	settings := &models.SceneSettings{
+		Preset:      "sweep",
+		Duration:    1000,
+		Devices:     []models.Device{{Name: "Left", Mac: mac}},
+		TargetColor: models.Color{Hue: 30, Saturation: 0, Brightness: 80, Kelvin: 3200},
+		DeviceColors: []models.SceneDeviceColor{
+			{Mac: mac, Color: models.Color{Hue: 240, Saturation: 100, Brightness: 60, Kelvin: 3500, PowerOn: &powerOff}},
+		},
+	}
+
+	commands := buildSceneCommands(settings)
+
+	require.Len(t, commands, 1)
+	require.NotNil(t, commands[0].Power)
+	require.False(t, *commands[0].Power)
 }
 
 func TestBuildSceneCommandsQuantizesNearbySweepDelays(t *testing.T) {
@@ -339,6 +440,16 @@ func powerOffDelays(commands []sceneCommand, mac string) []time.Duration {
 	delays := make([]time.Duration, 0)
 	for _, command := range commands {
 		if command.DeviceMac == mac && command.Power != nil && !*command.Power {
+			delays = append(delays, command.Delay)
+		}
+	}
+	return delays
+}
+
+func powerOnDelays(commands []sceneCommand, mac string) []time.Duration {
+	delays := make([]time.Duration, 0)
+	for _, command := range commands {
+		if command.DeviceMac == mac && command.Power != nil && *command.Power {
 			delays = append(delays, command.Delay)
 		}
 	}

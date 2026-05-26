@@ -316,10 +316,11 @@ func (c *Client) DebugCallback(msg []byte) {
 }
 
 type colorState struct {
-	Hue        int `json:"hue"`
-	Saturation int `json:"saturation"`
-	Brightness int `json:"brightness"`
-	Kelvin     int `json:"kelvin"`
+	Hue        int   `json:"hue"`
+	Saturation int   `json:"saturation"`
+	Brightness int   `json:"brightness"`
+	Kelvin     int   `json:"kelvin"`
+	PowerOn    *bool `json:"powerOn,omitempty"`
 }
 
 func colorStateFromHSBK(hsbk *golifx.HSBK) colorState {
@@ -363,13 +364,15 @@ func (c *Client) sendSceneColorsToPropertyInspector(action, context string, macs
 	colors := make(map[string]colorState)
 	errors := make(map[string]string)
 	for _, mac := range macs {
-		color, err := c.controller.GetCurrentColor(devices[mac])
+		currentState, err := c.controller.GetCurrentState(devices[mac])
 		if err != nil {
 			errors[mac] = err.Error()
 			c.sdClient.Log(fmt.Sprintf("getSceneColors failed mac=%s err=%v", mac, err))
 			continue
 		}
-		colors[mac] = colorStateFromHSBK(color)
+		state := colorStateFromHSBK(currentState.Color)
+		state.PowerOn = &currentState.Power
+		colors[mac] = state
 	}
 	if len(colors) == 0 {
 		c.SendWarnMessage(context)

@@ -75,6 +75,29 @@ func (_m *Controller) GetCurrentColor(_a0 *golifx.Device) (*golifx.HSBK, error) 
 	return r0, r1
 }
 
+// GetCurrentState provides a mock function with given fields: _a0
+func (_m *Controller) GetCurrentState(_a0 *golifx.Device) (*golifx.DeviceState, error) {
+	ret := _m.Called(_a0)
+
+	var r0 *golifx.DeviceState
+	if rf, ok := ret.Get(0).(func(*golifx.Device) *golifx.DeviceState); ok {
+		r0 = rf(_a0)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*golifx.DeviceState)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(*golifx.Device) error); ok {
+		r1 = rf(_a0)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetDevices provides a mock function with given fields:
 func (_m *Controller) GetDevices() map[string]*golifx.Device {
 	ret := _m.Called()
@@ -89,6 +112,27 @@ func (_m *Controller) GetDevices() map[string]*golifx.Device {
 	}
 
 	return r0
+}
+
+// GetPowerState provides a mock function with given fields: _a0
+func (_m *Controller) GetPowerState(_a0 *golifx.Device) (bool, error) {
+	ret := _m.Called(_a0)
+
+	var r0 bool
+	if rf, ok := ret.Get(0).(func(*golifx.Device) bool); ok {
+		r0 = rf(_a0)
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(*golifx.Device) error); ok {
+		r1 = rf(_a0)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // SetBrightness provides a mock function with given fields: _a0

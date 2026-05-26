@@ -21,6 +21,7 @@ type (
 		Brightness uint   `mapstructure:"brightness"`
 		Kelvin     uint16 `mapstructure:"kelvin"`
 		Transition uint32 `mapstructure:"transition"`
+		PowerOn    *bool  `mapstructure:"powerOn" json:"powerOn,omitempty"`
 	}
 
 	//PowerSettings represents the on/off action settings
@@ -72,23 +73,25 @@ type (
 	}
 
 	SceneDeviceColor struct {
-		Mac   string `mapstructure:"mac" json:"mac"`
-		Color Color  `mapstructure:"color" json:"color"`
+		Mac     string `mapstructure:"mac" json:"mac"`
+		Color   Color  `mapstructure:"color" json:"color"`
+		PowerOn *bool  `mapstructure:"powerOn" json:"powerOn,omitempty"`
 	}
 
 	SceneSettings struct {
-		Version      int                    `mapstructure:"version"`
-		Devices      []Device               `mapstructure:"devices"`
-		Placements   []SceneDevicePlacement `mapstructure:"placements"`
-		DeviceColors []SceneDeviceColor     `mapstructure:"deviceColors"`
-		Preset       string                 `mapstructure:"preset"`
-		Reverse      bool                   `mapstructure:"reverse"`
-		Direction    string                 `mapstructure:"direction"`
-		Duration     uint32                 `mapstructure:"duration"`
-		Stagger      uint32                 `mapstructure:"stagger"`
-		Intensity    uint                   `mapstructure:"intensity"`
-		ColorTravel  string                 `mapstructure:"colorTravel"`
-		TargetColor  Color                  `mapstructure:"color"`
+		Version          int                    `mapstructure:"version"`
+		Devices          []Device               `mapstructure:"devices"`
+		Placements       []SceneDevicePlacement `mapstructure:"placements"`
+		DeviceColors     []SceneDeviceColor     `mapstructure:"deviceColors"`
+		Preset           string                 `mapstructure:"preset"`
+		Reverse          bool                   `mapstructure:"reverse"`
+		StartFromCurrent bool                   `mapstructure:"startFromCurrent"`
+		Direction        string                 `mapstructure:"direction"`
+		Duration         uint32                 `mapstructure:"duration"`
+		Stagger          uint32                 `mapstructure:"stagger"`
+		Intensity        uint                   `mapstructure:"intensity"`
+		ColorTravel      string                 `mapstructure:"colorTravel"`
+		TargetColor      Color                  `mapstructure:"color"`
 	}
 
 	Debug struct {

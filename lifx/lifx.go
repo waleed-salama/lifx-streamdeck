@@ -43,6 +43,8 @@ func NewLifxController() Controller {
 type Controller interface {
 	DiscoverDevices() error
 	GetCurrentColor(*golifx.Device) (*golifx.HSBK, error)
+	GetCurrentState(*golifx.Device) (*golifx.DeviceState, error)
+	GetPowerState(*golifx.Device) (bool, error)
 	SetPowerState(*models.PowerSettings, bool) error
 	TogglePowerState(*models.ToggleSettings) error
 	SetColor(*models.ColorSettings) error
@@ -185,12 +187,20 @@ func (c *lifxClient) shouldUseBroadcastOnly(mac string) bool {
 }
 
 func (c *lifxClient) GetCurrentColor(device *golifx.Device) (*golifx.HSBK, error) {
+	cs, err := c.GetCurrentState(device)
+	if err != nil {
+		return nil, err
+	}
+	return cs.Color, nil
+}
+
+func (c *lifxClient) GetCurrentState(device *golifx.Device) (*golifx.DeviceState, error) {
 	if device == nil {
 		return nil, fmt.Errorf("cannot get color for missing device")
 	}
 	if c.shouldUseBroadcastOnly(device.MacAddress()) {
 		c.logf("lifx get color using broadcast-only mac=%s", device.MacAddress())
-		return getCurrentColorViaBroadcast(device.MacAddress())
+		return getCurrentStateViaBroadcast(device.MacAddress())
 	}
 	cs, err := device.GetColorState()
 	if err != nil {
@@ -212,7 +222,31 @@ func (c *lifxClient) GetCurrentColor(device *golifx.Device) (*golifx.HSBK, error
 	if cs == nil || cs.Color == nil {
 		return nil, fmt.Errorf("device returned no color state")
 	}
-	return cs.Color, nil
+	return cs, nil
+}
+
+func (c *lifxClient) GetPowerState(device *golifx.Device) (bool, error) {
+	if device == nil {
+		return false, fmt.Errorf("cannot get power for missing device")
+	}
+	if c.shouldUseBroadcastOnly(device.MacAddress()) {
+		c.logf("lifx get power using broadcast-only mac=%s", device.MacAddress())
+		return getPowerStateViaBroadcast(device.MacAddress())
+	}
+	state, err := device.GetPowerState()
+	if err != nil {
+		mac := device.MacAddress()
+		c.logf("lifx get power direct failed mac=%s err=%v", mac, err)
+		state, fallbackErr := getPowerStateViaBroadcast(mac)
+		if fallbackErr != nil {
+			c.logf("lifx get power broadcast failed mac=%s err=%v", mac, fallbackErr)
+			return false, err
+		}
+		c.markBroadcastOnly(mac)
+		c.logf("lifx get power broadcast ok mac=%s", mac)
+		return state, nil
+	}
+	return state, nil
 }
 
 func (c *lifxClient) SetPowerState(settings *models.PowerSettings, on bool) error {
@@ -598,6 +632,14 @@ func setPowerViaBroadcast(mac string, on bool, transition uint32) error {
 }
 
 func getCurrentColorViaBroadcast(mac string) (*golifx.HSBK, error) {
+	cs, err := getCurrentStateViaBroadcast(mac)
+	if err != nil {
+		return nil, err
+	}
+	return cs.Color, nil
+}
+
+func getCurrentStateViaBroadcast(mac string) (*golifx.DeviceState, error) {
 	fallback, err := deviceFromMac(mac)
 	if err != nil {
 		return nil, err
@@ -609,7 +651,15 @@ func getCurrentColorViaBroadcast(mac string) (*golifx.HSBK, error) {
 	if cs == nil || cs.Color == nil {
 		return nil, fmt.Errorf("device returned no color state")
 	}
-	return cs.Color, nil
+	return cs, nil
+}
+
+func getPowerStateViaBroadcast(mac string) (bool, error) {
+	fallback, err := deviceFromMac(mac)
+	if err != nil {
+		return false, err
+	}
+	return fallback.GetPowerState()
 }
 
 func (c *lifxClient) UpdateGlobalSettings(settings *models.GlobalSettings) error {
